@@ -22,3 +22,8 @@ auth:
   # Required `aud` claim on every access token. Set this per-deployment to
   # the logical identifier of *this* API, not the client that issues tokens.
   audience: "huddle-api"
+
+nats:
+  # JetStream URL. The API publishes message events here and streaming
+  # subscribers read them back. Future: search/audit/notification consumers.
+  url: "nats://localhost:4222"

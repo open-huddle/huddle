@@ -316,6 +316,50 @@ func (x *ListMessagesResponse) GetNextCursor() string {
 	return ""
 }
 
+type SubscribeMessagesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChannelId     string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeMessagesRequest) Reset() {
+	*x = SubscribeMessagesRequest{}
+	mi := &file_huddle_v1_message_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeMessagesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeMessagesRequest) ProtoMessage() {}
+
+func (x *SubscribeMessagesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeMessagesRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeMessagesRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SubscribeMessagesRequest) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
 var File_huddle_v1_message_proto protoreflect.FileDescriptor
 
 const file_huddle_v1_message_proto_rawDesc = "" +
@@ -343,10 +387,14 @@ const file_huddle_v1_message_proto_rawDesc = "" +
 	"\x14ListMessagesResponse\x12.\n" +
 	"\bmessages\x18\x01 \x03(\v2\x12.huddle.v1.MessageR\bmessages\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor2\xa4\x01\n" +
+	"nextCursor\"9\n" +
+	"\x18SubscribeMessagesRequest\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x01 \x01(\tR\tchannelId2\xee\x01\n" +
 	"\x0eMessageService\x12G\n" +
 	"\x04Send\x12\x1d.huddle.v1.SendMessageRequest\x1a\x1e.huddle.v1.SendMessageResponse\"\x00\x12I\n" +
-	"\x04List\x12\x1e.huddle.v1.ListMessagesRequest\x1a\x1f.huddle.v1.ListMessagesResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"\x04List\x12\x1e.huddle.v1.ListMessagesRequest\x1a\x1f.huddle.v1.ListMessagesResponse\"\x00\x12H\n" +
+	"\tSubscribe\x12#.huddle.v1.SubscribeMessagesRequest\x1a\x12.huddle.v1.Message\"\x000\x01B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_message_proto_rawDescOnce sync.Once
@@ -360,25 +408,28 @@ func file_huddle_v1_message_proto_rawDescGZIP() []byte {
 	return file_huddle_v1_message_proto_rawDescData
 }
 
-var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_huddle_v1_message_proto_goTypes = []any{
-	(*Message)(nil),               // 0: huddle.v1.Message
-	(*SendMessageRequest)(nil),    // 1: huddle.v1.SendMessageRequest
-	(*SendMessageResponse)(nil),   // 2: huddle.v1.SendMessageResponse
-	(*ListMessagesRequest)(nil),   // 3: huddle.v1.ListMessagesRequest
-	(*ListMessagesResponse)(nil),  // 4: huddle.v1.ListMessagesResponse
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*Message)(nil),                  // 0: huddle.v1.Message
+	(*SendMessageRequest)(nil),       // 1: huddle.v1.SendMessageRequest
+	(*SendMessageResponse)(nil),      // 2: huddle.v1.SendMessageResponse
+	(*ListMessagesRequest)(nil),      // 3: huddle.v1.ListMessagesRequest
+	(*ListMessagesResponse)(nil),     // 4: huddle.v1.ListMessagesResponse
+	(*SubscribeMessagesRequest)(nil), // 5: huddle.v1.SubscribeMessagesRequest
+	(*timestamppb.Timestamp)(nil),    // 6: google.protobuf.Timestamp
 }
 var file_huddle_v1_message_proto_depIdxs = []int32{
-	5, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	6, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
 	0, // 1: huddle.v1.SendMessageResponse.message:type_name -> huddle.v1.Message
 	0, // 2: huddle.v1.ListMessagesResponse.messages:type_name -> huddle.v1.Message
 	1, // 3: huddle.v1.MessageService.Send:input_type -> huddle.v1.SendMessageRequest
 	3, // 4: huddle.v1.MessageService.List:input_type -> huddle.v1.ListMessagesRequest
-	2, // 5: huddle.v1.MessageService.Send:output_type -> huddle.v1.SendMessageResponse
-	4, // 6: huddle.v1.MessageService.List:output_type -> huddle.v1.ListMessagesResponse
-	5, // [5:7] is the sub-list for method output_type
-	3, // [3:5] is the sub-list for method input_type
+	5, // 5: huddle.v1.MessageService.Subscribe:input_type -> huddle.v1.SubscribeMessagesRequest
+	2, // 6: huddle.v1.MessageService.Send:output_type -> huddle.v1.SendMessageResponse
+	4, // 7: huddle.v1.MessageService.List:output_type -> huddle.v1.ListMessagesResponse
+	0, // 8: huddle.v1.MessageService.Subscribe:output_type -> huddle.v1.Message
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
 	3, // [3:3] is the sub-list for extension extendee
 	0, // [0:3] is the sub-list for field type_name
@@ -395,7 +446,7 @@ func file_huddle_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_huddle_v1_message_proto_rawDesc), len(file_huddle_v1_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -15,6 +15,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
+	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
 	"github.com/open-huddle/huddle/apps/api/internal/services/channel"
@@ -32,10 +33,11 @@ type Server struct {
 	verifier *auth.Verifier
 	resolver *principal.Resolver
 	authz    policy.Engine
+	bus      *events.NATS
 	router   *chi.Mux
 }
 
-func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *auth.Verifier) *Server {
+func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *auth.Verifier, bus *events.NATS) *Server {
 	s := &Server{
 		cfg:      cfg,
 		logger:   logger,
@@ -43,6 +45,7 @@ func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *aut
 		verifier: verifier,
 		resolver: principal.NewResolver(db.Ent),
 		authz:    policy.NewRBAC(db.Ent),
+		bus:      bus,
 		router:   chi.NewRouter(),
 	}
 	s.routes()
@@ -84,7 +87,7 @@ func (s *Server) routes() {
 		s.router.Mount(path, handler)
 	}
 	{
-		svc := message.New(s.db.Ent, s.resolver, s.authz, s.logger)
+		svc := message.New(s.db.Ent, s.resolver, s.authz, s.bus, s.bus, s.logger)
 		path, handler := huddlev1connect.NewMessageServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}

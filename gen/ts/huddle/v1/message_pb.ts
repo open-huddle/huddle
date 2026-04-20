@@ -12,7 +12,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/message.proto.
  */
 export const file_huddle_v1_message: GenFile = /*@__PURE__*/
-  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxInoKB01lc3NhZ2USCgoCaWQYASABKAkSEgoKY2hhbm5lbF9pZBgCIAEoCRIRCglhdXRob3JfaWQYAyABKAkSDAoEYm9keRgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI2ChJTZW5kTWVzc2FnZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJIjoKE1NlbmRNZXNzYWdlUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIkgKE0xpc3RNZXNzYWdlc1JlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiUQoUTGlzdE1lc3NhZ2VzUmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCTKkAQoOTWVzc2FnZVNlcnZpY2USRwoEU2VuZBIdLmh1ZGRsZS52MS5TZW5kTWVzc2FnZVJlcXVlc3QaHi5odWRkbGUudjEuU2VuZE1lc3NhZ2VSZXNwb25zZSIAEkkKBExpc3QSHi5odWRkbGUudjEuTGlzdE1lc3NhZ2VzUmVxdWVzdBofLmh1ZGRsZS52MS5MaXN0TWVzc2FnZXNSZXNwb25zZSIAQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxInoKB01lc3NhZ2USCgoCaWQYASABKAkSEgoKY2hhbm5lbF9pZBgCIAEoCRIRCglhdXRob3JfaWQYAyABKAkSDAoEYm9keRgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI2ChJTZW5kTWVzc2FnZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJIjoKE1NlbmRNZXNzYWdlUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIkgKE0xpc3RNZXNzYWdlc1JlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiUQoUTGlzdE1lc3NhZ2VzUmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCSIuChhTdWJzY3JpYmVNZXNzYWdlc1JlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCTLuAQoOTWVzc2FnZVNlcnZpY2USRwoEU2VuZBIdLmh1ZGRsZS52MS5TZW5kTWVzc2FnZVJlcXVlc3QaHi5odWRkbGUudjEuU2VuZE1lc3NhZ2VSZXNwb25zZSIAEkkKBExpc3QSHi5odWRkbGUudjEuTGlzdE1lc3NhZ2VzUmVxdWVzdBofLmh1ZGRsZS52MS5MaXN0TWVzc2FnZXNSZXNwb25zZSIAEkgKCVN1YnNjcmliZRIjLmh1ZGRsZS52MS5TdWJzY3JpYmVNZXNzYWdlc1JlcXVlc3QaEi5odWRkbGUudjEuTWVzc2FnZSIAMAFCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Message
@@ -155,6 +155,23 @@ export const ListMessagesResponseSchema: GenMessage<ListMessagesResponse> = /*@_
   messageDesc(file_huddle_v1_message, 4);
 
 /**
+ * @generated from message huddle.v1.SubscribeMessagesRequest
+ */
+export type SubscribeMessagesRequest = Message$1<"huddle.v1.SubscribeMessagesRequest"> & {
+  /**
+   * @generated from field: string channel_id = 1;
+   */
+  channelId: string;
+};
+
+/**
+ * Describes the message huddle.v1.SubscribeMessagesRequest.
+ * Use `create(SubscribeMessagesRequestSchema)` to create a new message.
+ */
+export const SubscribeMessagesRequestSchema: GenMessage<SubscribeMessagesRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 5);
+
+/**
  * MessageService handles message send and read for chat channels. Realtime
  * delivery (WebSocket push) is intentionally out of scope here — clients
  * poll List for now; Phase 2c adds the streaming surface.
@@ -183,6 +200,20 @@ export const MessageService: GenService<{
     methodKind: "unary";
     input: typeof ListMessagesRequestSchema;
     output: typeof ListMessagesResponseSchema;
+  },
+  /**
+   * Subscribe streams new messages in a channel as they are sent. The stream
+   * starts at "now" — older messages are fetched via List on reconnect.
+   * Closing the call (client disconnect or context cancel) cleans up the
+   * server-side subscription. The token is verified once at stream open;
+   * long-lived clients should reconnect periodically with a fresh token.
+   *
+   * @generated from rpc huddle.v1.MessageService.Subscribe
+   */
+  subscribe: {
+    methodKind: "server_streaming";
+    input: typeof SubscribeMessagesRequestSchema;
+    output: typeof MessageSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_message, 0);

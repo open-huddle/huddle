@@ -14,6 +14,13 @@ type Config struct {
 	Database Database `mapstructure:"database"`
 	Valkey   Valkey   `mapstructure:"valkey"`
 	Auth     Auth     `mapstructure:"auth"`
+	Nats     Nats     `mapstructure:"nats"`
+}
+
+// Nats configures the JetStream connection used for realtime fan-out and
+// (future) audit / search / notifications consumers.
+type Nats struct {
+	URL string `mapstructure:"url"`
 }
 
 // Auth controls OIDC token verification. Issuer is the full URL of the realm
@@ -57,6 +64,7 @@ func Load() (*Config, error) {
 	v.SetDefault("valkey.url", "redis://localhost:6379")
 	v.SetDefault("auth.issuer_url", "http://localhost:8180/realms/huddle")
 	v.SetDefault("auth.audience", "huddle-api")
+	v.SetDefault("nats.url", "nats://localhost:4222")
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

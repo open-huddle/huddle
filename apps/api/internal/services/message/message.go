@@ -16,6 +16,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent"
 	entchannel "github.com/open-huddle/huddle/apps/api/ent/channel"
 	entmessage "github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
@@ -36,14 +37,26 @@ var _ huddlev1connect.MessageServiceHandler = (*Service)(nil)
 // a member of the channel's organization may both read and send. Edit and
 // delete are intentionally not in this service yet.
 type Service struct {
-	client   *ent.Client
-	resolver *principal.Resolver
-	authz    policy.Engine
-	logger   *slog.Logger
+	client    *ent.Client
+	resolver  *principal.Resolver
+	authz     policy.Engine
+	publisher events.Publisher
+	subs      events.Subscriber
+	logger    *slog.Logger
 }
 
-func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, logger *slog.Logger) *Service {
-	return &Service{client: client, resolver: resolver, authz: authz, logger: logger}
+// New takes the event bus split into Publisher and Subscriber. Both are
+// satisfied by the same NATS client today, but separating them keeps the
+// dependency edges honest: Send needs Publisher, Subscribe needs Subscriber.
+func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, publisher events.Publisher, subs events.Subscriber, logger *slog.Logger) *Service {
+	return &Service{
+		client:    client,
+		resolver:  resolver,
+		authz:     authz,
+		publisher: publisher,
+		subs:      subs,
+		logger:    logger,
+	}
 }
 
 func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.SendMessageRequest]) (*connect.Response[huddlev1.SendMessageResponse], error) {
@@ -85,9 +98,69 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.SendMe
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("send message: %w", err))
 	}
 
+	out := toProto(m)
+
+	// Best-effort publish — a failed broker write must not roll back the
+	// successful database write. Subscribers may briefly miss live messages
+	// during a NATS outage; clients backfill via List on reconnect, and the
+	// future Debezium CDC consumer will guarantee durable downstream
+	// delivery.
+	if err := s.publisher.PublishMessageCreated(ctx, out); err != nil {
+		s.logger.Warn("publish message.created", "err", err, "channel_id", out.ChannelId, "message_id", out.Id)
+	}
+
 	return connect.NewResponse(&huddlev1.SendMessageResponse{
-		Message: toProto(m),
+		Message: out,
 	}), nil
+}
+
+func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.SubscribeMessagesRequest], stream *connect.ServerStream[huddlev1.Message]) error {
+	channelID, err := uuid.Parse(req.Msg.ChannelId)
+	if err != nil {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New("invalid channel_id"))
+	}
+
+	caller, err := s.resolver.Resolve(ctx)
+	if err != nil {
+		return connect.NewError(connect.CodeUnauthenticated, err)
+	}
+
+	orgID, err := s.channelOrg(ctx, channelID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.authz.Authorize(ctx, caller.ID, policy.ActionReadMessage, policy.Resource{
+		Type:           "message",
+		OrganizationID: orgID,
+	}); err != nil {
+		return s.denyErr(err)
+	}
+
+	msgs, err := s.subs.SubscribeMessages(ctx, channelID)
+	if err != nil {
+		s.logger.Error("subscribe", "err", err, "channel_id", channelID)
+		return connect.NewError(connect.CodeInternal, errors.New("subscribe failed"))
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case m, ok := <-msgs:
+			if !ok {
+				// Subscriber tore down (server shutdown or broker disconnect).
+				// Returning nil ends the stream cleanly; clients will
+				// reconnect.
+				return nil
+			}
+			if err := stream.Send(m); err != nil {
+				// Most often a broken pipe — client went away. Returning the
+				// error lets Connect map it to the right transport state.
+				return err
+			}
+		}
+	}
 }
 
 func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListMessagesRequest]) (*connect.Response[huddlev1.ListMessagesResponse], error) {
