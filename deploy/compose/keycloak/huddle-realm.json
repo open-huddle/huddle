@@ -63,6 +63,24 @@
       "realmRoles": [
         "default-roles-huddle"
       ]
+    },
+    {
+      "username": "bob",
+      "email": "bob@example.com",
+      "firstName": "Bob",
+      "lastName": "Brown",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-huddle"
+      ]
     }
   ]
 }

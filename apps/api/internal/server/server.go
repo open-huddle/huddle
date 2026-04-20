@@ -15,21 +15,34 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
+	"github.com/open-huddle/huddle/apps/api/internal/policy"
+	"github.com/open-huddle/huddle/apps/api/internal/principal"
 	"github.com/open-huddle/huddle/apps/api/internal/services/health"
 	"github.com/open-huddle/huddle/apps/api/internal/services/identity"
+	"github.com/open-huddle/huddle/apps/api/internal/services/organization"
 	"github.com/open-huddle/huddle/gen/go/huddle/v1/huddlev1connect"
 )
 
 type Server struct {
-	cfg      *config.Config
-	logger   *slog.Logger
-	db       *database.DB
-	verifier *auth.Verifier
-	router   *chi.Mux
+	cfg       *config.Config
+	logger    *slog.Logger
+	db        *database.DB
+	verifier  *auth.Verifier
+	resolver  *principal.Resolver
+	authz     policy.Engine
+	router    *chi.Mux
 }
 
 func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *auth.Verifier) *Server {
-	s := &Server{cfg: cfg, logger: logger, db: db, verifier: verifier, router: chi.NewRouter()}
+	s := &Server{
+		cfg:      cfg,
+		logger:   logger,
+		db:       db,
+		verifier: verifier,
+		resolver: principal.NewResolver(db.Ent),
+		authz:    policy.NewRBAC(db.Ent),
+		router:   chi.NewRouter(),
+	}
 	s.routes()
 	return s
 }
@@ -54,8 +67,13 @@ func (s *Server) routes() {
 	// Authenticated Connect services — every RPC requires a valid bearer token.
 	authInt := connect.WithInterceptors(auth.NewInterceptor(s.verifier))
 	{
-		svc := identity.New(s.db.Ent, s.logger)
+		svc := identity.New(s.resolver, s.logger)
 		path, handler := huddlev1connect.NewIdentityServiceHandler(svc, authInt)
+		s.router.Mount(path, handler)
+	}
+	{
+		svc := organization.New(s.db.Ent, s.resolver, s.authz, s.logger)
+		path, handler := huddlev1connect.NewOrganizationServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}
 }
