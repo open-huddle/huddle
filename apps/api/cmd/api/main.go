@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
@@ -47,7 +48,18 @@ func main() {
 		}
 	}()
 
-	srv := server.New(cfg, logger, db)
+	// Fetch the OIDC discovery document and JWKS once at startup. The verifier
+	// keeps the JWKS fresh in the background, so Keycloak key rotations are
+	// picked up without a restart.
+	verifyCtx, vcancel := context.WithTimeout(ctx, 15*time.Second)
+	verifier, err := auth.NewVerifier(verifyCtx, cfg.Auth.IssuerURL, cfg.Auth.Audience)
+	vcancel()
+	if err != nil {
+		logger.Error("init oidc verifier", "err", err)
+		os.Exit(1)
+	}
+
+	srv := server.New(cfg, logger, db, verifier)
 
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,

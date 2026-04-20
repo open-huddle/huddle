@@ -15,3 +15,10 @@ database:
 
 valkey:
   url: "redis://localhost:6379"
+
+auth:
+  # OIDC issuer — the full URL of the realm, not the realms endpoint.
+  issuer_url: "http://localhost:8180/realms/huddle"
+  # Required `aud` claim on every access token. Set this per-deployment to
+  # the logical identifier of *this* API, not the client that issues tokens.
+  audience: "huddle-api"

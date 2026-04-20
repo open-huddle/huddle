@@ -13,6 +13,16 @@ type Config struct {
 	Version  string   `mapstructure:"version"`
 	Database Database `mapstructure:"database"`
 	Valkey   Valkey   `mapstructure:"valkey"`
+	Auth     Auth     `mapstructure:"auth"`
+}
+
+// Auth controls OIDC token verification. Issuer is the full URL of the realm
+// (ends in "/realms/<name>" for Keycloak). Audience is the claim the API
+// requires in every access token — usually the logical API identifier, not
+// the client ID that issued the token.
+type Auth struct {
+	IssuerURL string `mapstructure:"issuer_url"`
+	Audience  string `mapstructure:"audience"`
 }
 
 // Database controls the Postgres client. Pool settings default to values that
@@ -45,6 +55,8 @@ func Load() (*Config, error) {
 	v.SetDefault("database.conn_max_lifetime", 30*time.Minute)
 	v.SetDefault("database.conn_max_idle_time", 5*time.Minute)
 	v.SetDefault("valkey.url", "redis://localhost:6379")
+	v.SetDefault("auth.issuer_url", "http://localhost:8180/realms/huddle")
+	v.SetDefault("auth.audience", "huddle-api")
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

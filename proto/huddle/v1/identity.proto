@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// IdentityService exposes information about the calling user. All methods
+// require a valid bearer token — the Connect interceptor rejects
+// unauthenticated calls with CodeUnauthenticated before they reach the
+// handler.
+service IdentityService {
+  // WhoAmI returns the authenticated user's canonical record, creating one on
+  // first call for a given OIDC subject.
+  rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse) {}
+}
+
+message WhoAmIRequest {}
+
+message WhoAmIResponse {
+  // UUID of the row in the users table.
+  string user_id = 1;
+  // OIDC `sub` claim from the identity provider (stable across email changes).
+  string subject = 2;
+  string email = 3;
+  string display_name = 4;
+}

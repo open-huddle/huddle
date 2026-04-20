@@ -6,26 +6,30 @@ import (
 	"net/http"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
+	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/services/health"
+	"github.com/open-huddle/huddle/apps/api/internal/services/identity"
 	"github.com/open-huddle/huddle/gen/go/huddle/v1/huddlev1connect"
 )
 
 type Server struct {
-	cfg    *config.Config
-	logger *slog.Logger
-	db     *database.DB
-	router *chi.Mux
+	cfg      *config.Config
+	logger   *slog.Logger
+	db       *database.DB
+	verifier *auth.Verifier
+	router   *chi.Mux
 }
 
-func New(cfg *config.Config, logger *slog.Logger, db *database.DB) *Server {
-	s := &Server{cfg: cfg, logger: logger, db: db, router: chi.NewRouter()}
+func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *auth.Verifier) *Server {
+	s := &Server{cfg: cfg, logger: logger, db: db, verifier: verifier, router: chi.NewRouter()}
 	s.routes()
 	return s
 }
@@ -39,10 +43,21 @@ func (s *Server) routes() {
 	s.router.Get("/livez", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 	s.router.Get("/readyz", s.readyz)
 
-	// Connect services.
-	healthSvc := health.New(s.cfg.Version)
-	path, handler := huddlev1connect.NewHealthServiceHandler(healthSvc)
-	s.router.Mount(path, handler)
+	// Public Connect services — no auth interceptor so liveness checks can be
+	// scraped by anything that can speak Connect.
+	{
+		svc := health.New(s.cfg.Version)
+		path, handler := huddlev1connect.NewHealthServiceHandler(svc)
+		s.router.Mount(path, handler)
+	}
+
+	// Authenticated Connect services — every RPC requires a valid bearer token.
+	authInt := connect.WithInterceptors(auth.NewInterceptor(s.verifier))
+	{
+		svc := identity.New(s.db.Ent, s.logger)
+		path, handler := huddlev1connect.NewIdentityServiceHandler(svc, authInt)
+		s.router.Mount(path, handler)
+	}
 }
 
 // readyz reports ready only when the API can reach its dependencies. Kubelet

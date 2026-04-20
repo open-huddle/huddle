@@ -14,6 +14,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
+      # Seeds additional databases/roles on first-volume boot (see the SQL
+      # files for details). Postgres's init scripts run exactly once per
+      # volume, so `make dev-down -v` is needed to re-seed.
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U huddle -d huddle" ]
       interval: 5s
@@ -32,6 +36,43 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  keycloak:
+    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Persistence — share the Postgres instance with the API, separate DB + role.
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      # Dev-mode HTTP on 8180 so it doesn't collide with the API on 8080.
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: "8180"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+      # Dev admin — DO NOT use in any environment that isn't your laptop.
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    # `--import-realm` reads every *.json under /opt/keycloak/data/import on
+    # startup if the realm does not yet exist. Subsequent starts ignore it.
+    command: [ "start-dev", "--import-realm" ]
+    ports:
+      - "8180:8180"
+      - "9000:9000" # management port — carries /health and /metrics in KC 26+
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      # KC 26 moved /health off the HTTP port onto the management port (9000)
+      # and ships without curl, so we check TCP via bash's /dev/tcp.
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo ok >&3 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
 volumes:
   postgres-data:
