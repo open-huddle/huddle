@@ -16,6 +16,8 @@ type Tx struct {
 	Channel *ChannelClient
 	// Membership is the client for interacting with the Membership builders.
 	Membership *MembershipClient
+	// Message is the client for interacting with the Message builders.
+	Message *MessageClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// User is the client for interacting with the User builders.
@@ -153,6 +155,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Channel = NewChannelClient(tx.config)
 	tx.Membership = NewMembershipClient(tx.config)
+	tx.Message = NewMessageClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

@@ -41,6 +41,8 @@ func (Channel) Edges() []ent.Edge {
 		edge.From("created_by", User.Type).
 			Ref("created_channels").
 			Unique(),
+		// Messages posted in this channel.
+		edge.To("messages", Message.Type),
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -135,6 +136,21 @@ func (_u *ChannelUpdate) SetCreatedBy(v *User) *ChannelUpdate {
 	return _u.SetCreatedByID(v.ID)
 }
 
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (_u *ChannelUpdate) AddMessageIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (_u *ChannelUpdate) AddMessages(v ...*Message) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMessageIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdate) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -150,6 +166,27 @@ func (_u *ChannelUpdate) ClearOrganization() *ChannelUpdate {
 func (_u *ChannelUpdate) ClearCreatedBy() *ChannelUpdate {
 	_u.mutation.ClearCreatedBy()
 	return _u
+}
+
+// ClearMessages clears all "messages" edges to the Message entity.
+func (_u *ChannelUpdate) ClearMessages() *ChannelUpdate {
+	_u.mutation.ClearMessages()
+	return _u
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
+func (_u *ChannelUpdate) RemoveMessageIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
+}
+
+// RemoveMessages removes "messages" edges to Message entities.
+func (_u *ChannelUpdate) RemoveMessages(v ...*Message) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMessageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -297,6 +334,51 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{channel.Label}
@@ -421,6 +503,21 @@ func (_u *ChannelUpdateOne) SetCreatedBy(v *User) *ChannelUpdateOne {
 	return _u.SetCreatedByID(v.ID)
 }
 
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (_u *ChannelUpdateOne) AddMessageIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (_u *ChannelUpdateOne) AddMessages(v ...*Message) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMessageIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdateOne) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -436,6 +533,27 @@ func (_u *ChannelUpdateOne) ClearOrganization() *ChannelUpdateOne {
 func (_u *ChannelUpdateOne) ClearCreatedBy() *ChannelUpdateOne {
 	_u.mutation.ClearCreatedBy()
 	return _u
+}
+
+// ClearMessages clears all "messages" edges to the Message entity.
+func (_u *ChannelUpdateOne) ClearMessages() *ChannelUpdateOne {
+	_u.mutation.ClearMessages()
+	return _u
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
+func (_u *ChannelUpdateOne) RemoveMessageIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
+}
+
+// RemoveMessages removes "messages" edges to Message entities.
+func (_u *ChannelUpdateOne) RemoveMessages(v ...*Message) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMessageIDs(ids...)
 }
 
 // Where appends a list predicates to the ChannelUpdate builder.
@@ -606,6 +724,51 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

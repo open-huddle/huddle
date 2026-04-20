@@ -31,6 +31,8 @@ const (
 	EdgeOrganization = "organization"
 	// EdgeCreatedBy holds the string denoting the created_by edge name in mutations.
 	EdgeCreatedBy = "created_by"
+	// EdgeMessages holds the string denoting the messages edge name in mutations.
+	EdgeMessages = "messages"
 	// Table holds the table name of the channel in the database.
 	Table = "channels"
 	// OrganizationTable is the table that holds the organization relation/edge.
@@ -47,6 +49,13 @@ const (
 	CreatedByInverseTable = "users"
 	// CreatedByColumn is the table column denoting the created_by relation/edge.
 	CreatedByColumn = "user_created_channels"
+	// MessagesTable is the table that holds the messages relation/edge.
+	MessagesTable = "messages"
+	// MessagesInverseTable is the table name for the Message entity.
+	// It exists in this package in order to avoid circular dependency with the "message" package.
+	MessagesInverseTable = "messages"
+	// MessagesColumn is the table column denoting the messages relation/edge.
+	MessagesColumn = "channel_id"
 )
 
 // Columns holds all SQL columns for channel fields.
@@ -148,6 +157,20 @@ func ByCreatedByField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCreatedByStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMessagesCount orders the results by messages count.
+func ByMessagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMessagesStep(), opts...)
+	}
+}
+
+// ByMessages orders the results by messages terms.
+func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOrganizationStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -160,5 +183,12 @@ func newCreatedByStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreatedByInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CreatedByTable, CreatedByColumn),
+	)
+}
+func newMessagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MessagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
 	)
 }

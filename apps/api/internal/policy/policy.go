@@ -26,6 +26,9 @@ const (
 
 	ActionCreateChannel Action = "channel:create"
 	ActionReadChannel   Action = "channel:read"
+
+	ActionSendMessage Action = "message:send"
+	ActionReadMessage Action = "message:read"
 )
 
 // Resource names what an action targets. Type and OrganizationID together

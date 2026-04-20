@@ -40,9 +40,11 @@ type UserEdges struct {
 	Memberships []*Membership `json:"memberships,omitempty"`
 	// CreatedChannels holds the value of the created_channels edge.
 	CreatedChannels []*Channel `json:"created_channels,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -61,6 +63,15 @@ func (e UserEdges) CreatedChannelsOrErr() ([]*Channel, error) {
 		return e.CreatedChannels, nil
 	}
 	return nil, &NotLoadedError{edge: "created_channels"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[2] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -146,6 +157,11 @@ func (_m *User) QueryMemberships() *MembershipQuery {
 // QueryCreatedChannels queries the "created_channels" edge of the User entity.
 func (_m *User) QueryCreatedChannels() *ChannelQuery {
 	return NewUserClient(_m.config).QueryCreatedChannels(_m)
+}
+
+// QueryMessages queries the "messages" edge of the User entity.
+func (_m *User) QueryMessages() *MessageQuery {
+	return NewUserClient(_m.config).QueryMessages(_m)
 }
 
 // Update returns a builder for updating this User.

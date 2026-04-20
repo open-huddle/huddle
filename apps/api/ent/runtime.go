@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
+	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/schema"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -67,6 +68,45 @@ func init() {
 	membershipDescID := membershipMixinFields0[0].Descriptor()
 	// membership.DefaultID holds the default value on creation for the id field.
 	membership.DefaultID = membershipDescID.Default.(func() uuid.UUID)
+	messageMixin := schema.Message{}.Mixin()
+	messageMixinFields0 := messageMixin[0].Fields()
+	_ = messageMixinFields0
+	messageMixinFields1 := messageMixin[1].Fields()
+	_ = messageMixinFields1
+	messageFields := schema.Message{}.Fields()
+	_ = messageFields
+	// messageDescCreatedAt is the schema descriptor for created_at field.
+	messageDescCreatedAt := messageMixinFields1[0].Descriptor()
+	// message.DefaultCreatedAt holds the default value on creation for the created_at field.
+	message.DefaultCreatedAt = messageDescCreatedAt.Default.(func() time.Time)
+	// messageDescUpdatedAt is the schema descriptor for updated_at field.
+	messageDescUpdatedAt := messageMixinFields1[1].Descriptor()
+	// message.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	message.DefaultUpdatedAt = messageDescUpdatedAt.Default.(func() time.Time)
+	// message.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	message.UpdateDefaultUpdatedAt = messageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// messageDescBody is the schema descriptor for body field.
+	messageDescBody := messageFields[2].Descriptor()
+	// message.BodyValidator is a validator for the "body" field. It is called by the builders before save.
+	message.BodyValidator = func() func(string) error {
+		validators := messageDescBody.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(body string) error {
+			for _, fn := range fns {
+				if err := fn(body); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// messageDescID is the schema descriptor for id field.
+	messageDescID := messageMixinFields0[0].Descriptor()
+	// message.DefaultID holds the default value on creation for the id field.
+	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
 	organizationMixin := schema.Organization{}.Mixin()
 	organizationMixinFields0 := organizationMixin[0].Fields()
 	_ = organizationMixinFields0

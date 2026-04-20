@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
@@ -136,6 +137,21 @@ func (_c *ChannelCreate) SetNillableCreatedByID(id *uuid.UUID) *ChannelCreate {
 // SetCreatedBy sets the "created_by" edge to the User entity.
 func (_c *ChannelCreate) SetCreatedBy(v *User) *ChannelCreate {
 	return _c.SetCreatedByID(v.ID)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (_c *ChannelCreate) AddMessageIDs(ids ...uuid.UUID) *ChannelCreate {
+	_c.mutation.AddMessageIDs(ids...)
+	return _c
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (_c *ChannelCreate) AddMessages(v ...*Message) *ChannelCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMessageIDs(ids...)
 }
 
 // Mutation returns the ChannelMutation object of the builder.
@@ -306,6 +322,22 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_created_channels = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.MessagesTable,
+			Columns: []string{channel.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

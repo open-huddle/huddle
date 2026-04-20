@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// MessageService handles message send and read for chat channels. Realtime
+// delivery (WebSocket push) is intentionally out of scope here — clients
+// poll List for now; Phase 2c adds the streaming surface.
+service MessageService {
+  // Send a message to a channel. Caller must be a member of the channel's
+  // organization.
+  rpc Send(SendMessageRequest) returns (SendMessageResponse) {}
+
+  // List messages in a channel, newest first. Cursor-paginated: callers pass
+  // the next_cursor from a previous response to fetch older messages.
+  rpc List(ListMessagesRequest) returns (ListMessagesResponse) {}
+}
+
+message Message {
+  string id = 1;
+  string channel_id = 2;
+  string author_id = 3;
+  // Markdown text. Server treats as opaque; clients render. Max 8 KiB.
+  // Format is intentionally not parameterised — there is no body_format
+  // enum. If a future variant is needed it will land as a separate field.
+  string body = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message SendMessageRequest {
+  string channel_id = 1;
+  string body = 2;
+}
+message SendMessageResponse {
+  Message message = 1;
+}
+
+message ListMessagesRequest {
+  string channel_id = 1;
+  // Opaque cursor returned by a previous List call. Empty means start from
+  // the newest message. Cursors encode (created_at, id) of the boundary
+  // row; do not parse or construct them on the client.
+  string before = 2;
+  // Page size. Defaults to 50 when zero or negative; clamped to 200 max.
+  int32 limit = 3;
+}
+message ListMessagesResponse {
+  // Newest first.
+  repeated Message messages = 1;
+  // Pass to a subsequent List call to fetch older messages. Empty when no
+  // more pages exist.
+  string next_cursor = 2;
+}

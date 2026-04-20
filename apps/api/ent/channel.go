@@ -46,9 +46,11 @@ type ChannelEdges struct {
 	Organization *Organization `json:"organization,omitempty"`
 	// CreatedBy holds the value of the created_by edge.
 	CreatedBy *User `json:"created_by,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // OrganizationOrErr returns the Organization value or an error if the edge
@@ -71,6 +73,15 @@ func (e ChannelEdges) CreatedByOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "created_by"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[2] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -180,6 +191,11 @@ func (_m *Channel) QueryOrganization() *OrganizationQuery {
 // QueryCreatedBy queries the "created_by" edge of the Channel entity.
 func (_m *Channel) QueryCreatedBy() *UserQuery {
 	return NewChannelClient(_m.config).QueryCreatedBy(_m)
+}
+
+// QueryMessages queries the "messages" edge of the Channel entity.
+func (_m *Channel) QueryMessages() *MessageQuery {
+	return NewChannelClient(_m.config).QueryMessages(_m)
 }
 
 // Update returns a builder for updating this Channel.

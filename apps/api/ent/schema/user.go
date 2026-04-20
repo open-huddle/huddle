@@ -36,5 +36,8 @@ func (User) Edges() []ent.Edge {
 		edge.To("memberships", Membership.Type),
 		// Channels this user created. Informational; not used for authz.
 		edge.To("created_channels", Channel.Type),
+		// Messages authored by this user. Required-from-Message side, so a
+		// User with messages cannot be deleted without first scrubbing them.
+		edge.To("messages", Message.Type),
 	}
 }
