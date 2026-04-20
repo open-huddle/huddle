@@ -1,0 +1,47 @@
+# Go
+**/bin/
+*.test
+*.out
+*.prof
+*.pprof
+cover.out
+coverage.txt
+coverage/
+go.work.local
+
+# Node
+node_modules/
+.pnpm-store/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Secrets (belt-and-suspenders; SOC 2 / HIPAA posture)
+*.pem
+*.key
+*.crt
+*.p12
+secrets.yaml
+secrets.yml
+
+# IDE / tooling
+.idea/
+.vscode/
+.claude/
+*.swp
+*~
+
+# Merge artifacts
+*.orig
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

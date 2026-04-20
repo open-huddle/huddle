@@ -1,0 +1,11 @@
+# Example config file. Copy to ./config.yaml (or /etc/huddle/config.yaml) to use.
+# Env vars (HUDDLE_*) override these values.
+
+addr: ":8080"
+version: "dev"
+
+database:
+  url: "postgres://huddle:huddle@localhost:5432/huddle?sslmode=disable"
+
+valkey:
+  url: "redis://localhost:6379"

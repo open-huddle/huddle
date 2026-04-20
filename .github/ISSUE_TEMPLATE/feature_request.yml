@@ -1,0 +1,42 @@
+name: Feature Request
+description: Propose an idea, new capability, or enhancement.
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Note:** For large architectural changes or new subsystems, please read `GOVERNANCE.md` regarding the RFC process.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The Problem
+      description: Is your feature request related to a problem? Please describe it concisely.
+      placeholder: "e.g., As an administrator, I need to..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd ideally like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: Enterprise / Compliance Impact
+      description: Does this feature relate to any enterprise, security, or compliance constraints?
+      options:
+        - Impacts SOC 2 controls (e.g., audit logging, access controls)
+        - Impacts HIPAA controls (e.g., PHI handling, encryption)
+        - Introduces new third-party services or dependencies
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, wireframes, or screenshots here.

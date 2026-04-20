@@ -1,0 +1,21 @@
+version: v2
+clean: true
+plugins:
+  # Go — protobuf message types
+  - remote: buf.build/protocolbuffers/go
+    out: gen/go
+    opt:
+      - paths=source_relative
+
+  # Go — Connect handlers & clients
+  - remote: buf.build/connectrpc/go
+    out: gen/go
+    opt:
+      - paths=source_relative
+
+  # TypeScript — protobuf messages *and* service descriptors (Connect-ES v2 reads
+  # the service descriptor from the *_pb.ts file, so no separate Connect plugin).
+  - remote: buf.build/bufbuild/es
+    out: gen/ts
+    opt:
+      - target=ts

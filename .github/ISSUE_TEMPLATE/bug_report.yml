@@ -1,0 +1,63 @@
+name: Bug Report
+description: Create a report to help us improve Open Huddle.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Note:** If you have found a security vulnerability, please do NOT use this form. Read `SECURITY.md` for our responsible disclosure process.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      value: |
+        1. Deploy Open Huddle via ...
+        2. Go to '...'
+        3. Click on '....'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Open Huddle Version
+      description: Which version, commit, or Docker tag are you running?
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Environment
+      description: How are you hosting Open Huddle?
+      options:
+        - Kubernetes (Helm)
+        - Docker Compose
+        - Local source build
+        - Other (please specify in context)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server / Client Logs
+      description: Provide relevant logs or error traces. Please scrub any PII, tokens, or credentials before pasting!
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: OS version, browser version, database details, or any other context.

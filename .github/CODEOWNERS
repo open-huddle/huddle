@@ -1,0 +1,16 @@
+# Global default
+* @open-huddle/maintainers
+
+# Infrastructure & Deployment (SOC 2 sensitive)
+/deploy/ @open-huddle/maintainers
+/Makefile @open-huddle/maintainers
+
+# API Contracts & Architecture
+/proto/ @open-huddle/maintainers
+/buf.* @open-huddle/maintainers
+
+# CI/CD & Governance Policies (High constraint)
+/.github/ @open-huddle/maintainers
+/*.md @open-huddle/maintainers
+/LICENSE @open-huddle/maintainers
+/NOTICE @open-huddle/maintainers

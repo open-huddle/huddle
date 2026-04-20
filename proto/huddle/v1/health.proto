@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// HealthService reports the liveness and readiness of the API.
+service HealthService {
+  // Check returns the current health status of the server.
+  rpc Check(CheckRequest) returns (CheckResponse) {}
+}
+
+message CheckRequest {}
+
+message CheckResponse {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_SERVING = 1;
+    STATUS_NOT_SERVING = 2;
+  }
+  Status status = 1;
+  string version = 2;
+}
