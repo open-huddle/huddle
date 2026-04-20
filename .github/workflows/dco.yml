@@ -1,0 +1,44 @@
+name: DCO
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: Signed-off-by check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Verify every commit is signed off
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          missing=0
+          while IFS= read -r sha; do
+            author_email=$(git show -s --format='%ae' "$sha")
+            author_name=$(git show -s --format='%an' "$sha")
+            if ! git show -s --format='%B' "$sha" | \
+                 grep -qiE "^Signed-off-by: .+ <.+@.+>$"; then
+              echo "::error::Commit $sha is not signed off."
+              echo "  Author: $author_name <$author_email>"
+              echo "  Fix:    git commit --amend -s   (or for all commits: git rebase -i $BASE_SHA --signoff)"
+              missing=$((missing+1))
+            fi
+          done < <(git rev-list "$BASE_SHA".."$HEAD_SHA")
+          if [ "$missing" -gt 0 ]; then
+            echo "::error::$missing commit(s) missing Signed-off-by trailer."
+            echo "See CONTRIBUTING.md for the DCO policy: https://developercertificate.org/"
+            exit 1
+          fi
+          echo "All commits are signed off."

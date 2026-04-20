@@ -1,0 +1,144 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Established Renovate baselines — auto-merge strategy, PR hygiene,
+  // vulnerability alerts, pinning, range strategies.
+  extends: [
+    "config:best-practices",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    ":enableVulnerabilityAlertsWithLabel(security)",
+  ],
+
+  // Every Renovate PR lands with a sign-off so the DCO workflow passes.
+  gitAuthor: "Renovate Bot <bot@renovateapp.com>",
+  platformCommit: "enabled",
+  commitMessagePrefix: "chore(deps):",
+  commitBody: "\n\nSigned-off-by: Renovate Bot <bot@renovateapp.com>",
+
+  labels: ["dependencies"],
+  rebaseWhen: "behind-base-branch",
+  prConcurrentLimit: 8,
+  prHourlyLimit: 4,
+
+  // One dashboard issue summarising every pending update.
+  dependencyDashboardTitle: "🔄 Dependency dashboard",
+
+  timezone: "Europe/Lisbon",
+  schedule: ["before 6am on monday"],
+
+  // Security alerts bypass the weekly schedule.
+  vulnerabilityAlerts: {
+    enabled: true,
+    labels: ["security", "dependencies"],
+    schedule: ["at any time"],
+  },
+
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 6am on the first day of the month"],
+  },
+
+  postUpdateOptions: [
+    "gomodTidy",
+    "gomodUpdateImportPaths",
+  ],
+
+  packageRules: [
+    // Auto-merge low-risk updates so we don't drown in PRs.
+    {
+      matchUpdateTypes: ["patch", "pin", "digest"],
+      matchCurrentVersion: "!/^0/",  // avoid auto-merging 0.x where patch may break
+      automerge: true,
+      automergeType: "pr",
+    },
+    {
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["patch", "minor"],
+      automerge: true,
+      automergeType: "pr",
+    },
+
+    // Group related updates to reduce PR churn.
+    {
+      groupName: "Ant Design",
+      matchPackagePatterns: ["^antd", "^@ant-design/"],
+    },
+    {
+      groupName: "React ecosystem",
+      matchPackagePatterns: ["^react", "^@types/react"],
+    },
+    {
+      groupName: "ESLint + TypeScript-ESLint",
+      matchPackagePatterns: [
+        "^eslint",
+        "^@eslint/",
+        "^typescript-eslint",
+        "^@typescript-eslint/",
+        "^eslint-plugin-",
+      ],
+    },
+    {
+      groupName: "Vite + SWC",
+      matchPackagePatterns: ["^vite", "^@vitejs/", "^@swc/"],
+    },
+    {
+      groupName: "Connect + buf tooling",
+      matchPackagePatterns: [
+        "^@bufbuild/",
+        "^@connectrpc/",
+        "^connectrpc.com/",
+        "^buf\\.build/",
+      ],
+    },
+    {
+      groupName: "Go core libs",
+      matchManagers: ["gomod"],
+      matchPackagePatterns: [
+        "^github.com/go-chi/",
+        "^github.com/spf13/",
+        "^golang.org/x/",
+      ],
+    },
+    {
+      groupName: "GitHub Actions",
+      matchManagers: ["github-actions"],
+    },
+
+    // Major bumps are human-only — never auto-merge.
+    {
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      labels: ["dependencies", "major-version"],
+    },
+
+    // FOSS-licensing posture: prohibit drift toward SSPL/BSL/AGPL forks of
+    // things we explicitly replaced (Redis, Elasticsearch, Vault, MinIO).
+    // Renovate can't refuse these on license grounds, but we add a loud label.
+    {
+      matchPackageNames: [
+        "redis",
+        "redis/redis-stack",
+        "redislabs/redisearch",
+        "elastic/elasticsearch",
+        "docker.elastic.co/elasticsearch/elasticsearch",
+        "hashicorp/vault",
+        "minio/minio",
+      ],
+      enabled: false,
+      description: "Prohibited — SSPL/BSL/AGPL. Use Valkey / OpenSearch / OpenBao / SeaweedFS instead.",
+    },
+  ],
+
+  // Custom managers for pins that aren't in a standard manifest.
+  customManagers: [
+    // Pin Go + Node + pnpm versions in CI workflows and Makefile via comments.
+    {
+      customType: "regex",
+      fileMatch: ["^\\.github/workflows/.*\\.ya?ml$"],
+      matchStrings: [
+        "#\\s*renovate: datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)\\s*\\n\\s*[A-Z_]+:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
+      ],
+    },
+  ],
+}

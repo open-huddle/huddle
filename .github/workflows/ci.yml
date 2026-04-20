@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded PR runs so we don't pay for queued-up old commits.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26"
+  NODE_VERSION: "20"
+  PNPM_VERSION: "10"
+
+jobs:
+  go:
+    name: Go (build, vet, test, lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          # Multi-module workspace: cache from every go.sum in the repo.
+          cache-dependency-path: |
+            apps/api/go.sum
+            gen/go/go.sum
+
+      - name: Sync workspace
+        run: go work sync
+
+      - name: Tidy check (fails if go.mod/go.sum are not clean)
+        run: |
+          cd apps/api && go mod tidy -diff
+          cd ../../gen/go && go mod tidy -diff
+
+      - name: Build
+        run: |
+          cd apps/api && go build ./...
+
+      - name: Vet
+        run: |
+          cd apps/api && go vet ./...
+
+      - name: Test
+        run: |
+          cd apps/api && go test -race -count=1 ./...
+
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+          working-directory: apps/api
+          args: --timeout=5m
+
+  web:
+    name: Web (typecheck, lint, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --filter @open-huddle/web typecheck
+
+      - name: Lint
+        run: pnpm --filter @open-huddle/web lint
+
+      - name: Build
+        run: pnpm --filter @open-huddle/web build
+
+  proto:
+    name: Proto (lint, breaking, gen-drift)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # buf breaking needs history to compare against main.
+          fetch-depth: 0
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lint protos
+        run: buf lint
+
+      - name: Detect breaking changes against main
+        # Skip on pushes *to* main, where there is no "against" reference.
+        if: github.ref != 'refs/heads/main'
+        run: buf breaking --against '.git#branch=main'
+
+      - name: Regenerate and verify no drift
+        run: |
+          buf generate
+          if ! git diff --exit-code -- gen/; then
+            echo "::error::gen/ is out of sync with proto/. Run 'make proto' and commit the result."
+            exit 1
+          fi
