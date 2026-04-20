@@ -36,9 +36,11 @@ type Organization struct {
 type OrganizationEdges struct {
 	// Memberships holds the value of the memberships edge.
 	Memberships []*Membership `json:"memberships,omitempty"`
+	// Channels holds the value of the channels edge.
+	Channels []*Channel `json:"channels,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -48,6 +50,15 @@ func (e OrganizationEdges) MembershipsOrErr() ([]*Membership, error) {
 		return e.Memberships, nil
 	}
 	return nil, &NotLoadedError{edge: "memberships"}
+}
+
+// ChannelsOrErr returns the Channels value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) ChannelsOrErr() ([]*Channel, error) {
+	if e.loadedTypes[1] {
+		return e.Channels, nil
+	}
+	return nil, &NotLoadedError{edge: "channels"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -122,6 +133,11 @@ func (_m *Organization) Value(name string) (ent.Value, error) {
 // QueryMemberships queries the "memberships" edge of the Organization entity.
 func (_m *Organization) QueryMemberships() *MembershipQuery {
 	return NewOrganizationClient(_m.config).QueryMemberships(_m)
+}
+
+// QueryChannels queries the "channels" edge of the Organization entity.
+func (_m *Organization) QueryChannels() *ChannelQuery {
+	return NewOrganizationClient(_m.config).QueryChannels(_m)
 }
 
 // Update returns a builder for updating this Organization.

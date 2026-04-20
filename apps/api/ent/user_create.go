@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
@@ -106,6 +107,21 @@ func (_c *UserCreate) AddMemberships(v ...*Membership) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMembershipIDs(ids...)
+}
+
+// AddCreatedChannelIDs adds the "created_channels" edge to the Channel entity by IDs.
+func (_c *UserCreate) AddCreatedChannelIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddCreatedChannelIDs(ids...)
+	return _c
+}
+
+// AddCreatedChannels adds the "created_channels" edges to the Channel entity.
+func (_c *UserCreate) AddCreatedChannels(v ...*Channel) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCreatedChannelIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -246,6 +262,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CreatedChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedChannelsTable,
+			Columns: []string{user.CreatedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// ChannelService manages chat channels within an organization. Every channel
+// is visible and postable to all members of its parent organization — the
+// MVP intentionally does not model private channels yet (those will land as
+// a separate ChannelMembership entity when there is a clear need).
+service ChannelService {
+  // Create a new channel inside an organization. Caller must be a member of
+  // the organization.
+  rpc Create(CreateChannelRequest) returns (CreateChannelResponse) {}
+
+  // List all channels in an organization, oldest first. Caller must be a
+  // member of the organization.
+  rpc List(ListChannelsRequest) returns (ListChannelsResponse) {}
+
+  // Get a channel by ID. Caller must be a member of the channel's
+  // organization.
+  rpc Get(GetChannelRequest) returns (GetChannelResponse) {}
+}
+
+message Channel {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string slug = 4;
+  string topic = 5;
+  string description = 6;
+  // ID of the user who created the channel. May be empty if the creator's
+  // user row has been deleted.
+  string created_by_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message CreateChannelRequest {
+  string organization_id = 1;
+  string name = 2;
+  // Per-organization unique. Lowercase + hyphens recommended; the server
+  // does not enforce a regex yet (will when the rule stabilises).
+  string slug = 3;
+  string topic = 4;
+  string description = 5;
+}
+message CreateChannelResponse {
+  Channel channel = 1;
+}
+
+message ListChannelsRequest {
+  string organization_id = 1;
+}
+message ListChannelsResponse {
+  repeated Channel channels = 1;
+}
+
+message GetChannelRequest {
+  string id = 1;
+}
+message GetChannelResponse {
+  Channel channel = 1;
+}

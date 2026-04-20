@@ -23,6 +23,9 @@ const (
 	ActionCreateOrganization Action = "organization:create"
 	ActionReadOrganization   Action = "organization:read"
 	ActionAddMember          Action = "organization:add_member"
+
+	ActionCreateChannel Action = "channel:create"
+	ActionReadChannel   Action = "channel:read"
 )
 
 // Resource names what an action targets. Type and OrganizationID together

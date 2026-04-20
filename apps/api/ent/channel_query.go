@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -14,59 +13,60 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
-	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
+	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
 
-// OrganizationQuery is the builder for querying Organization entities.
-type OrganizationQuery struct {
+// ChannelQuery is the builder for querying Channel entities.
+type ChannelQuery struct {
 	config
-	ctx             *QueryContext
-	order           []organization.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.Organization
-	withMemberships *MembershipQuery
-	withChannels    *ChannelQuery
+	ctx              *QueryContext
+	order            []channel.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.Channel
+	withOrganization *OrganizationQuery
+	withCreatedBy    *UserQuery
+	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the OrganizationQuery builder.
-func (_q *OrganizationQuery) Where(ps ...predicate.Organization) *OrganizationQuery {
+// Where adds a new predicate for the ChannelQuery builder.
+func (_q *ChannelQuery) Where(ps ...predicate.Channel) *ChannelQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *OrganizationQuery) Limit(limit int) *OrganizationQuery {
+func (_q *ChannelQuery) Limit(limit int) *ChannelQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *OrganizationQuery) Offset(offset int) *OrganizationQuery {
+func (_q *ChannelQuery) Offset(offset int) *ChannelQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *OrganizationQuery) Unique(unique bool) *OrganizationQuery {
+func (_q *ChannelQuery) Unique(unique bool) *ChannelQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *OrganizationQuery) Order(o ...organization.OrderOption) *OrganizationQuery {
+func (_q *ChannelQuery) Order(o ...channel.OrderOption) *ChannelQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryMemberships chains the current query on the "memberships" edge.
-func (_q *OrganizationQuery) QueryMemberships() *MembershipQuery {
-	query := (&MembershipClient{config: _q.config}).Query()
+// QueryOrganization chains the current query on the "organization" edge.
+func (_q *ChannelQuery) QueryOrganization() *OrganizationQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -76,9 +76,9 @@ func (_q *OrganizationQuery) QueryMemberships() *MembershipQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, selector),
-			sqlgraph.To(membership.Table, membership.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.MembershipsTable, organization.MembershipsColumn),
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, channel.OrganizationTable, channel.OrganizationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -86,9 +86,9 @@ func (_q *OrganizationQuery) QueryMemberships() *MembershipQuery {
 	return query
 }
 
-// QueryChannels chains the current query on the "channels" edge.
-func (_q *OrganizationQuery) QueryChannels() *ChannelQuery {
-	query := (&ChannelClient{config: _q.config}).Query()
+// QueryCreatedBy chains the current query on the "created_by" edge.
+func (_q *ChannelQuery) QueryCreatedBy() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -98,9 +98,9 @@ func (_q *OrganizationQuery) QueryChannels() *ChannelQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, selector),
-			sqlgraph.To(channel.Table, channel.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.ChannelsTable, organization.ChannelsColumn),
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, channel.CreatedByTable, channel.CreatedByColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -108,21 +108,21 @@ func (_q *OrganizationQuery) QueryChannels() *ChannelQuery {
 	return query
 }
 
-// First returns the first Organization entity from the query.
-// Returns a *NotFoundError when no Organization was found.
-func (_q *OrganizationQuery) First(ctx context.Context) (*Organization, error) {
+// First returns the first Channel entity from the query.
+// Returns a *NotFoundError when no Channel was found.
+func (_q *ChannelQuery) First(ctx context.Context) (*Channel, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{organization.Label}
+		return nil, &NotFoundError{channel.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *OrganizationQuery) FirstX(ctx context.Context) *Organization {
+func (_q *ChannelQuery) FirstX(ctx context.Context) *Channel {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -130,22 +130,22 @@ func (_q *OrganizationQuery) FirstX(ctx context.Context) *Organization {
 	return node
 }
 
-// FirstID returns the first Organization ID from the query.
-// Returns a *NotFoundError when no Organization ID was found.
-func (_q *OrganizationQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first Channel ID from the query.
+// Returns a *NotFoundError when no Channel ID was found.
+func (_q *ChannelQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{organization.Label}
+		err = &NotFoundError{channel.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *OrganizationQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *ChannelQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -153,10 +153,10 @@ func (_q *OrganizationQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Organization entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Organization entity is found.
-// Returns a *NotFoundError when no Organization entities are found.
-func (_q *OrganizationQuery) Only(ctx context.Context) (*Organization, error) {
+// Only returns a single Channel entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Channel entity is found.
+// Returns a *NotFoundError when no Channel entities are found.
+func (_q *ChannelQuery) Only(ctx context.Context) (*Channel, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -165,14 +165,14 @@ func (_q *OrganizationQuery) Only(ctx context.Context) (*Organization, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{organization.Label}
+		return nil, &NotFoundError{channel.Label}
 	default:
-		return nil, &NotSingularError{organization.Label}
+		return nil, &NotSingularError{channel.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *OrganizationQuery) OnlyX(ctx context.Context) *Organization {
+func (_q *ChannelQuery) OnlyX(ctx context.Context) *Channel {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -180,10 +180,10 @@ func (_q *OrganizationQuery) OnlyX(ctx context.Context) *Organization {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Organization ID in the query.
-// Returns a *NotSingularError when more than one Organization ID is found.
+// OnlyID is like Only, but returns the only Channel ID in the query.
+// Returns a *NotSingularError when more than one Channel ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *OrganizationQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *ChannelQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -192,15 +192,15 @@ func (_q *OrganizationQuery) OnlyID(ctx context.Context) (id uuid.UUID, err erro
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{organization.Label}
+		err = &NotFoundError{channel.Label}
 	default:
-		err = &NotSingularError{organization.Label}
+		err = &NotSingularError{channel.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *OrganizationQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *ChannelQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -208,18 +208,18 @@ func (_q *OrganizationQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Organizations.
-func (_q *OrganizationQuery) All(ctx context.Context) ([]*Organization, error) {
+// All executes the query and returns a list of Channels.
+func (_q *ChannelQuery) All(ctx context.Context) ([]*Channel, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Organization, *OrganizationQuery]()
-	return withInterceptors[[]*Organization](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Channel, *ChannelQuery]()
+	return withInterceptors[[]*Channel](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *OrganizationQuery) AllX(ctx context.Context) []*Organization {
+func (_q *ChannelQuery) AllX(ctx context.Context) []*Channel {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -227,20 +227,20 @@ func (_q *OrganizationQuery) AllX(ctx context.Context) []*Organization {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Organization IDs.
-func (_q *OrganizationQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of Channel IDs.
+func (_q *ChannelQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(organization.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(channel.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *OrganizationQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *ChannelQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -249,16 +249,16 @@ func (_q *OrganizationQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *OrganizationQuery) Count(ctx context.Context) (int, error) {
+func (_q *ChannelQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*OrganizationQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ChannelQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *OrganizationQuery) CountX(ctx context.Context) int {
+func (_q *ChannelQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -267,7 +267,7 @@ func (_q *OrganizationQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *OrganizationQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *ChannelQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -280,7 +280,7 @@ func (_q *OrganizationQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *OrganizationQuery) ExistX(ctx context.Context) bool {
+func (_q *ChannelQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -288,45 +288,45 @@ func (_q *OrganizationQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the OrganizationQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the ChannelQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *OrganizationQuery) Clone() *OrganizationQuery {
+func (_q *ChannelQuery) Clone() *ChannelQuery {
 	if _q == nil {
 		return nil
 	}
-	return &OrganizationQuery{
-		config:          _q.config,
-		ctx:             _q.ctx.Clone(),
-		order:           append([]organization.OrderOption{}, _q.order...),
-		inters:          append([]Interceptor{}, _q.inters...),
-		predicates:      append([]predicate.Organization{}, _q.predicates...),
-		withMemberships: _q.withMemberships.Clone(),
-		withChannels:    _q.withChannels.Clone(),
+	return &ChannelQuery{
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]channel.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.Channel{}, _q.predicates...),
+		withOrganization: _q.withOrganization.Clone(),
+		withCreatedBy:    _q.withCreatedBy.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithMemberships tells the query-builder to eager-load the nodes that are connected to
-// the "memberships" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *OrganizationQuery) WithMemberships(opts ...func(*MembershipQuery)) *OrganizationQuery {
-	query := (&MembershipClient{config: _q.config}).Query()
+// WithOrganization tells the query-builder to eager-load the nodes that are connected to
+// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithOrganization(opts ...func(*OrganizationQuery)) *ChannelQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withMemberships = query
+	_q.withOrganization = query
 	return _q
 }
 
-// WithChannels tells the query-builder to eager-load the nodes that are connected to
-// the "channels" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *OrganizationQuery) WithChannels(opts ...func(*ChannelQuery)) *OrganizationQuery {
-	query := (&ChannelClient{config: _q.config}).Query()
+// WithCreatedBy tells the query-builder to eager-load the nodes that are connected to
+// the "created_by" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithCreatedBy(opts ...func(*UserQuery)) *ChannelQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withChannels = query
+	_q.withCreatedBy = query
 	return _q
 }
 
@@ -340,15 +340,15 @@ func (_q *OrganizationQuery) WithChannels(opts ...func(*ChannelQuery)) *Organiza
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Organization.Query().
-//		GroupBy(organization.FieldCreatedAt).
+//	client.Channel.Query().
+//		GroupBy(channel.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *OrganizationQuery) GroupBy(field string, fields ...string) *OrganizationGroupBy {
+func (_q *ChannelQuery) GroupBy(field string, fields ...string) *ChannelGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &OrganizationGroupBy{build: _q}
+	grbuild := &ChannelGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = organization.Label
+	grbuild.label = channel.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -362,23 +362,23 @@ func (_q *OrganizationQuery) GroupBy(field string, fields ...string) *Organizati
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.Organization.Query().
-//		Select(organization.FieldCreatedAt).
+//	client.Channel.Query().
+//		Select(channel.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *OrganizationQuery) Select(fields ...string) *OrganizationSelect {
+func (_q *ChannelQuery) Select(fields ...string) *ChannelSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &OrganizationSelect{OrganizationQuery: _q}
-	sbuild.label = organization.Label
+	sbuild := &ChannelSelect{ChannelQuery: _q}
+	sbuild.label = channel.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a OrganizationSelect configured with the given aggregations.
-func (_q *OrganizationQuery) Aggregate(fns ...AggregateFunc) *OrganizationSelect {
+// Aggregate returns a ChannelSelect configured with the given aggregations.
+func (_q *ChannelQuery) Aggregate(fns ...AggregateFunc) *ChannelSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *OrganizationQuery) prepareQuery(ctx context.Context) error {
+func (_q *ChannelQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -390,7 +390,7 @@ func (_q *OrganizationQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !organization.ValidColumn(f) {
+		if !channel.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -404,20 +404,27 @@ func (_q *OrganizationQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Organization, error) {
+func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Channel, error) {
 	var (
-		nodes       = []*Organization{}
+		nodes       = []*Channel{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			_q.withMemberships != nil,
-			_q.withChannels != nil,
+			_q.withOrganization != nil,
+			_q.withCreatedBy != nil,
 		}
 	)
+	if _q.withOrganization != nil || _q.withCreatedBy != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, channel.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Organization).scanValues(nil, columns)
+		return (*Channel).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Organization{config: _q.config}
+		node := &Channel{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -431,87 +438,87 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withMemberships; query != nil {
-		if err := _q.loadMemberships(ctx, query, nodes,
-			func(n *Organization) { n.Edges.Memberships = []*Membership{} },
-			func(n *Organization, e *Membership) { n.Edges.Memberships = append(n.Edges.Memberships, e) }); err != nil {
+	if query := _q.withOrganization; query != nil {
+		if err := _q.loadOrganization(ctx, query, nodes, nil,
+			func(n *Channel, e *Organization) { n.Edges.Organization = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := _q.withChannels; query != nil {
-		if err := _q.loadChannels(ctx, query, nodes,
-			func(n *Organization) { n.Edges.Channels = []*Channel{} },
-			func(n *Organization, e *Channel) { n.Edges.Channels = append(n.Edges.Channels, e) }); err != nil {
+	if query := _q.withCreatedBy; query != nil {
+		if err := _q.loadCreatedBy(ctx, query, nodes, nil,
+			func(n *Channel, e *User) { n.Edges.CreatedBy = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *OrganizationQuery) loadMemberships(ctx context.Context, query *MembershipQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *Membership)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Organization)
+func (_q *ChannelQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *Organization)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Channel)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].organization_channels == nil {
+			continue
 		}
+		fk := *nodes[i].organization_channels
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Membership(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(organization.MembershipsColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(organization.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.organization_memberships
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "organization_memberships" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "organization_memberships" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "organization_channels" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
-func (_q *OrganizationQuery) loadChannels(ctx context.Context, query *ChannelQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *Channel)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Organization)
+func (_q *ChannelQuery) loadCreatedBy(ctx context.Context, query *UserQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Channel)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].user_created_channels == nil {
+			continue
 		}
+		fk := *nodes[i].user_created_channels
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Channel(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(organization.ChannelsColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.organization_channels
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "organization_channels" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "organization_channels" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_created_channels" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
 
-func (_q *OrganizationQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *ChannelQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -520,8 +527,8 @@ func (_q *OrganizationQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *OrganizationQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(organization.Table, organization.Columns, sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID))
+func (_q *ChannelQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -530,9 +537,9 @@ func (_q *OrganizationQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, organization.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, channel.FieldID)
 		for i := range fields {
-			if fields[i] != organization.FieldID {
+			if fields[i] != channel.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -560,12 +567,12 @@ func (_q *OrganizationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *OrganizationQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *ChannelQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(organization.Table)
+	t1 := builder.Table(channel.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = organization.Columns
+		columns = channel.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -592,28 +599,28 @@ func (_q *OrganizationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// OrganizationGroupBy is the group-by builder for Organization entities.
-type OrganizationGroupBy struct {
+// ChannelGroupBy is the group-by builder for Channel entities.
+type ChannelGroupBy struct {
 	selector
-	build *OrganizationQuery
+	build *ChannelQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *OrganizationGroupBy) Aggregate(fns ...AggregateFunc) *OrganizationGroupBy {
+func (_g *ChannelGroupBy) Aggregate(fns ...AggregateFunc) *ChannelGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *OrganizationGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *ChannelGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*OrganizationQuery, *OrganizationGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*ChannelQuery, *ChannelGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *OrganizationGroupBy) sqlScan(ctx context.Context, root *OrganizationQuery, v any) error {
+func (_g *ChannelGroupBy) sqlScan(ctx context.Context, root *ChannelQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -640,28 +647,28 @@ func (_g *OrganizationGroupBy) sqlScan(ctx context.Context, root *OrganizationQu
 	return sql.ScanSlice(rows, v)
 }
 
-// OrganizationSelect is the builder for selecting fields of Organization entities.
-type OrganizationSelect struct {
-	*OrganizationQuery
+// ChannelSelect is the builder for selecting fields of Channel entities.
+type ChannelSelect struct {
+	*ChannelQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *OrganizationSelect) Aggregate(fns ...AggregateFunc) *OrganizationSelect {
+func (_s *ChannelSelect) Aggregate(fns ...AggregateFunc) *ChannelSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *OrganizationSelect) Scan(ctx context.Context, v any) error {
+func (_s *ChannelSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*OrganizationQuery, *OrganizationSelect](ctx, _s.OrganizationQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*ChannelQuery, *ChannelSelect](ctx, _s.ChannelQuery, _s, _s.inters, v)
 }
 
-func (_s *OrganizationSelect) sqlScan(ctx context.Context, root *OrganizationQuery, v any) error {
+func (_s *ChannelSelect) sqlScan(ctx context.Context, root *ChannelQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

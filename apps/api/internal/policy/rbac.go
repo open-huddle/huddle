@@ -36,6 +36,8 @@ func NewRBAC(client *ent.Client) *RBAC {
 var permissions = map[Action]map[membership.Role]bool{
 	ActionReadOrganization: {membership.RoleMember: true, membership.RoleAdmin: true, membership.RoleOwner: true},
 	ActionAddMember:        {membership.RoleAdmin: true, membership.RoleOwner: true},
+	ActionCreateChannel:    {membership.RoleMember: true, membership.RoleAdmin: true, membership.RoleOwner: true},
+	ActionReadChannel:      {membership.RoleMember: true, membership.RoleAdmin: true, membership.RoleOwner: true},
 }
 
 func (r *RBAC) Authorize(ctx context.Context, principalID uuid.UUID, action Action, resource Resource) error {
@@ -43,7 +45,7 @@ func (r *RBAC) Authorize(ctx context.Context, principalID uuid.UUID, action Acti
 	case ActionCreateOrganization:
 		// Any authenticated user can found an organization. No resource lookup.
 		return nil
-	case ActionReadOrganization, ActionAddMember:
+	case ActionReadOrganization, ActionAddMember, ActionCreateChannel, ActionReadChannel:
 		if resource.OrganizationID == uuid.Nil {
 			return fmt.Errorf("%w: %s requires an organization id", ErrDenied, action)
 		}

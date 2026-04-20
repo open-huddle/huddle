@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/schema"
@@ -16,6 +17,35 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	channelMixin := schema.Channel{}.Mixin()
+	channelMixinFields0 := channelMixin[0].Fields()
+	_ = channelMixinFields0
+	channelMixinFields1 := channelMixin[1].Fields()
+	_ = channelMixinFields1
+	channelFields := schema.Channel{}.Fields()
+	_ = channelFields
+	// channelDescCreatedAt is the schema descriptor for created_at field.
+	channelDescCreatedAt := channelMixinFields1[0].Descriptor()
+	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
+	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
+	// channelDescUpdatedAt is the schema descriptor for updated_at field.
+	channelDescUpdatedAt := channelMixinFields1[1].Descriptor()
+	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(func() time.Time)
+	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// channelDescName is the schema descriptor for name field.
+	channelDescName := channelFields[0].Descriptor()
+	// channel.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	channel.NameValidator = channelDescName.Validators[0].(func(string) error)
+	// channelDescSlug is the schema descriptor for slug field.
+	channelDescSlug := channelFields[1].Descriptor()
+	// channel.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
+	channel.SlugValidator = channelDescSlug.Validators[0].(func(string) error)
+	// channelDescID is the schema descriptor for id field.
+	channelDescID := channelMixinFields0[0].Descriptor()
+	// channel.DefaultID holds the default value on creation for the id field.
+	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
 	membershipMixin := schema.Membership{}.Mixin()
 	membershipMixinFields0 := membershipMixin[0].Fields()
 	_ = membershipMixinFields0

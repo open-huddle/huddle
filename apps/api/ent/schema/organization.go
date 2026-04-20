@@ -24,5 +24,6 @@ func (Organization) Fields() []ent.Field {
 func (Organization) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("memberships", Membership.Type),
+		edge.To("channels", Channel.Type),
 	}
 }

@@ -8,6 +8,45 @@ import (
 )
 
 var (
+	// ChannelsColumns holds the columns for the "channels" table.
+	ChannelsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "slug", Type: field.TypeString},
+		{Name: "topic", Type: field.TypeString, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "organization_channels", Type: field.TypeUUID},
+		{Name: "user_created_channels", Type: field.TypeUUID, Nullable: true},
+	}
+	// ChannelsTable holds the schema information for the "channels" table.
+	ChannelsTable = &schema.Table{
+		Name:       "channels",
+		Columns:    ChannelsColumns,
+		PrimaryKey: []*schema.Column{ChannelsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "channels_organizations_channels",
+				Columns:    []*schema.Column{ChannelsColumns[7]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "channels_users_created_channels",
+				Columns:    []*schema.Column{ChannelsColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "channel_slug_organization_channels",
+				Unique:  true,
+				Columns: []*schema.Column{ChannelsColumns[4], ChannelsColumns[7]},
+			},
+		},
+	}
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -82,6 +121,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ChannelsTable,
 		MembershipsTable,
 		OrganizationsTable,
 		UsersTable,
@@ -89,6 +129,8 @@ var (
 )
 
 func init() {
+	ChannelsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	ChannelsTable.ForeignKeys[1].RefTable = UsersTable
 	MembershipsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	MembershipsTable.ForeignKeys[1].RefTable = UsersTable
 }

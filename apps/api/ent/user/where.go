@@ -389,6 +389,29 @@ func HasMembershipsWith(preds ...predicate.Membership) predicate.User {
 	})
 }
 
+// HasCreatedChannels applies the HasEdge predicate on the "created_channels" edge.
+func HasCreatedChannels() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CreatedChannelsTable, CreatedChannelsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCreatedChannelsWith applies the HasEdge predicate on the "created_channels" edge with a given conditions (other predicates).
+func HasCreatedChannelsWith(preds ...predicate.Channel) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCreatedChannelsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

@@ -17,6 +17,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
+	"github.com/open-huddle/huddle/apps/api/internal/services/channel"
 	"github.com/open-huddle/huddle/apps/api/internal/services/health"
 	"github.com/open-huddle/huddle/apps/api/internal/services/identity"
 	"github.com/open-huddle/huddle/apps/api/internal/services/organization"
@@ -74,6 +75,11 @@ func (s *Server) routes() {
 	{
 		svc := organization.New(s.db.Ent, s.resolver, s.authz, s.logger)
 		path, handler := huddlev1connect.NewOrganizationServiceHandler(svc, authInt)
+		s.router.Mount(path, handler)
+	}
+	{
+		svc := channel.New(s.db.Ent, s.resolver, s.authz, s.logger)
+		path, handler := huddlev1connect.NewChannelServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}
 }
