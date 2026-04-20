@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/open-huddle/huddle/apps/api/internal/config"
+	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
 )
 
@@ -24,7 +25,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv := server.New(cfg, logger)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	db, err := database.Open(connectCtx, database.Config{
+		URL:             cfg.Database.URL,
+		MaxOpenConns:    cfg.Database.MaxOpenConns,
+		MaxIdleConns:    cfg.Database.MaxIdleConns,
+		ConnMaxLifetime: cfg.Database.ConnMaxLifetime,
+		ConnMaxIdleTime: cfg.Database.ConnMaxIdleTime,
+	})
+	cancel()
+	if err != nil {
+		logger.Error("connect database", "err", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("close database", "err", err)
+		}
+	}()
+
+	srv := server.New(cfg, logger, db)
 
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,
@@ -40,8 +63,6 @@ func main() {
 		}
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 	<-ctx.Done()
 
 	logger.Info("shutting down")

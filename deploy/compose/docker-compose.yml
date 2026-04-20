@@ -1,7 +1,10 @@
 # Local dev dependencies only. Full production topology lives in Helm charts.
 services:
   postgres:
-    image: postgres:18.3-alpine
+    # Keep this in lockstep with the dev-diff container in apps/api/scripts/migrate-diff.sh.
+    # Both read POSTGRES_IMAGE from the environment (set by the Makefile) so a single
+    # bump updates compose + migration diffs together.
+    image: ${POSTGRES_IMAGE:-postgres:18.3-alpine}
     restart: unless-stopped
     environment:
       POSTGRES_USER: huddle

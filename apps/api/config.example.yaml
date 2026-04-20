@@ -6,6 +6,12 @@ version: "dev"
 
 database:
   url: "postgres://huddle:huddle@localhost:5432/huddle?sslmode=disable"
+  # Pool sizing. Tune per deployment based on Postgres max_connections and
+  # the number of API replicas.
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 30m
+  conn_max_idle_time: 5m
 
 valkey:
   url: "redis://localhost:6379"

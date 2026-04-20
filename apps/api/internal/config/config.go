@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -14,8 +15,15 @@ type Config struct {
 	Valkey   Valkey   `mapstructure:"valkey"`
 }
 
+// Database controls the Postgres client. Pool settings default to values that
+// are safe for a single API replica sharing a Postgres with other services;
+// operators tune them per-deployment.
 type Database struct {
-	URL string `mapstructure:"url"`
+	URL             string        `mapstructure:"url"`
+	MaxOpenConns    int           `mapstructure:"max_open_conns"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
+	ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time"`
 }
 
 type Valkey struct {
@@ -32,6 +40,10 @@ func Load() (*Config, error) {
 	v.SetDefault("addr", ":8080")
 	v.SetDefault("version", "dev")
 	v.SetDefault("database.url", "postgres://huddle:huddle@localhost:5432/huddle?sslmode=disable")
+	v.SetDefault("database.max_open_conns", 25)
+	v.SetDefault("database.max_idle_conns", 5)
+	v.SetDefault("database.conn_max_lifetime", 30*time.Minute)
+	v.SetDefault("database.conn_max_idle_time", 5*time.Minute)
 	v.SetDefault("valkey.url", "redis://localhost:6379")
 
 	v.SetConfigName("config")
