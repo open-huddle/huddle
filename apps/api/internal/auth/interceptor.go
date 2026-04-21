@@ -34,7 +34,7 @@ func bearerFromHeader(h string) (string, error) {
 	}
 	const prefix = "Bearer "
 	if len(h) <= len(prefix) || !strings.EqualFold(h[:len(prefix)], prefix) {
-		return "", errors.New("Authorization header is not a Bearer token")
+		return "", errors.New("authorization header is not a Bearer token")
 	}
 	return strings.TrimSpace(h[len(prefix):]), nil
 }

@@ -24,13 +24,13 @@ import (
 )
 
 type Server struct {
-	cfg       *config.Config
-	logger    *slog.Logger
-	db        *database.DB
-	verifier  *auth.Verifier
-	resolver  *principal.Resolver
-	authz     policy.Engine
-	router    *chi.Mux
+	cfg      *config.Config
+	logger   *slog.Logger
+	db       *database.DB
+	verifier *auth.Verifier
+	resolver *principal.Resolver
+	authz    policy.Engine
+	router   *chi.Mux
 }
 
 func New(cfg *config.Config, logger *slog.Logger, db *database.DB, verifier *auth.Verifier) *Server {

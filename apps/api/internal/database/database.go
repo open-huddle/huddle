@@ -8,6 +8,8 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
+
+	// pgx/stdlib registers the "pgx" driver with database/sql.
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/open-huddle/huddle/apps/api/ent"

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,10 +21,18 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
+	if err := run(logger); err != nil {
+		logger.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+// run wraps the startup/shutdown sequence so all defers (signal stop, DB close,
+// context cancels) run before os.Exit — os.Exit skips them if called inline.
+func run(logger *slog.Logger) error {
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("load config", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("load config: %w", err)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -39,8 +48,7 @@ func main() {
 	})
 	cancel()
 	if err != nil {
-		logger.Error("connect database", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
@@ -55,8 +63,7 @@ func main() {
 	verifier, err := auth.NewVerifier(verifyCtx, cfg.Auth.IssuerURL, cfg.Auth.Audience)
 	vcancel()
 	if err != nil {
-		logger.Error("init oidc verifier", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("init oidc verifier: %w", err)
 	}
 
 	srv := server.New(cfg, logger, db, verifier)
@@ -67,20 +74,27 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
+	serveErr := make(chan error, 1)
 	go func() {
 		logger.Info("api listening", "addr", cfg.Addr)
 		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("listen", "err", err)
-			os.Exit(1)
+			serveErr <- err
+			return
 		}
+		serveErr <- nil
 	}()
 
-	<-ctx.Done()
+	select {
+	case err := <-serveErr:
+		return fmt.Errorf("listen: %w", err)
+	case <-ctx.Done():
+	}
 
 	logger.Info("shutting down")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
+	shutdownCtx, scancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer scancel()
 	if err := httpSrv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("shutdown", "err", err)
+		return fmt.Errorf("shutdown: %w", err)
 	}
+	return nil
 }

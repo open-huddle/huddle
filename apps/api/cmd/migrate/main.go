@@ -15,6 +15,7 @@ import (
 	atlasmigrate "ariga.io/atlas/sql/migrate"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql/schema"
+
 	// Ent's NamedDiff calls sql.Open("postgres", url) with the driver name
 	// hardcoded. The runtime API uses pgx (in internal/database), but the diff
 	// tool needs something registered under "postgres" — lib/pq is the only

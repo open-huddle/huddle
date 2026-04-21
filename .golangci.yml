@@ -27,6 +27,13 @@ linters:
         linters:
           - gosec
           - unparam
+      # revive's exported / package-comments rules want a doc comment on every
+      # exported identifier. Useful on a library, noisy on an internal app —
+      # we rely on identifier names + package READMEs instead. Other revive
+      # rules (blank-imports, error-strings, unused-parameter, ...) stay on.
+      - linters:
+          - revive
+        text: "should have comment( or be unexported)?|package-comments"
 
 formatters:
   enable:
