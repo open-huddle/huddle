@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AuditEvent is the client for interacting with the AuditEvent builders.
+	AuditEvent *AuditEventClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// Membership is the client for interacting with the Membership builders.
@@ -20,6 +22,8 @@ type Tx struct {
 	Message *MessageClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
+	// OutboxEvent is the client for interacting with the OutboxEvent builders.
+	OutboxEvent *OutboxEventClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -153,10 +157,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AuditEvent = NewAuditEventClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
 	tx.Membership = NewMembershipClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
+	tx.OutboxEvent = NewOutboxEventClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 
@@ -167,7 +173,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Channel.QueryXXX(), the query will be executed
+// applies a query, for example: AuditEvent.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

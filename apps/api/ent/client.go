@@ -16,10 +16,12 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/open-huddle/huddle/apps/api/ent/auditevent"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
+	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
 
@@ -28,6 +30,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AuditEvent is the client for interacting with the AuditEvent builders.
+	AuditEvent *AuditEventClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// Membership is the client for interacting with the Membership builders.
@@ -36,6 +40,8 @@ type Client struct {
 	Message *MessageClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
+	// OutboxEvent is the client for interacting with the OutboxEvent builders.
+	OutboxEvent *OutboxEventClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -49,10 +55,12 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AuditEvent = NewAuditEventClient(c.config)
 	c.Channel = NewChannelClient(c.config)
 	c.Membership = NewMembershipClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
+	c.OutboxEvent = NewOutboxEventClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -146,10 +154,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		AuditEvent:   NewAuditEventClient(cfg),
 		Channel:      NewChannelClient(cfg),
 		Membership:   NewMembershipClient(cfg),
 		Message:      NewMessageClient(cfg),
 		Organization: NewOrganizationClient(cfg),
+		OutboxEvent:  NewOutboxEventClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
 }
@@ -170,10 +180,12 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		AuditEvent:   NewAuditEventClient(cfg),
 		Channel:      NewChannelClient(cfg),
 		Membership:   NewMembershipClient(cfg),
 		Message:      NewMessageClient(cfg),
 		Organization: NewOrganizationClient(cfg),
+		OutboxEvent:  NewOutboxEventClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
 }
@@ -181,7 +193,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Channel.
+//		AuditEvent.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -203,26 +215,30 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Channel.Use(hooks...)
-	c.Membership.Use(hooks...)
-	c.Message.Use(hooks...)
-	c.Organization.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.AuditEvent, c.Channel, c.Membership, c.Message, c.Organization, c.OutboxEvent,
+		c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Channel.Intercept(interceptors...)
-	c.Membership.Intercept(interceptors...)
-	c.Message.Intercept(interceptors...)
-	c.Organization.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.AuditEvent, c.Channel, c.Membership, c.Message, c.Organization, c.OutboxEvent,
+		c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AuditEventMutation:
+		return c.AuditEvent.mutate(ctx, m)
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
 	case *MembershipMutation:
@@ -231,10 +247,161 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Message.mutate(ctx, m)
 	case *OrganizationMutation:
 		return c.Organization.mutate(ctx, m)
+	case *OutboxEventMutation:
+		return c.OutboxEvent.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AuditEventClient is a client for the AuditEvent schema.
+type AuditEventClient struct {
+	config
+}
+
+// NewAuditEventClient returns a client for the AuditEvent from the given config.
+func NewAuditEventClient(c config) *AuditEventClient {
+	return &AuditEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `auditevent.Hooks(f(g(h())))`.
+func (c *AuditEventClient) Use(hooks ...Hook) {
+	c.hooks.AuditEvent = append(c.hooks.AuditEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `auditevent.Intercept(f(g(h())))`.
+func (c *AuditEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AuditEvent = append(c.inters.AuditEvent, interceptors...)
+}
+
+// Create returns a builder for creating a AuditEvent entity.
+func (c *AuditEventClient) Create() *AuditEventCreate {
+	mutation := newAuditEventMutation(c.config, OpCreate)
+	return &AuditEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AuditEvent entities.
+func (c *AuditEventClient) CreateBulk(builders ...*AuditEventCreate) *AuditEventCreateBulk {
+	return &AuditEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AuditEventClient) MapCreateBulk(slice any, setFunc func(*AuditEventCreate, int)) *AuditEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AuditEventCreateBulk{err: fmt.Errorf("calling to AuditEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AuditEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AuditEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AuditEvent.
+func (c *AuditEventClient) Update() *AuditEventUpdate {
+	mutation := newAuditEventMutation(c.config, OpUpdate)
+	return &AuditEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AuditEventClient) UpdateOne(_m *AuditEvent) *AuditEventUpdateOne {
+	mutation := newAuditEventMutation(c.config, OpUpdateOne, withAuditEvent(_m))
+	return &AuditEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AuditEventClient) UpdateOneID(id uuid.UUID) *AuditEventUpdateOne {
+	mutation := newAuditEventMutation(c.config, OpUpdateOne, withAuditEventID(id))
+	return &AuditEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AuditEvent.
+func (c *AuditEventClient) Delete() *AuditEventDelete {
+	mutation := newAuditEventMutation(c.config, OpDelete)
+	return &AuditEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AuditEventClient) DeleteOne(_m *AuditEvent) *AuditEventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AuditEventClient) DeleteOneID(id uuid.UUID) *AuditEventDeleteOne {
+	builder := c.Delete().Where(auditevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AuditEventDeleteOne{builder}
+}
+
+// Query returns a query builder for AuditEvent.
+func (c *AuditEventClient) Query() *AuditEventQuery {
+	return &AuditEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAuditEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AuditEvent entity by its id.
+func (c *AuditEventClient) Get(ctx context.Context, id uuid.UUID) (*AuditEvent, error) {
+	return c.Query().Where(auditevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AuditEventClient) GetX(ctx context.Context, id uuid.UUID) *AuditEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOutboxEvent queries the outbox_event edge of a AuditEvent.
+func (c *AuditEventClient) QueryOutboxEvent(_m *AuditEvent) *OutboxEventQuery {
+	query := (&OutboxEventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(auditevent.Table, auditevent.FieldID, id),
+			sqlgraph.To(outboxevent.Table, outboxevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, auditevent.OutboxEventTable, auditevent.OutboxEventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AuditEventClient) Hooks() []Hook {
+	return c.hooks.AuditEvent
+}
+
+// Interceptors returns the client interceptors.
+func (c *AuditEventClient) Interceptors() []Interceptor {
+	return c.inters.AuditEvent
+}
+
+func (c *AuditEventClient) mutate(ctx context.Context, m *AuditEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AuditEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AuditEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AuditEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AuditEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AuditEvent mutation op: %q", m.Op())
 	}
 }
 
@@ -914,6 +1081,155 @@ func (c *OrganizationClient) mutate(ctx context.Context, m *OrganizationMutation
 	}
 }
 
+// OutboxEventClient is a client for the OutboxEvent schema.
+type OutboxEventClient struct {
+	config
+}
+
+// NewOutboxEventClient returns a client for the OutboxEvent from the given config.
+func NewOutboxEventClient(c config) *OutboxEventClient {
+	return &OutboxEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `outboxevent.Hooks(f(g(h())))`.
+func (c *OutboxEventClient) Use(hooks ...Hook) {
+	c.hooks.OutboxEvent = append(c.hooks.OutboxEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `outboxevent.Intercept(f(g(h())))`.
+func (c *OutboxEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OutboxEvent = append(c.inters.OutboxEvent, interceptors...)
+}
+
+// Create returns a builder for creating a OutboxEvent entity.
+func (c *OutboxEventClient) Create() *OutboxEventCreate {
+	mutation := newOutboxEventMutation(c.config, OpCreate)
+	return &OutboxEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OutboxEvent entities.
+func (c *OutboxEventClient) CreateBulk(builders ...*OutboxEventCreate) *OutboxEventCreateBulk {
+	return &OutboxEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OutboxEventClient) MapCreateBulk(slice any, setFunc func(*OutboxEventCreate, int)) *OutboxEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OutboxEventCreateBulk{err: fmt.Errorf("calling to OutboxEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OutboxEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OutboxEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OutboxEvent.
+func (c *OutboxEventClient) Update() *OutboxEventUpdate {
+	mutation := newOutboxEventMutation(c.config, OpUpdate)
+	return &OutboxEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OutboxEventClient) UpdateOne(_m *OutboxEvent) *OutboxEventUpdateOne {
+	mutation := newOutboxEventMutation(c.config, OpUpdateOne, withOutboxEvent(_m))
+	return &OutboxEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OutboxEventClient) UpdateOneID(id uuid.UUID) *OutboxEventUpdateOne {
+	mutation := newOutboxEventMutation(c.config, OpUpdateOne, withOutboxEventID(id))
+	return &OutboxEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OutboxEvent.
+func (c *OutboxEventClient) Delete() *OutboxEventDelete {
+	mutation := newOutboxEventMutation(c.config, OpDelete)
+	return &OutboxEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OutboxEventClient) DeleteOne(_m *OutboxEvent) *OutboxEventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OutboxEventClient) DeleteOneID(id uuid.UUID) *OutboxEventDeleteOne {
+	builder := c.Delete().Where(outboxevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OutboxEventDeleteOne{builder}
+}
+
+// Query returns a query builder for OutboxEvent.
+func (c *OutboxEventClient) Query() *OutboxEventQuery {
+	return &OutboxEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOutboxEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OutboxEvent entity by its id.
+func (c *OutboxEventClient) Get(ctx context.Context, id uuid.UUID) (*OutboxEvent, error) {
+	return c.Query().Where(outboxevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OutboxEventClient) GetX(ctx context.Context, id uuid.UUID) *OutboxEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAuditEvent queries the audit_event edge of a OutboxEvent.
+func (c *OutboxEventClient) QueryAuditEvent(_m *OutboxEvent) *AuditEventQuery {
+	query := (&AuditEventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(outboxevent.Table, outboxevent.FieldID, id),
+			sqlgraph.To(auditevent.Table, auditevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, outboxevent.AuditEventTable, outboxevent.AuditEventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OutboxEventClient) Hooks() []Hook {
+	return c.hooks.OutboxEvent
+}
+
+// Interceptors returns the client interceptors.
+func (c *OutboxEventClient) Interceptors() []Interceptor {
+	return c.inters.OutboxEvent
+}
+
+func (c *OutboxEventClient) mutate(ctx context.Context, m *OutboxEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OutboxEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OutboxEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OutboxEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OutboxEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OutboxEvent mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -1098,9 +1414,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Channel, Membership, Message, Organization, User []ent.Hook
+		AuditEvent, Channel, Membership, Message, Organization, OutboxEvent,
+		User []ent.Hook
 	}
 	inters struct {
-		Channel, Membership, Message, Organization, User []ent.Interceptor
+		AuditEvent, Channel, Membership, Message, Organization, OutboxEvent,
+		User []ent.Interceptor
 	}
 )

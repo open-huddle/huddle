@@ -15,15 +15,21 @@ import (
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
+// SubjectMessageCreated returns the NATS subject for a "message created"
+// event on the given channel. Exposed so the outbox-writer and subscribers
+// agree on the wire shape without duplicating the format string.
+func SubjectMessageCreated(channelID uuid.UUID) string {
+	return "huddle.messages.created." + channelID.String()
+}
+
 // Publisher fans out domain events. Implementations should be safe for
 // concurrent use.
+//
+// The caller owns serialization: the payload is the exact byte stream
+// subscribers will decode. Keeps the interface narrow enough to swap NATS
+// for Kafka / in-memory / a CDC bridge without touching domain code.
 type Publisher interface {
-	// PublishMessageCreated emits a "message created" event for the channel.
-	// The call is best-effort: a failed publish must not roll back the
-	// originating database write. Phase 2c relies on the database as the
-	// source of truth and treats the bus as a fast path for live clients;
-	// later phases (Debezium CDC) will deliver durable replay.
-	PublishMessageCreated(ctx context.Context, msg *huddlev1.Message) error
+	Publish(ctx context.Context, subject string, payload []byte) error
 }
 
 // Subscriber feeds events from the bus into per-call channels. The returned

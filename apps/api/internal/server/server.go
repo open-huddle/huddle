@@ -87,7 +87,7 @@ func (s *Server) routes() {
 		s.router.Mount(path, handler)
 	}
 	{
-		svc := message.New(s.db.Ent, s.resolver, s.authz, s.bus, s.bus, s.logger)
+		svc := message.New(s.db.Ent, s.resolver, s.authz, s.bus, s.logger)
 		path, handler := huddlev1connect.NewMessageServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}

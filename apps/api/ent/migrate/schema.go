@@ -8,6 +8,44 @@ import (
 )
 
 var (
+	// AuditEventsColumns holds the columns for the "audit_events" table.
+	AuditEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "actor_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "organization_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "resource_id", Type: field.TypeUUID},
+		{Name: "payload", Type: field.TypeBytes},
+		{Name: "outbox_event_id", Type: field.TypeUUID, Unique: true},
+	}
+	// AuditEventsTable holds the schema information for the "audit_events" table.
+	AuditEventsTable = &schema.Table{
+		Name:       "audit_events",
+		Columns:    AuditEventsColumns,
+		PrimaryKey: []*schema.Column{AuditEventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "audit_events_outbox_events_audit_event",
+				Columns:    []*schema.Column{AuditEventsColumns[8]},
+				RefColumns: []*schema.Column{OutboxEventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "auditevent_actor_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditEventsColumns[3], AuditEventsColumns[1]},
+			},
+			{
+				Name:    "auditevent_organization_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditEventsColumns[4], AuditEventsColumns[1]},
+			},
+		},
+	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -133,6 +171,39 @@ var (
 		Columns:    OrganizationsColumns,
 		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
 	}
+	// OutboxEventsColumns holds the columns for the "outbox_events" table.
+	OutboxEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "aggregate_type", Type: field.TypeString},
+		{Name: "aggregate_id", Type: field.TypeUUID},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "subject", Type: field.TypeString},
+		{Name: "payload", Type: field.TypeBytes},
+		{Name: "actor_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "organization_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "resource_id", Type: field.TypeUUID},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+	}
+	// OutboxEventsTable holds the schema information for the "outbox_events" table.
+	OutboxEventsTable = &schema.Table{
+		Name:       "outbox_events",
+		Columns:    OutboxEventsColumns,
+		PrimaryKey: []*schema.Column{OutboxEventsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "outboxevent_published_at_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{OutboxEventsColumns[11], OutboxEventsColumns[1]},
+			},
+			{
+				Name:    "outboxevent_created_at_id",
+				Unique:  false,
+				Columns: []*schema.Column{OutboxEventsColumns[1], OutboxEventsColumns[0]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -157,15 +228,18 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AuditEventsTable,
 		ChannelsTable,
 		MembershipsTable,
 		MessagesTable,
 		OrganizationsTable,
+		OutboxEventsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	AuditEventsTable.ForeignKeys[0].RefTable = OutboxEventsTable
 	ChannelsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	ChannelsTable.ForeignKeys[1].RefTable = UsersTable
 	MembershipsTable.ForeignKeys[0].RefTable = OrganizationsTable

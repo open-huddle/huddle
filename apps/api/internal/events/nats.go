@@ -15,8 +15,10 @@ import (
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
-// Stream + subject layout. Versioning the subject prefix (`huddle.`) lets a
-// future v2 of the schema coexist on the same NATS cluster.
+// Stream + subject layout. See events.go for the subject builders callers use.
+
+// Versioning the subject prefix (`huddle.`) lets a future v2 of the schema
+// coexist on the same NATS cluster.
 const (
 	streamName            = "messages"
 	subjectMessageCreated = "huddle.messages.created"
@@ -77,15 +79,13 @@ func (n *NATS) Close() {
 	}
 }
 
-func (n *NATS) PublishMessageCreated(ctx context.Context, msg *huddlev1.Message) error {
-	if msg == nil || msg.ChannelId == "" {
-		return errors.New("publish: message missing channel_id")
+// Publish writes a raw payload to the given NATS subject. The outbox worker
+// is the only caller today — domain handlers write to the outbox table and
+// the worker drains it here.
+func (n *NATS) Publish(ctx context.Context, subject string, payload []byte) error {
+	if subject == "" {
+		return errors.New("publish: empty subject")
 	}
-	payload, err := proto.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("marshal: %w", err)
-	}
-	subject := fmt.Sprintf("%s.%s", subjectMessageCreated, msg.ChannelId)
 	if _, err := n.js.Publish(ctx, subject, payload); err != nil {
 		return fmt.Errorf("publish %s: %w", subject, err)
 	}

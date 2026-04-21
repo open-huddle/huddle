@@ -11,10 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/open-huddle/huddle/apps/api/internal/audit"
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
+	"github.com/open-huddle/huddle/apps/api/internal/outbox"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
 )
 
@@ -77,6 +79,15 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("init nats: %w", err)
 	}
 	defer bus.Close()
+
+	// Background workers: drain the transactional outbox to NATS, and mirror
+	// outbox rows into the audit log. Both share the signal-cancellable ctx
+	// so they stop when SIGINT/SIGTERM fires — any rows they didn't reach
+	// stay durable in the DB and get picked up at next startup.
+	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger)
+	auditConsumer := audit.NewConsumer(db.Ent, logger)
+	go outboxPublisher.Run(ctx)
+	go auditConsumer.Run(ctx)
 
 	srv := server.New(cfg, logger, db, verifier, bus)
 
