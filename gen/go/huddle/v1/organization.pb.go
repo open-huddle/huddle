@@ -166,7 +166,7 @@ func (x *Membership) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-type CreateOrganizationRequest struct {
+type CreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Slug          string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
@@ -174,20 +174,20 @@ type CreateOrganizationRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateOrganizationRequest) Reset() {
-	*x = CreateOrganizationRequest{}
+func (x *CreateRequest) Reset() {
+	*x = CreateRequest{}
 	mi := &file_huddle_v1_organization_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateOrganizationRequest) String() string {
+func (x *CreateRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateOrganizationRequest) ProtoMessage() {}
+func (*CreateRequest) ProtoMessage() {}
 
-func (x *CreateOrganizationRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_organization_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -199,46 +199,46 @@ func (x *CreateOrganizationRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateOrganizationRequest.ProtoReflect.Descriptor instead.
-func (*CreateOrganizationRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateRequest.ProtoReflect.Descriptor instead.
+func (*CreateRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateOrganizationRequest) GetName() string {
+func (x *CreateRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateOrganizationRequest) GetSlug() string {
+func (x *CreateRequest) GetSlug() string {
 	if x != nil {
 		return x.Slug
 	}
 	return ""
 }
 
-type CreateOrganizationResponse struct {
+type CreateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Organization  *Organization          `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateOrganizationResponse) Reset() {
-	*x = CreateOrganizationResponse{}
+func (x *CreateResponse) Reset() {
+	*x = CreateResponse{}
 	mi := &file_huddle_v1_organization_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateOrganizationResponse) String() string {
+func (x *CreateResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateOrganizationResponse) ProtoMessage() {}
+func (*CreateResponse) ProtoMessage() {}
 
-func (x *CreateOrganizationResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_organization_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -250,38 +250,38 @@ func (x *CreateOrganizationResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateOrganizationResponse.ProtoReflect.Descriptor instead.
-func (*CreateOrganizationResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateResponse.ProtoReflect.Descriptor instead.
+func (*CreateResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *CreateOrganizationResponse) GetOrganization() *Organization {
+func (x *CreateResponse) GetOrganization() *Organization {
 	if x != nil {
 		return x.Organization
 	}
 	return nil
 }
 
-type ListOrganizationsRequest struct {
+type ListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListOrganizationsRequest) Reset() {
-	*x = ListOrganizationsRequest{}
+func (x *ListRequest) Reset() {
+	*x = ListRequest{}
 	mi := &file_huddle_v1_organization_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListOrganizationsRequest) String() string {
+func (x *ListRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListOrganizationsRequest) ProtoMessage() {}
+func (*ListRequest) ProtoMessage() {}
 
-func (x *ListOrganizationsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_organization_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -293,32 +293,32 @@ func (x *ListOrganizationsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListOrganizationsRequest.ProtoReflect.Descriptor instead.
-func (*ListOrganizationsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
+func (*ListRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{4}
 }
 
-type ListOrganizationsResponse struct {
+type ListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Organizations []*Organization        `protobuf:"bytes,1,rep,name=organizations,proto3" json:"organizations,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListOrganizationsResponse) Reset() {
-	*x = ListOrganizationsResponse{}
+func (x *ListResponse) Reset() {
+	*x = ListResponse{}
 	mi := &file_huddle_v1_organization_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListOrganizationsResponse) String() string {
+func (x *ListResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListOrganizationsResponse) ProtoMessage() {}
+func (*ListResponse) ProtoMessage() {}
 
-func (x *ListOrganizationsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_organization_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -330,12 +330,12 @@ func (x *ListOrganizationsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListOrganizationsResponse.ProtoReflect.Descriptor instead.
-func (*ListOrganizationsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
+func (*ListResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ListOrganizationsResponse) GetOrganizations() []*Organization {
+func (x *ListResponse) GetOrganizations() []*Organization {
 	if x != nil {
 		return x.Organizations
 	}
@@ -464,14 +464,14 @@ const file_huddle_v1_organization_proto_rawDesc = "" +
 	"\x0forganization_id\x18\x03 \x01(\tR\x0eorganizationId\x12\x12\n" +
 	"\x04role\x18\x04 \x01(\tR\x04role\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"C\n" +
-	"\x19CreateOrganizationRequest\x12\x12\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"7\n" +
+	"\rCreateRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04slug\x18\x02 \x01(\tR\x04slug\"Y\n" +
-	"\x1aCreateOrganizationResponse\x12;\n" +
-	"\forganization\x18\x01 \x01(\v2\x17.huddle.v1.OrganizationR\forganization\"\x1a\n" +
-	"\x18ListOrganizationsRequest\"Z\n" +
-	"\x19ListOrganizationsResponse\x12=\n" +
+	"\x04slug\x18\x02 \x01(\tR\x04slug\"M\n" +
+	"\x0eCreateResponse\x12;\n" +
+	"\forganization\x18\x01 \x01(\v2\x17.huddle.v1.OrganizationR\forganization\"\r\n" +
+	"\vListRequest\"M\n" +
+	"\fListResponse\x12=\n" +
 	"\rorganizations\x18\x01 \x03(\v2\x17.huddle.v1.OrganizationR\rorganizations\"h\n" +
 	"\x10AddMemberRequest\x12'\n" +
 	"\x0forganization_id\x18\x01 \x01(\tR\x0eorganizationId\x12\x17\n" +
@@ -480,10 +480,10 @@ const file_huddle_v1_organization_proto_rawDesc = "" +
 	"\x11AddMemberResponse\x125\n" +
 	"\n" +
 	"membership\x18\x01 \x01(\v2\x15.huddle.v1.MembershipR\n" +
-	"membership2\x8d\x02\n" +
-	"\x13OrganizationService\x12W\n" +
-	"\x06Create\x12$.huddle.v1.CreateOrganizationRequest\x1a%.huddle.v1.CreateOrganizationResponse\"\x00\x12S\n" +
-	"\x04List\x12#.huddle.v1.ListOrganizationsRequest\x1a$.huddle.v1.ListOrganizationsResponse\"\x00\x12H\n" +
+	"membership2\xdb\x01\n" +
+	"\x13OrganizationService\x12?\n" +
+	"\x06Create\x12\x18.huddle.v1.CreateRequest\x1a\x19.huddle.v1.CreateResponse\"\x00\x129\n" +
+	"\x04List\x12\x16.huddle.v1.ListRequest\x1a\x17.huddle.v1.ListResponse\"\x00\x12H\n" +
 	"\tAddMember\x12\x1b.huddle.v1.AddMemberRequest\x1a\x1c.huddle.v1.AddMemberResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
@@ -500,27 +500,27 @@ func file_huddle_v1_organization_proto_rawDescGZIP() []byte {
 
 var file_huddle_v1_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_huddle_v1_organization_proto_goTypes = []any{
-	(*Organization)(nil),               // 0: huddle.v1.Organization
-	(*Membership)(nil),                 // 1: huddle.v1.Membership
-	(*CreateOrganizationRequest)(nil),  // 2: huddle.v1.CreateOrganizationRequest
-	(*CreateOrganizationResponse)(nil), // 3: huddle.v1.CreateOrganizationResponse
-	(*ListOrganizationsRequest)(nil),   // 4: huddle.v1.ListOrganizationsRequest
-	(*ListOrganizationsResponse)(nil),  // 5: huddle.v1.ListOrganizationsResponse
-	(*AddMemberRequest)(nil),           // 6: huddle.v1.AddMemberRequest
-	(*AddMemberResponse)(nil),          // 7: huddle.v1.AddMemberResponse
-	(*timestamppb.Timestamp)(nil),      // 8: google.protobuf.Timestamp
+	(*Organization)(nil),          // 0: huddle.v1.Organization
+	(*Membership)(nil),            // 1: huddle.v1.Membership
+	(*CreateRequest)(nil),         // 2: huddle.v1.CreateRequest
+	(*CreateResponse)(nil),        // 3: huddle.v1.CreateResponse
+	(*ListRequest)(nil),           // 4: huddle.v1.ListRequest
+	(*ListResponse)(nil),          // 5: huddle.v1.ListResponse
+	(*AddMemberRequest)(nil),      // 6: huddle.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),     // 7: huddle.v1.AddMemberResponse
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_huddle_v1_organization_proto_depIdxs = []int32{
 	8, // 0: huddle.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
 	8, // 1: huddle.v1.Membership.created_at:type_name -> google.protobuf.Timestamp
-	0, // 2: huddle.v1.CreateOrganizationResponse.organization:type_name -> huddle.v1.Organization
-	0, // 3: huddle.v1.ListOrganizationsResponse.organizations:type_name -> huddle.v1.Organization
+	0, // 2: huddle.v1.CreateResponse.organization:type_name -> huddle.v1.Organization
+	0, // 3: huddle.v1.ListResponse.organizations:type_name -> huddle.v1.Organization
 	1, // 4: huddle.v1.AddMemberResponse.membership:type_name -> huddle.v1.Membership
-	2, // 5: huddle.v1.OrganizationService.Create:input_type -> huddle.v1.CreateOrganizationRequest
-	4, // 6: huddle.v1.OrganizationService.List:input_type -> huddle.v1.ListOrganizationsRequest
+	2, // 5: huddle.v1.OrganizationService.Create:input_type -> huddle.v1.CreateRequest
+	4, // 6: huddle.v1.OrganizationService.List:input_type -> huddle.v1.ListRequest
 	6, // 7: huddle.v1.OrganizationService.AddMember:input_type -> huddle.v1.AddMemberRequest
-	3, // 8: huddle.v1.OrganizationService.Create:output_type -> huddle.v1.CreateOrganizationResponse
-	5, // 9: huddle.v1.OrganizationService.List:output_type -> huddle.v1.ListOrganizationsResponse
+	3, // 8: huddle.v1.OrganizationService.Create:output_type -> huddle.v1.CreateResponse
+	5, // 9: huddle.v1.OrganizationService.List:output_type -> huddle.v1.ListResponse
 	7, // 10: huddle.v1.OrganizationService.AddMember:output_type -> huddle.v1.AddMemberResponse
 	8, // [8:11] is the sub-list for method output_type
 	5, // [5:8] is the sub-list for method input_type

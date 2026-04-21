@@ -47,9 +47,9 @@ const (
 // OrganizationServiceClient is a client for the huddle.v1.OrganizationService service.
 type OrganizationServiceClient interface {
 	// Create a new organization. The caller becomes its owner.
-	Create(context.Context, *connect.Request[v1.CreateOrganizationRequest]) (*connect.Response[v1.CreateOrganizationResponse], error)
+	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
 	// List organizations the caller is a member of.
-	List(context.Context, *connect.Request[v1.ListOrganizationsRequest]) (*connect.Response[v1.ListOrganizationsResponse], error)
+	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	// AddMember adds an existing user to an organization with the given role.
 	// Only owners and admins may call this. Owner role can only be granted by
 	// an existing owner — admins are limited to admin / member.
@@ -71,13 +71,13 @@ func NewOrganizationServiceClient(httpClient connect.HTTPClient, baseURL string,
 	baseURL = strings.TrimRight(baseURL, "/")
 	organizationServiceMethods := v1.File_huddle_v1_organization_proto.Services().ByName("OrganizationService").Methods()
 	return &organizationServiceClient{
-		create: connect.NewClient[v1.CreateOrganizationRequest, v1.CreateOrganizationResponse](
+		create: connect.NewClient[v1.CreateRequest, v1.CreateResponse](
 			httpClient,
 			baseURL+OrganizationServiceCreateProcedure,
 			connect.WithSchema(organizationServiceMethods.ByName("Create")),
 			connect.WithClientOptions(opts...),
 		),
-		list: connect.NewClient[v1.ListOrganizationsRequest, v1.ListOrganizationsResponse](
+		list: connect.NewClient[v1.ListRequest, v1.ListResponse](
 			httpClient,
 			baseURL+OrganizationServiceListProcedure,
 			connect.WithSchema(organizationServiceMethods.ByName("List")),
@@ -94,18 +94,18 @@ func NewOrganizationServiceClient(httpClient connect.HTTPClient, baseURL string,
 
 // organizationServiceClient implements OrganizationServiceClient.
 type organizationServiceClient struct {
-	create    *connect.Client[v1.CreateOrganizationRequest, v1.CreateOrganizationResponse]
-	list      *connect.Client[v1.ListOrganizationsRequest, v1.ListOrganizationsResponse]
+	create    *connect.Client[v1.CreateRequest, v1.CreateResponse]
+	list      *connect.Client[v1.ListRequest, v1.ListResponse]
 	addMember *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
 }
 
 // Create calls huddle.v1.OrganizationService.Create.
-func (c *organizationServiceClient) Create(ctx context.Context, req *connect.Request[v1.CreateOrganizationRequest]) (*connect.Response[v1.CreateOrganizationResponse], error) {
+func (c *organizationServiceClient) Create(ctx context.Context, req *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
 	return c.create.CallUnary(ctx, req)
 }
 
 // List calls huddle.v1.OrganizationService.List.
-func (c *organizationServiceClient) List(ctx context.Context, req *connect.Request[v1.ListOrganizationsRequest]) (*connect.Response[v1.ListOrganizationsResponse], error) {
+func (c *organizationServiceClient) List(ctx context.Context, req *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error) {
 	return c.list.CallUnary(ctx, req)
 }
 
@@ -117,9 +117,9 @@ func (c *organizationServiceClient) AddMember(ctx context.Context, req *connect.
 // OrganizationServiceHandler is an implementation of the huddle.v1.OrganizationService service.
 type OrganizationServiceHandler interface {
 	// Create a new organization. The caller becomes its owner.
-	Create(context.Context, *connect.Request[v1.CreateOrganizationRequest]) (*connect.Response[v1.CreateOrganizationResponse], error)
+	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
 	// List organizations the caller is a member of.
-	List(context.Context, *connect.Request[v1.ListOrganizationsRequest]) (*connect.Response[v1.ListOrganizationsResponse], error)
+	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	// AddMember adds an existing user to an organization with the given role.
 	// Only owners and admins may call this. Owner role can only be granted by
 	// an existing owner — admins are limited to admin / member.
@@ -172,11 +172,11 @@ func NewOrganizationServiceHandler(svc OrganizationServiceHandler, opts ...conne
 // UnimplementedOrganizationServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedOrganizationServiceHandler struct{}
 
-func (UnimplementedOrganizationServiceHandler) Create(context.Context, *connect.Request[v1.CreateOrganizationRequest]) (*connect.Response[v1.CreateOrganizationResponse], error) {
+func (UnimplementedOrganizationServiceHandler) Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.OrganizationService.Create is not implemented"))
 }
 
-func (UnimplementedOrganizationServiceHandler) List(context.Context, *connect.Request[v1.ListOrganizationsRequest]) (*connect.Response[v1.ListOrganizationsResponse], error) {
+func (UnimplementedOrganizationServiceHandler) List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.OrganizationService.List is not implemented"))
 }
 

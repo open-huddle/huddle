@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/organization.proto.
  */
 export const file_huddle_v1_organization: GenFile = /*@__PURE__*/
-  fileDesc("ChxodWRkbGUvdjEvb3JnYW5pemF0aW9uLnByb3RvEglodWRkbGUudjEiZgoMT3JnYW5pemF0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEc2x1ZxgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKAAQoKTWVtYmVyc2hpcBIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgDIAEoCRIMCgRyb2xlGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjcKGUNyZWF0ZU9yZ2FuaXphdGlvblJlcXVlc3QSDAoEbmFtZRgBIAEoCRIMCgRzbHVnGAIgASgJIksKGkNyZWF0ZU9yZ2FuaXphdGlvblJlc3BvbnNlEi0KDG9yZ2FuaXphdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Pcmdhbml6YXRpb24iGgoYTGlzdE9yZ2FuaXphdGlvbnNSZXF1ZXN0IksKGUxpc3RPcmdhbml6YXRpb25zUmVzcG9uc2USLgoNb3JnYW5pemF0aW9ucxgBIAMoCzIXLmh1ZGRsZS52MS5Pcmdhbml6YXRpb24iSgoQQWRkTWVtYmVyUmVxdWVzdBIXCg9vcmdhbml6YXRpb25faWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCRIMCgRyb2xlGAMgASgJIj4KEUFkZE1lbWJlclJlc3BvbnNlEikKCm1lbWJlcnNoaXAYASABKAsyFS5odWRkbGUudjEuTWVtYmVyc2hpcDKNAgoTT3JnYW5pemF0aW9uU2VydmljZRJXCgZDcmVhdGUSJC5odWRkbGUudjEuQ3JlYXRlT3JnYW5pemF0aW9uUmVxdWVzdBolLmh1ZGRsZS52MS5DcmVhdGVPcmdhbml6YXRpb25SZXNwb25zZSIAElMKBExpc3QSIy5odWRkbGUudjEuTGlzdE9yZ2FuaXphdGlvbnNSZXF1ZXN0GiQuaHVkZGxlLnYxLkxpc3RPcmdhbml6YXRpb25zUmVzcG9uc2UiABJICglBZGRNZW1iZXISGy5odWRkbGUudjEuQWRkTWVtYmVyUmVxdWVzdBocLmh1ZGRsZS52MS5BZGRNZW1iZXJSZXNwb25zZSIAQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChxodWRkbGUvdjEvb3JnYW5pemF0aW9uLnByb3RvEglodWRkbGUudjEiZgoMT3JnYW5pemF0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEc2x1ZxgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKAAQoKTWVtYmVyc2hpcBIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgDIAEoCRIMCgRyb2xlGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIisKDUNyZWF0ZVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIMCgRzbHVnGAIgASgJIj8KDkNyZWF0ZVJlc3BvbnNlEi0KDG9yZ2FuaXphdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Pcmdhbml6YXRpb24iDQoLTGlzdFJlcXVlc3QiPgoMTGlzdFJlc3BvbnNlEi4KDW9yZ2FuaXphdGlvbnMYASADKAsyFy5odWRkbGUudjEuT3JnYW5pemF0aW9uIkoKEEFkZE1lbWJlclJlcXVlc3QSFwoPb3JnYW5pemF0aW9uX2lkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDAoEcm9sZRgDIAEoCSI+ChFBZGRNZW1iZXJSZXNwb25zZRIpCgptZW1iZXJzaGlwGAEgASgLMhUuaHVkZGxlLnYxLk1lbWJlcnNoaXAy2wEKE09yZ2FuaXphdGlvblNlcnZpY2USPwoGQ3JlYXRlEhguaHVkZGxlLnYxLkNyZWF0ZVJlcXVlc3QaGS5odWRkbGUudjEuQ3JlYXRlUmVzcG9uc2UiABI5CgRMaXN0EhYuaHVkZGxlLnYxLkxpc3RSZXF1ZXN0GhcuaHVkZGxlLnYxLkxpc3RSZXNwb25zZSIAEkgKCUFkZE1lbWJlchIbLmh1ZGRsZS52MS5BZGRNZW1iZXJSZXF1ZXN0GhwuaHVkZGxlLnYxLkFkZE1lbWJlclJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Organization
@@ -86,9 +86,9 @@ export const MembershipSchema: GenMessage<Membership> = /*@__PURE__*/
   messageDesc(file_huddle_v1_organization, 1);
 
 /**
- * @generated from message huddle.v1.CreateOrganizationRequest
+ * @generated from message huddle.v1.CreateRequest
  */
-export type CreateOrganizationRequest = Message<"huddle.v1.CreateOrganizationRequest"> & {
+export type CreateRequest = Message<"huddle.v1.CreateRequest"> & {
   /**
    * @generated from field: string name = 1;
    */
@@ -101,16 +101,16 @@ export type CreateOrganizationRequest = Message<"huddle.v1.CreateOrganizationReq
 };
 
 /**
- * Describes the message huddle.v1.CreateOrganizationRequest.
- * Use `create(CreateOrganizationRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.CreateRequest.
+ * Use `create(CreateRequestSchema)` to create a new message.
  */
-export const CreateOrganizationRequestSchema: GenMessage<CreateOrganizationRequest> = /*@__PURE__*/
+export const CreateRequestSchema: GenMessage<CreateRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_organization, 2);
 
 /**
- * @generated from message huddle.v1.CreateOrganizationResponse
+ * @generated from message huddle.v1.CreateResponse
  */
-export type CreateOrganizationResponse = Message<"huddle.v1.CreateOrganizationResponse"> & {
+export type CreateResponse = Message<"huddle.v1.CreateResponse"> & {
   /**
    * @generated from field: huddle.v1.Organization organization = 1;
    */
@@ -118,29 +118,29 @@ export type CreateOrganizationResponse = Message<"huddle.v1.CreateOrganizationRe
 };
 
 /**
- * Describes the message huddle.v1.CreateOrganizationResponse.
- * Use `create(CreateOrganizationResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.CreateResponse.
+ * Use `create(CreateResponseSchema)` to create a new message.
  */
-export const CreateOrganizationResponseSchema: GenMessage<CreateOrganizationResponse> = /*@__PURE__*/
+export const CreateResponseSchema: GenMessage<CreateResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_organization, 3);
 
 /**
- * @generated from message huddle.v1.ListOrganizationsRequest
+ * @generated from message huddle.v1.ListRequest
  */
-export type ListOrganizationsRequest = Message<"huddle.v1.ListOrganizationsRequest"> & {
+export type ListRequest = Message<"huddle.v1.ListRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.ListOrganizationsRequest.
- * Use `create(ListOrganizationsRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.ListRequest.
+ * Use `create(ListRequestSchema)` to create a new message.
  */
-export const ListOrganizationsRequestSchema: GenMessage<ListOrganizationsRequest> = /*@__PURE__*/
+export const ListRequestSchema: GenMessage<ListRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_organization, 4);
 
 /**
- * @generated from message huddle.v1.ListOrganizationsResponse
+ * @generated from message huddle.v1.ListResponse
  */
-export type ListOrganizationsResponse = Message<"huddle.v1.ListOrganizationsResponse"> & {
+export type ListResponse = Message<"huddle.v1.ListResponse"> & {
   /**
    * @generated from field: repeated huddle.v1.Organization organizations = 1;
    */
@@ -148,10 +148,10 @@ export type ListOrganizationsResponse = Message<"huddle.v1.ListOrganizationsResp
 };
 
 /**
- * Describes the message huddle.v1.ListOrganizationsResponse.
- * Use `create(ListOrganizationsResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.ListResponse.
+ * Use `create(ListResponseSchema)` to create a new message.
  */
-export const ListOrganizationsResponseSchema: GenMessage<ListOrganizationsResponse> = /*@__PURE__*/
+export const ListResponseSchema: GenMessage<ListResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_organization, 5);
 
 /**
@@ -215,8 +215,8 @@ export const OrganizationService: GenService<{
    */
   create: {
     methodKind: "unary";
-    input: typeof CreateOrganizationRequestSchema;
-    output: typeof CreateOrganizationResponseSchema;
+    input: typeof CreateRequestSchema;
+    output: typeof CreateResponseSchema;
   },
   /**
    * List organizations the caller is a member of.
@@ -225,8 +225,8 @@ export const OrganizationService: GenService<{
    */
   list: {
     methodKind: "unary";
-    input: typeof ListOrganizationsRequestSchema;
-    output: typeof ListOrganizationsResponseSchema;
+    input: typeof ListRequestSchema;
+    output: typeof ListResponseSchema;
   },
   /**
    * AddMember adds an existing user to an organization with the given role.

@@ -36,7 +36,7 @@ func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, 
 	return &Service{client: client, resolver: resolver, authz: authz, logger: logger}
 }
 
-func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.CreateOrganizationRequest]) (*connect.Response[huddlev1.CreateOrganizationResponse], error) {
+func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.CreateRequest]) (*connect.Response[huddlev1.CreateResponse], error) {
 	if req.Msg.Name == "" || req.Msg.Slug == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name and slug are required"))
 	}
@@ -83,12 +83,12 @@ func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.Crea
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}
 
-	return connect.NewResponse(&huddlev1.CreateOrganizationResponse{
+	return connect.NewResponse(&huddlev1.CreateResponse{
 		Organization: orgToProto(org),
 	}), nil
 }
 
-func (s *Service) List(ctx context.Context, _ *connect.Request[huddlev1.ListOrganizationsRequest]) (*connect.Response[huddlev1.ListOrganizationsResponse], error) {
+func (s *Service) List(ctx context.Context, _ *connect.Request[huddlev1.ListRequest]) (*connect.Response[huddlev1.ListResponse], error) {
 	caller, err := s.resolver.Resolve(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated, err)
@@ -105,7 +105,7 @@ func (s *Service) List(ctx context.Context, _ *connect.Request[huddlev1.ListOrga
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("list orgs: %w", err))
 	}
 
-	resp := &huddlev1.ListOrganizationsResponse{
+	resp := &huddlev1.ListResponse{
 		Organizations: make([]*huddlev1.Organization, 0, len(orgs)),
 	}
 	for _, o := range orgs {

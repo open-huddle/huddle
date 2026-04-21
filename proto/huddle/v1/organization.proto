@@ -11,10 +11,10 @@ option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
 // Membership.role) is enforced inside each handler.
 service OrganizationService {
   // Create a new organization. The caller becomes its owner.
-  rpc Create(CreateOrganizationRequest) returns (CreateOrganizationResponse) {}
+  rpc Create(CreateRequest) returns (CreateResponse) {}
 
   // List organizations the caller is a member of.
-  rpc List(ListOrganizationsRequest) returns (ListOrganizationsResponse) {}
+  rpc List(ListRequest) returns (ListResponse) {}
 
   // AddMember adds an existing user to an organization with the given role.
   // Only owners and admins may call this. Owner role can only be granted by
@@ -41,16 +41,16 @@ message Membership {
   google.protobuf.Timestamp created_at = 5;
 }
 
-message CreateOrganizationRequest {
+message CreateRequest {
   string name = 1;
   string slug = 2;
 }
-message CreateOrganizationResponse {
+message CreateResponse {
   Organization organization = 1;
 }
 
-message ListOrganizationsRequest {}
-message ListOrganizationsResponse {
+message ListRequest {}
+message ListResponse {
   repeated Organization organizations = 1;
 }
 
