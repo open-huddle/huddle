@@ -29,9 +29,12 @@ jobs:
           scan-ref: .
           # Focus on lockfiles + declared deps; Dockerfiles are future work.
           scanners: vuln,secret,misconfig
-          # CI-blocking severities only. Lower ones still appear in the
-          # uploaded SARIF report and the Security tab.
+          # CI-blocking severities. limit-severities-for-sarif keeps the
+          # filter applied to the SARIF output too — without it the action
+          # unsets TRIVY_SEVERITY for SARIF and exit-code: 1 then trips on
+          # LOW/MEDIUM findings that were never meant to gate CI.
           severity: CRITICAL,HIGH
+          limit-severities-for-sarif: true
           ignore-unfixed: true
           format: sarif
           output: trivy-results.sarif

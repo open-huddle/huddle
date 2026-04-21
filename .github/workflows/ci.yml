@@ -55,9 +55,9 @@ jobs:
         run: |
           cd apps/api && go test -race -count=1 ./...
 
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.62
+          version: v2.11
           working-directory: apps/api
           args: --timeout=5m
 
@@ -103,6 +103,13 @@ jobs:
 
       - name: Lint protos
         run: buf lint
+
+      - name: Fetch main as a local branch
+        # actions/checkout fetches remote refs into refs/remotes/origin/ but
+        # does not create a local refs/heads/main, which is what buf breaking
+        # --against '.git#branch=main' looks for.
+        if: github.ref != 'refs/heads/main'
+        run: git fetch origin main:main
 
       - name: Detect breaking changes against main
         # Skip on pushes *to* main, where there is no "against" reference.
