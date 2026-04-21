@@ -25,6 +25,8 @@ const (
 	FieldSlug = "slug"
 	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
 	EdgeMemberships = "memberships"
+	// EdgeChannels holds the string denoting the channels edge name in mutations.
+	EdgeChannels = "channels"
 	// Table holds the table name of the organization in the database.
 	Table = "organizations"
 	// MembershipsTable is the table that holds the memberships relation/edge.
@@ -34,6 +36,13 @@ const (
 	MembershipsInverseTable = "memberships"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
 	MembershipsColumn = "organization_memberships"
+	// ChannelsTable is the table that holds the channels relation/edge.
+	ChannelsTable = "channels"
+	// ChannelsInverseTable is the table name for the Channel entity.
+	// It exists in this package in order to avoid circular dependency with the "channel" package.
+	ChannelsInverseTable = "channels"
+	// ChannelsColumn is the table column denoting the channels relation/edge.
+	ChannelsColumn = "organization_channels"
 )
 
 // Columns holds all SQL columns for organization fields.
@@ -111,10 +120,31 @@ func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByChannelsCount orders the results by channels count.
+func ByChannelsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChannelsStep(), opts...)
+	}
+}
+
+// ByChannels orders the results by channels terms.
+func ByChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChannelsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MembershipsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
+	)
+}
+func newChannelsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChannelsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChannelsTable, ChannelsColumn),
 	)
 }

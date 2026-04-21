@@ -1,0 +1,4 @@
+-- Create "channels" table
+CREATE TABLE "channels" ("id" uuid NOT NULL, "created_at" timestamptz NOT NULL, "updated_at" timestamptz NOT NULL, "name" character varying NOT NULL, "slug" character varying NOT NULL, "topic" character varying NULL, "description" character varying NULL, "organization_channels" uuid NOT NULL, "user_created_channels" uuid NULL, PRIMARY KEY ("id"), CONSTRAINT "channels_organizations_channels" FOREIGN KEY ("organization_channels") REFERENCES "organizations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT "channels_users_created_channels" FOREIGN KEY ("user_created_channels") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL);
+-- Create index "channel_slug_organization_channels" to table: "channels"
+CREATE UNIQUE INDEX "channel_slug_organization_channels" ON "channels" ("slug", "organization_channels");

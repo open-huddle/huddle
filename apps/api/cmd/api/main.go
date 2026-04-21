@@ -14,6 +14,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
+	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
 )
 
@@ -66,7 +67,18 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("init oidc verifier: %w", err)
 	}
 
-	srv := server.New(cfg, logger, db, verifier)
+	// Connect to NATS and ensure the JetStream stream exists. Failure here is
+	// fatal at startup — operators should know up front that the realtime
+	// path is broken rather than discover it on the first Subscribe call.
+	natsCtx, ncancel := context.WithTimeout(ctx, 15*time.Second)
+	bus, err := events.Open(natsCtx, cfg.Nats.URL, logger)
+	ncancel()
+	if err != nil {
+		return fmt.Errorf("init nats: %w", err)
+	}
+	defer bus.Close()
+
+	srv := server.New(cfg, logger, db, verifier, bus)
 
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,

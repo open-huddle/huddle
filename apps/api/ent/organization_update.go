@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
@@ -79,6 +80,21 @@ func (_u *OrganizationUpdate) AddMemberships(v ...*Membership) *OrganizationUpda
 	return _u.AddMembershipIDs(ids...)
 }
 
+// AddChannelIDs adds the "channels" edge to the Channel entity by IDs.
+func (_u *OrganizationUpdate) AddChannelIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.AddChannelIDs(ids...)
+	return _u
+}
+
+// AddChannels adds the "channels" edges to the Channel entity.
+func (_u *OrganizationUpdate) AddChannels(v ...*Channel) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChannelIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -103,6 +119,27 @@ func (_u *OrganizationUpdate) RemoveMemberships(v ...*Membership) *OrganizationU
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMembershipIDs(ids...)
+}
+
+// ClearChannels clears all "channels" edges to the Channel entity.
+func (_u *OrganizationUpdate) ClearChannels() *OrganizationUpdate {
+	_u.mutation.ClearChannels()
+	return _u
+}
+
+// RemoveChannelIDs removes the "channels" edge to Channel entities by IDs.
+func (_u *OrganizationUpdate) RemoveChannelIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.RemoveChannelIDs(ids...)
+	return _u
+}
+
+// RemoveChannels removes "channels" edges to Channel entities.
+func (_u *OrganizationUpdate) RemoveChannels(v ...*Channel) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChannelIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -222,6 +259,51 @@ func (_u *OrganizationUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChannelsIDs(); len(nodes) > 0 && !_u.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
@@ -291,6 +373,21 @@ func (_u *OrganizationUpdateOne) AddMemberships(v ...*Membership) *OrganizationU
 	return _u.AddMembershipIDs(ids...)
 }
 
+// AddChannelIDs adds the "channels" edge to the Channel entity by IDs.
+func (_u *OrganizationUpdateOne) AddChannelIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.AddChannelIDs(ids...)
+	return _u
+}
+
+// AddChannels adds the "channels" edges to the Channel entity.
+func (_u *OrganizationUpdateOne) AddChannels(v ...*Channel) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChannelIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -315,6 +412,27 @@ func (_u *OrganizationUpdateOne) RemoveMemberships(v ...*Membership) *Organizati
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMembershipIDs(ids...)
+}
+
+// ClearChannels clears all "channels" edges to the Channel entity.
+func (_u *OrganizationUpdateOne) ClearChannels() *OrganizationUpdateOne {
+	_u.mutation.ClearChannels()
+	return _u
+}
+
+// RemoveChannelIDs removes the "channels" edge to Channel entities by IDs.
+func (_u *OrganizationUpdateOne) RemoveChannelIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.RemoveChannelIDs(ids...)
+	return _u
+}
+
+// RemoveChannels removes "channels" edges to Channel entities.
+func (_u *OrganizationUpdateOne) RemoveChannels(v ...*Channel) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChannelIDs(ids...)
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
@@ -457,6 +575,51 @@ func (_u *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizati
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChannelsIDs(); len(nodes) > 0 && !_u.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ChannelsTable,
+			Columns: []string{organization.ChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

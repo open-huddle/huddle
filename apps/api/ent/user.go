@@ -38,9 +38,13 @@ type User struct {
 type UserEdges struct {
 	// Memberships holds the value of the memberships edge.
 	Memberships []*Membership `json:"memberships,omitempty"`
+	// CreatedChannels holds the value of the created_channels edge.
+	CreatedChannels []*Channel `json:"created_channels,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -50,6 +54,24 @@ func (e UserEdges) MembershipsOrErr() ([]*Membership, error) {
 		return e.Memberships, nil
 	}
 	return nil, &NotLoadedError{edge: "memberships"}
+}
+
+// CreatedChannelsOrErr returns the CreatedChannels value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CreatedChannelsOrErr() ([]*Channel, error) {
+	if e.loadedTypes[1] {
+		return e.CreatedChannels, nil
+	}
+	return nil, &NotLoadedError{edge: "created_channels"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[2] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -130,6 +152,16 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryMemberships queries the "memberships" edge of the User entity.
 func (_m *User) QueryMemberships() *MembershipQuery {
 	return NewUserClient(_m.config).QueryMemberships(_m)
+}
+
+// QueryCreatedChannels queries the "created_channels" edge of the User entity.
+func (_m *User) QueryCreatedChannels() *ChannelQuery {
+	return NewUserClient(_m.config).QueryCreatedChannels(_m)
+}
+
+// QueryMessages queries the "messages" edge of the User entity.
+func (_m *User) QueryMessages() *MessageQuery {
+	return NewUserClient(_m.config).QueryMessages(_m)
 }
 
 // Update returns a builder for updating this User.
