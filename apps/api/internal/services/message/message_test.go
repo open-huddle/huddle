@@ -328,7 +328,7 @@ func TestList_NewestFirst_UnderLimit(t *testing.T) {
 	f := newFixture(t)
 	ctx := callerCtx(f.ctx, "alice")
 
-	sendAll(t, f, ctx, []string{"first", "second", "third"})
+	sendAll(ctx, t, f, []string{"first", "second", "third"})
 
 	resp, err := f.svc.List(ctx, connect.NewRequest(&huddlev1.MessageServiceListRequest{
 		ChannelId: f.ch.ID.String(),
@@ -351,7 +351,7 @@ func TestList_CursorPagination(t *testing.T) {
 	f := newFixture(t)
 	ctx := callerCtx(f.ctx, "alice")
 
-	sendAll(t, f, ctx, []string{"one", "two", "three", "four", "five"})
+	sendAll(ctx, t, f, []string{"one", "two", "three", "four", "five"})
 
 	// Page 1: limit 3 → newest 3 + cursor.
 	page1, err := f.svc.List(ctx, connect.NewRequest(&huddlev1.MessageServiceListRequest{
@@ -394,7 +394,7 @@ func TestList_DefaultAndClampedLimit(t *testing.T) {
 	// get all 3 without a cursor. Can't easily test the 200-max clamp without
 	// seeding >200 messages; the pagination test above already proves the
 	// limit-is-honoured path.
-	sendAll(t, f, ctx, []string{"a", "b", "c"})
+	sendAll(ctx, t, f, []string{"a", "b", "c"})
 
 	zero, err := f.svc.List(ctx, connect.NewRequest(&huddlev1.MessageServiceListRequest{
 		ChannelId: f.ch.ID.String(),
@@ -424,7 +424,7 @@ func TestList_DefaultAndClampedLimit(t *testing.T) {
 
 // --- helpers ----------------------------------------------------------------
 
-func sendAll(t *testing.T, f *fixture, ctx context.Context, bodies []string) {
+func sendAll(ctx context.Context, t *testing.T, f *fixture, bodies []string) {
 	t.Helper()
 	for _, body := range bodies {
 		if _, err := f.svc.Send(ctx, connect.NewRequest(&huddlev1.MessageServiceSendRequest{
