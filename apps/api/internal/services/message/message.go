@@ -11,6 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
@@ -36,26 +37,25 @@ var _ huddlev1connect.MessageServiceHandler = (*Service)(nil)
 // Service handles sending and listing messages. Authorization is per-channel:
 // a member of the channel's organization may both read and send. Edit and
 // delete are intentionally not in this service yet.
+//
+// Send persists messages and their outbox entries in one transaction — the
+// outbox publisher worker (internal/outbox) drains to NATS out of band. The
+// Subscriber dependency remains for the streaming Subscribe RPC.
 type Service struct {
-	client    *ent.Client
-	resolver  *principal.Resolver
-	authz     policy.Engine
-	publisher events.Publisher
-	subs      events.Subscriber
-	logger    *slog.Logger
+	client   *ent.Client
+	resolver *principal.Resolver
+	authz    policy.Engine
+	subs     events.Subscriber
+	logger   *slog.Logger
 }
 
-// New takes the event bus split into Publisher and Subscriber. Both are
-// satisfied by the same NATS client today, but separating them keeps the
-// dependency edges honest: Send needs Publisher, Subscribe needs Subscriber.
-func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, publisher events.Publisher, subs events.Subscriber, logger *slog.Logger) *Service {
+func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, subs events.Subscriber, logger *slog.Logger) *Service {
 	return &Service{
-		client:    client,
-		resolver:  resolver,
-		authz:     authz,
-		publisher: publisher,
-		subs:      subs,
-		logger:    logger,
+		client:   client,
+		resolver: resolver,
+		authz:    authz,
+		subs:     subs,
+		logger:   logger,
 	}
 }
 
@@ -89,24 +89,50 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.Messag
 		return nil, s.denyErr(err)
 	}
 
-	m, err := s.client.Message.Create().
+	// Persist the message and the outbox entry in one transaction so a broker
+	// outage cannot silently drop events anymore — the outbox publisher
+	// worker retries from the database (see ADR-0007). The old best-effort
+	// direct publish is gone; downstream consumers (realtime Subscribe,
+	// audit, future CDC) all read off the outbox instead.
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+
+	m, err := tx.Message.Create().
 		SetChannelID(channelID).
 		SetAuthorID(caller.ID).
 		SetBody(body).
 		Save(ctx)
 	if err != nil {
+		_ = tx.Rollback()
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("send message: %w", err))
 	}
 
 	out := toProto(m)
+	payload, err := proto.Marshal(out)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("marshal payload: %w", err))
+	}
 
-	// Best-effort publish — a failed broker write must not roll back the
-	// successful database write. Subscribers may briefly miss live messages
-	// during a NATS outage; clients backfill via List on reconnect, and the
-	// future Debezium CDC consumer will guarantee durable downstream
-	// delivery.
-	if err := s.publisher.PublishMessageCreated(ctx, out); err != nil {
-		s.logger.Warn("publish message.created", "err", err, "channel_id", out.ChannelId, "message_id", out.Id)
+	if _, err := tx.OutboxEvent.Create().
+		SetAggregateType("message").
+		SetAggregateID(m.ID).
+		SetEventType("message.created").
+		SetSubject(events.SubjectMessageCreated(channelID)).
+		SetPayload(payload).
+		SetActorID(caller.ID).
+		SetOrganizationID(orgID).
+		SetResourceType("message").
+		SetResourceID(m.ID).
+		Save(ctx); err != nil {
+		_ = tx.Rollback()
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("outbox: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}
 
 	return connect.NewResponse(&huddlev1.MessageServiceSendResponse{

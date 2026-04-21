@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"strings"
-	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	entmembership "github.com/open-huddle/huddle/apps/api/ent/membership"
+	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
@@ -21,32 +21,6 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/testutil"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
-
-// spyPublisher records PublishMessageCreated calls. fail, when non-nil, is
-// returned on every call — exercises the best-effort swallow path in Send.
-type spyPublisher struct {
-	mu        sync.Mutex
-	published []*huddlev1.Message
-	fail      error
-}
-
-func (p *spyPublisher) PublishMessageCreated(_ context.Context, msg *huddlev1.Message) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.fail != nil {
-		return p.fail
-	}
-	p.published = append(p.published, msg)
-	return nil
-}
-
-func (p *spyPublisher) calls() []*huddlev1.Message {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	out := make([]*huddlev1.Message, len(p.published))
-	copy(out, p.published)
-	return out
-}
 
 // nopSubscriber satisfies events.Subscriber for tests that don't exercise the
 // streaming path. Returns a closed channel so any unexpected Subscribe call
@@ -60,13 +34,12 @@ func (nopSubscriber) SubscribeMessages(_ context.Context, _ uuid.UUID) (<-chan *
 }
 
 type fixture struct {
-	ctx       context.Context
-	client    *ent.Client
-	svc       *message.Service
-	publisher *spyPublisher
-	org       *ent.Organization
-	ch        *ent.Channel
-	alice     *ent.User // member of org
+	ctx    context.Context
+	client *ent.Client
+	svc    *message.Service
+	org    *ent.Organization
+	ch     *ent.Channel
+	alice  *ent.User // member of org
 }
 
 // newFixture sets up: an org, a channel in it, Alice as a member of the org.
@@ -77,8 +50,7 @@ func newFixture(t *testing.T) *fixture {
 	client := testutil.NewClient(t)
 	resolver := principal.NewResolver(client)
 	engine := policy.NewRBAC(client)
-	pub := &spyPublisher{}
-	svc := message.New(client, resolver, engine, pub, nopSubscriber{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	svc := message.New(client, resolver, engine, nopSubscriber{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 
 	ctx := context.Background()
 	org := testutil.MakeOrg(ctx, t, client, "acme")
@@ -94,7 +66,7 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatalf("seed channel: %v", err)
 	}
 
-	return &fixture{ctx: ctx, client: client, svc: svc, publisher: pub, org: org, ch: ch, alice: alice}
+	return &fixture{ctx: ctx, client: client, svc: svc, org: org, ch: ch, alice: alice}
 }
 
 func callerCtx(ctx context.Context, subject string) context.Context {
@@ -183,7 +155,7 @@ func TestSend_NonMemberOfOrg_PermissionDenied(t *testing.T) {
 	}
 }
 
-func TestSend_HappyPath_PersistsAndPublishes(t *testing.T) {
+func TestSend_HappyPath_PersistsAndEnqueuesOutbox(t *testing.T) {
 	t.Parallel()
 	f := newFixture(t)
 	ctx := callerCtx(f.ctx, "alice")
@@ -211,40 +183,42 @@ func TestSend_HappyPath_PersistsAndPublishes(t *testing.T) {
 		t.Fatalf("want 1 message persisted, got %d", count)
 	}
 
-	// Publisher was invoked with the same proto — subscribers get the live
-	// copy without an extra DB hop.
-	calls := f.publisher.calls()
-	if len(calls) != 1 {
-		t.Fatalf("want 1 publish call, got %d", len(calls))
-	}
-	if calls[0].Id != resp.Msg.Message.Id {
-		t.Fatalf("publish id %s != response id %s", calls[0].Id, resp.Msg.Message.Id)
-	}
-}
-
-func TestSend_PublishFailure_StillSucceeds(t *testing.T) {
-	t.Parallel()
-	f := newFixture(t)
-	f.publisher.fail = errors.New("simulated nats outage")
-	ctx := callerCtx(f.ctx, "alice")
-
-	// Best-effort publish: a broker outage must not roll back the database
-	// write. Send returns 200; subscribers backfill via List.
-	resp, err := f.svc.Send(ctx, connect.NewRequest(&huddlev1.MessageServiceSendRequest{
-		ChannelId: f.ch.ID.String(),
-		Body:      "hello",
-	}))
+	// Outbox row was written in the same transaction — durable delivery to
+	// NATS is the worker's job, not the handler's.
+	outbox, err := f.client.OutboxEvent.Query().
+		Where(outboxevent.EventTypeEQ("message.created")).
+		All(f.ctx)
 	if err != nil {
-		t.Fatalf("send should swallow publish error, got %v", err)
+		t.Fatalf("query outbox: %v", err)
 	}
-	if resp.Msg.Message.Id == "" {
-		t.Fatal("want persisted message id, got empty")
+	if len(outbox) != 1 {
+		t.Fatalf("want 1 outbox row, got %d", len(outbox))
 	}
-	count, err := f.client.Message.Query().Count(f.ctx)
-	if err != nil || count != 1 {
-		t.Fatalf("want 1 persisted message after publish failure, got count=%d err=%v", count, err)
+	row := outbox[0]
+	if row.ResourceID.String() != resp.Msg.Message.Id {
+		t.Fatalf("outbox resource_id %s != message id %s", row.ResourceID, resp.Msg.Message.Id)
+	}
+	if row.ActorID == nil || row.ActorID.String() != f.alice.ID.String() {
+		t.Fatalf("want actor_id %s, got %v", f.alice.ID, row.ActorID)
+	}
+	if row.OrganizationID == nil || row.OrganizationID.String() != f.org.ID.String() {
+		t.Fatalf("want organization_id %s, got %v", f.org.ID, row.OrganizationID)
+	}
+	if row.PublishedAt != nil {
+		t.Fatalf("outbox row should start unpublished, got published_at=%v", row.PublishedAt)
+	}
+	if row.Subject == "" {
+		t.Fatal("outbox row missing subject")
+	}
+	if len(row.Payload) == 0 {
+		t.Fatal("outbox row missing payload")
 	}
 }
+
+// Note: the old "publish failure still succeeds" test is gone. Send no longer
+// touches the broker — the handler commits a DB transaction with the
+// outbox row; a broker outage is the publisher worker's problem (covered in
+// internal/outbox tests).
 
 // --- List -------------------------------------------------------------------
 

@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/open-huddle/huddle/apps/api/ent/auditevent"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
+	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/schema"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
@@ -18,6 +20,27 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	auditeventMixin := schema.AuditEvent{}.Mixin()
+	auditeventMixinFields0 := auditeventMixin[0].Fields()
+	_ = auditeventMixinFields0
+	auditeventFields := schema.AuditEvent{}.Fields()
+	_ = auditeventFields
+	// auditeventDescCreatedAt is the schema descriptor for created_at field.
+	auditeventDescCreatedAt := auditeventFields[0].Descriptor()
+	// auditevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	auditevent.DefaultCreatedAt = auditeventDescCreatedAt.Default.(func() time.Time)
+	// auditeventDescEventType is the schema descriptor for event_type field.
+	auditeventDescEventType := auditeventFields[2].Descriptor()
+	// auditevent.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
+	auditevent.EventTypeValidator = auditeventDescEventType.Validators[0].(func(string) error)
+	// auditeventDescResourceType is the schema descriptor for resource_type field.
+	auditeventDescResourceType := auditeventFields[5].Descriptor()
+	// auditevent.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
+	auditevent.ResourceTypeValidator = auditeventDescResourceType.Validators[0].(func(string) error)
+	// auditeventDescID is the schema descriptor for id field.
+	auditeventDescID := auditeventMixinFields0[0].Descriptor()
+	// auditevent.DefaultID holds the default value on creation for the id field.
+	auditevent.DefaultID = auditeventDescID.Default.(func() uuid.UUID)
 	channelMixin := schema.Channel{}.Mixin()
 	channelMixinFields0 := channelMixin[0].Fields()
 	_ = channelMixinFields0
@@ -136,6 +159,35 @@ func init() {
 	organizationDescID := organizationMixinFields0[0].Descriptor()
 	// organization.DefaultID holds the default value on creation for the id field.
 	organization.DefaultID = organizationDescID.Default.(func() uuid.UUID)
+	outboxeventMixin := schema.OutboxEvent{}.Mixin()
+	outboxeventMixinFields0 := outboxeventMixin[0].Fields()
+	_ = outboxeventMixinFields0
+	outboxeventFields := schema.OutboxEvent{}.Fields()
+	_ = outboxeventFields
+	// outboxeventDescCreatedAt is the schema descriptor for created_at field.
+	outboxeventDescCreatedAt := outboxeventFields[0].Descriptor()
+	// outboxevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	outboxevent.DefaultCreatedAt = outboxeventDescCreatedAt.Default.(func() time.Time)
+	// outboxeventDescAggregateType is the schema descriptor for aggregate_type field.
+	outboxeventDescAggregateType := outboxeventFields[1].Descriptor()
+	// outboxevent.AggregateTypeValidator is a validator for the "aggregate_type" field. It is called by the builders before save.
+	outboxevent.AggregateTypeValidator = outboxeventDescAggregateType.Validators[0].(func(string) error)
+	// outboxeventDescEventType is the schema descriptor for event_type field.
+	outboxeventDescEventType := outboxeventFields[3].Descriptor()
+	// outboxevent.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
+	outboxevent.EventTypeValidator = outboxeventDescEventType.Validators[0].(func(string) error)
+	// outboxeventDescSubject is the schema descriptor for subject field.
+	outboxeventDescSubject := outboxeventFields[4].Descriptor()
+	// outboxevent.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
+	outboxevent.SubjectValidator = outboxeventDescSubject.Validators[0].(func(string) error)
+	// outboxeventDescResourceType is the schema descriptor for resource_type field.
+	outboxeventDescResourceType := outboxeventFields[8].Descriptor()
+	// outboxevent.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
+	outboxevent.ResourceTypeValidator = outboxeventDescResourceType.Validators[0].(func(string) error)
+	// outboxeventDescID is the schema descriptor for id field.
+	outboxeventDescID := outboxeventMixinFields0[0].Descriptor()
+	// outboxevent.DefaultID holds the default value on creation for the id field.
+	outboxevent.DefaultID = outboxeventDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

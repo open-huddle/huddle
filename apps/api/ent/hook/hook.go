@@ -9,6 +9,18 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent"
 )
 
+// The AuditEventFunc type is an adapter to allow the use of ordinary
+// function as AuditEvent mutator.
+type AuditEventFunc func(context.Context, *ent.AuditEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuditEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AuditEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditEventMutation", m)
+}
+
 // The ChannelFunc type is an adapter to allow the use of ordinary
 // function as Channel mutator.
 type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
@@ -55,6 +67,18 @@ func (f OrganizationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationMutation", m)
+}
+
+// The OutboxEventFunc type is an adapter to allow the use of ordinary
+// function as OutboxEvent mutator.
+type OutboxEventFunc func(context.Context, *ent.OutboxEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OutboxEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OutboxEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OutboxEventMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
