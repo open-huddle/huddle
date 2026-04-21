@@ -1,5 +1,7 @@
 version: v2
-clean: true
+# clean: true would wipe gen/go and gen/ts, including the go.mod / package.json
+# that sit alongside generated code. Leaving it off — if a proto is removed,
+# manually delete the orphaned output.
 plugins:
   # Go — protobuf message types
   - remote: buf.build/protocolbuffers/go

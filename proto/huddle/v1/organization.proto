@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// OrganizationService manages tenants and their memberships. Every RPC
+// requires authentication; resource-level authorization (RBAC over
+// Membership.role) is enforced inside each handler.
+service OrganizationService {
+  // Create a new organization. The caller becomes its owner.
+  rpc Create(CreateRequest) returns (CreateResponse) {}
+
+  // List organizations the caller is a member of.
+  rpc List(ListRequest) returns (ListResponse) {}
+
+  // AddMember adds an existing user to an organization with the given role.
+  // Only owners and admins may call this. Owner role can only be granted by
+  // an existing owner — admins are limited to admin / member.
+  //
+  // This is a low-level primitive that takes a known user_id; the
+  // human-facing email-invite flow is intentionally not part of this RPC and
+  // will land separately when the invite subsystem is built.
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {}
+}
+
+message Organization {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message Membership {
+  string id = 1;
+  string user_id = 2;
+  string organization_id = 3;
+  string role = 4; // "owner" | "admin" | "member"
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message CreateRequest {
+  string name = 1;
+  string slug = 2;
+}
+message CreateResponse {
+  Organization organization = 1;
+}
+
+message ListRequest {}
+message ListResponse {
+  repeated Organization organizations = 1;
+}
+
+message AddMemberRequest {
+  string organization_id = 1;
+  string user_id = 2;
+  string role = 3; // "admin" | "member" (admin callers); "owner" allowed only when caller is owner
+}
+message AddMemberResponse {
+  Membership membership = 1;
+}

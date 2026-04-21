@@ -1,0 +1,49 @@
+name: Trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays at 06:23 UTC — catches newly-disclosed CVEs without blocking PRs.
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  fs-scan:
+    name: Filesystem scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          # Focus on lockfiles + declared deps; Dockerfiles are future work.
+          scanners: vuln,secret,misconfig
+          # CI-blocking severities. limit-severities-for-sarif keeps the
+          # filter applied to the SARIF output too — without it the action
+          # unsets TRIVY_SEVERITY for SARIF and exit-code: 1 then trips on
+          # LOW/MEDIUM findings that were never meant to gate CI.
+          severity: CRITICAL,HIGH
+          limit-severities-for-sarif: true
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: "1"
+
+      - name: Upload SARIF to GitHub Security
+        # Run even when the scan fails, so findings reach the Security tab.
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-fs
