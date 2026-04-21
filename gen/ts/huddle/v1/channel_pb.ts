@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/channel.proto.
  */
 export const file_huddle_v1_channel: GenFile = /*@__PURE__*/
-  fileDesc("ChdodWRkbGUvdjEvY2hhbm5lbC5wcm90bxIJaHVkZGxlLnYxIrUBCgdDaGFubmVsEgoKAmlkGAEgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEgwKBHNsdWcYBCABKAkSDQoFdG9waWMYBSABKAkSEwoLZGVzY3JpcHRpb24YBiABKAkSFQoNY3JlYXRlZF9ieV9pZBgHIAEoCRIuCgpjcmVhdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJvChRDcmVhdGVDaGFubmVsUmVxdWVzdBIXCg9vcmdhbml6YXRpb25faWQYASABKAkSDAoEbmFtZRgCIAEoCRIMCgRzbHVnGAMgASgJEg0KBXRvcGljGAQgASgJEhMKC2Rlc2NyaXB0aW9uGAUgASgJIjwKFUNyZWF0ZUNoYW5uZWxSZXNwb25zZRIjCgdjaGFubmVsGAEgASgLMhIuaHVkZGxlLnYxLkNoYW5uZWwiLgoTTGlzdENoYW5uZWxzUmVxdWVzdBIXCg9vcmdhbml6YXRpb25faWQYASABKAkiPAoUTGlzdENoYW5uZWxzUmVzcG9uc2USJAoIY2hhbm5lbHMYASADKAsyEi5odWRkbGUudjEuQ2hhbm5lbCIfChFHZXRDaGFubmVsUmVxdWVzdBIKCgJpZBgBIAEoCSI5ChJHZXRDaGFubmVsUmVzcG9uc2USIwoHY2hhbm5lbBgBIAEoCzISLmh1ZGRsZS52MS5DaGFubmVsMvABCg5DaGFubmVsU2VydmljZRJNCgZDcmVhdGUSHy5odWRkbGUudjEuQ3JlYXRlQ2hhbm5lbFJlcXVlc3QaIC5odWRkbGUudjEuQ3JlYXRlQ2hhbm5lbFJlc3BvbnNlIgASSQoETGlzdBIeLmh1ZGRsZS52MS5MaXN0Q2hhbm5lbHNSZXF1ZXN0Gh8uaHVkZGxlLnYxLkxpc3RDaGFubmVsc1Jlc3BvbnNlIgASRAoDR2V0EhwuaHVkZGxlLnYxLkdldENoYW5uZWxSZXF1ZXN0Gh0uaHVkZGxlLnYxLkdldENoYW5uZWxSZXNwb25zZSIAQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChdodWRkbGUvdjEvY2hhbm5lbC5wcm90bxIJaHVkZGxlLnYxIrUBCgdDaGFubmVsEgoKAmlkGAEgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEgwKBHNsdWcYBCABKAkSDQoFdG9waWMYBSABKAkSEwoLZGVzY3JpcHRpb24YBiABKAkSFQoNY3JlYXRlZF9ieV9pZBgHIAEoCRIuCgpjcmVhdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ2ChtDaGFubmVsU2VydmljZUNyZWF0ZVJlcXVlc3QSFwoPb3JnYW5pemF0aW9uX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEc2x1ZxgDIAEoCRINCgV0b3BpYxgEIAEoCRITCgtkZXNjcmlwdGlvbhgFIAEoCSJDChxDaGFubmVsU2VydmljZUNyZWF0ZVJlc3BvbnNlEiMKB2NoYW5uZWwYASABKAsyEi5odWRkbGUudjEuQ2hhbm5lbCI0ChlDaGFubmVsU2VydmljZUxpc3RSZXF1ZXN0EhcKD29yZ2FuaXphdGlvbl9pZBgBIAEoCSJCChpDaGFubmVsU2VydmljZUxpc3RSZXNwb25zZRIkCghjaGFubmVscxgBIAMoCzISLmh1ZGRsZS52MS5DaGFubmVsIiYKGENoYW5uZWxTZXJ2aWNlR2V0UmVxdWVzdBIKCgJpZBgBIAEoCSJAChlDaGFubmVsU2VydmljZUdldFJlc3BvbnNlEiMKB2NoYW5uZWwYASABKAsyEi5odWRkbGUudjEuQ2hhbm5lbDKYAgoOQ2hhbm5lbFNlcnZpY2USWwoGQ3JlYXRlEiYuaHVkZGxlLnYxLkNoYW5uZWxTZXJ2aWNlQ3JlYXRlUmVxdWVzdBonLmh1ZGRsZS52MS5DaGFubmVsU2VydmljZUNyZWF0ZVJlc3BvbnNlIgASVQoETGlzdBIkLmh1ZGRsZS52MS5DaGFubmVsU2VydmljZUxpc3RSZXF1ZXN0GiUuaHVkZGxlLnYxLkNoYW5uZWxTZXJ2aWNlTGlzdFJlc3BvbnNlIgASUgoDR2V0EiMuaHVkZGxlLnYxLkNoYW5uZWxTZXJ2aWNlR2V0UmVxdWVzdBokLmh1ZGRsZS52MS5DaGFubmVsU2VydmljZUdldFJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Channel
@@ -70,9 +70,9 @@ export const ChannelSchema: GenMessage<Channel> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 0);
 
 /**
- * @generated from message huddle.v1.CreateChannelRequest
+ * @generated from message huddle.v1.ChannelServiceCreateRequest
  */
-export type CreateChannelRequest = Message<"huddle.v1.CreateChannelRequest"> & {
+export type ChannelServiceCreateRequest = Message<"huddle.v1.ChannelServiceCreateRequest"> & {
   /**
    * @generated from field: string organization_id = 1;
    */
@@ -103,16 +103,16 @@ export type CreateChannelRequest = Message<"huddle.v1.CreateChannelRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.CreateChannelRequest.
- * Use `create(CreateChannelRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceCreateRequest.
+ * Use `create(ChannelServiceCreateRequestSchema)` to create a new message.
  */
-export const CreateChannelRequestSchema: GenMessage<CreateChannelRequest> = /*@__PURE__*/
+export const ChannelServiceCreateRequestSchema: GenMessage<ChannelServiceCreateRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 1);
 
 /**
- * @generated from message huddle.v1.CreateChannelResponse
+ * @generated from message huddle.v1.ChannelServiceCreateResponse
  */
-export type CreateChannelResponse = Message<"huddle.v1.CreateChannelResponse"> & {
+export type ChannelServiceCreateResponse = Message<"huddle.v1.ChannelServiceCreateResponse"> & {
   /**
    * @generated from field: huddle.v1.Channel channel = 1;
    */
@@ -120,16 +120,16 @@ export type CreateChannelResponse = Message<"huddle.v1.CreateChannelResponse"> &
 };
 
 /**
- * Describes the message huddle.v1.CreateChannelResponse.
- * Use `create(CreateChannelResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceCreateResponse.
+ * Use `create(ChannelServiceCreateResponseSchema)` to create a new message.
  */
-export const CreateChannelResponseSchema: GenMessage<CreateChannelResponse> = /*@__PURE__*/
+export const ChannelServiceCreateResponseSchema: GenMessage<ChannelServiceCreateResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 2);
 
 /**
- * @generated from message huddle.v1.ListChannelsRequest
+ * @generated from message huddle.v1.ChannelServiceListRequest
  */
-export type ListChannelsRequest = Message<"huddle.v1.ListChannelsRequest"> & {
+export type ChannelServiceListRequest = Message<"huddle.v1.ChannelServiceListRequest"> & {
   /**
    * @generated from field: string organization_id = 1;
    */
@@ -137,16 +137,16 @@ export type ListChannelsRequest = Message<"huddle.v1.ListChannelsRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.ListChannelsRequest.
- * Use `create(ListChannelsRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceListRequest.
+ * Use `create(ChannelServiceListRequestSchema)` to create a new message.
  */
-export const ListChannelsRequestSchema: GenMessage<ListChannelsRequest> = /*@__PURE__*/
+export const ChannelServiceListRequestSchema: GenMessage<ChannelServiceListRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 3);
 
 /**
- * @generated from message huddle.v1.ListChannelsResponse
+ * @generated from message huddle.v1.ChannelServiceListResponse
  */
-export type ListChannelsResponse = Message<"huddle.v1.ListChannelsResponse"> & {
+export type ChannelServiceListResponse = Message<"huddle.v1.ChannelServiceListResponse"> & {
   /**
    * @generated from field: repeated huddle.v1.Channel channels = 1;
    */
@@ -154,16 +154,16 @@ export type ListChannelsResponse = Message<"huddle.v1.ListChannelsResponse"> & {
 };
 
 /**
- * Describes the message huddle.v1.ListChannelsResponse.
- * Use `create(ListChannelsResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceListResponse.
+ * Use `create(ChannelServiceListResponseSchema)` to create a new message.
  */
-export const ListChannelsResponseSchema: GenMessage<ListChannelsResponse> = /*@__PURE__*/
+export const ChannelServiceListResponseSchema: GenMessage<ChannelServiceListResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 4);
 
 /**
- * @generated from message huddle.v1.GetChannelRequest
+ * @generated from message huddle.v1.ChannelServiceGetRequest
  */
-export type GetChannelRequest = Message<"huddle.v1.GetChannelRequest"> & {
+export type ChannelServiceGetRequest = Message<"huddle.v1.ChannelServiceGetRequest"> & {
   /**
    * @generated from field: string id = 1;
    */
@@ -171,16 +171,16 @@ export type GetChannelRequest = Message<"huddle.v1.GetChannelRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.GetChannelRequest.
- * Use `create(GetChannelRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceGetRequest.
+ * Use `create(ChannelServiceGetRequestSchema)` to create a new message.
  */
-export const GetChannelRequestSchema: GenMessage<GetChannelRequest> = /*@__PURE__*/
+export const ChannelServiceGetRequestSchema: GenMessage<ChannelServiceGetRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 5);
 
 /**
- * @generated from message huddle.v1.GetChannelResponse
+ * @generated from message huddle.v1.ChannelServiceGetResponse
  */
-export type GetChannelResponse = Message<"huddle.v1.GetChannelResponse"> & {
+export type ChannelServiceGetResponse = Message<"huddle.v1.ChannelServiceGetResponse"> & {
   /**
    * @generated from field: huddle.v1.Channel channel = 1;
    */
@@ -188,10 +188,10 @@ export type GetChannelResponse = Message<"huddle.v1.GetChannelResponse"> & {
 };
 
 /**
- * Describes the message huddle.v1.GetChannelResponse.
- * Use `create(GetChannelResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.ChannelServiceGetResponse.
+ * Use `create(ChannelServiceGetResponseSchema)` to create a new message.
  */
-export const GetChannelResponseSchema: GenMessage<GetChannelResponse> = /*@__PURE__*/
+export const ChannelServiceGetResponseSchema: GenMessage<ChannelServiceGetResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_channel, 6);
 
 /**
@@ -211,8 +211,8 @@ export const ChannelService: GenService<{
    */
   create: {
     methodKind: "unary";
-    input: typeof CreateChannelRequestSchema;
-    output: typeof CreateChannelResponseSchema;
+    input: typeof ChannelServiceCreateRequestSchema;
+    output: typeof ChannelServiceCreateResponseSchema;
   },
   /**
    * List all channels in an organization, oldest first. Caller must be a
@@ -222,8 +222,8 @@ export const ChannelService: GenService<{
    */
   list: {
     methodKind: "unary";
-    input: typeof ListChannelsRequestSchema;
-    output: typeof ListChannelsResponseSchema;
+    input: typeof ChannelServiceListRequestSchema;
+    output: typeof ChannelServiceListResponseSchema;
   },
   /**
    * Get a channel by ID. Caller must be a member of the channel's
@@ -233,8 +233,8 @@ export const ChannelService: GenService<{
    */
   get: {
     methodKind: "unary";
-    input: typeof GetChannelRequestSchema;
-    output: typeof GetChannelResponseSchema;
+    input: typeof ChannelServiceGetRequestSchema;
+    output: typeof ChannelServiceGetResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_channel, 0);

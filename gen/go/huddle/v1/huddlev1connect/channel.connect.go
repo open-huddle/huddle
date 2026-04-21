@@ -45,13 +45,13 @@ const (
 type ChannelServiceClient interface {
 	// Create a new channel inside an organization. Caller must be a member of
 	// the organization.
-	Create(context.Context, *connect.Request[v1.CreateChannelRequest]) (*connect.Response[v1.CreateChannelResponse], error)
+	Create(context.Context, *connect.Request[v1.ChannelServiceCreateRequest]) (*connect.Response[v1.ChannelServiceCreateResponse], error)
 	// List all channels in an organization, oldest first. Caller must be a
 	// member of the organization.
-	List(context.Context, *connect.Request[v1.ListChannelsRequest]) (*connect.Response[v1.ListChannelsResponse], error)
+	List(context.Context, *connect.Request[v1.ChannelServiceListRequest]) (*connect.Response[v1.ChannelServiceListResponse], error)
 	// Get a channel by ID. Caller must be a member of the channel's
 	// organization.
-	Get(context.Context, *connect.Request[v1.GetChannelRequest]) (*connect.Response[v1.GetChannelResponse], error)
+	Get(context.Context, *connect.Request[v1.ChannelServiceGetRequest]) (*connect.Response[v1.ChannelServiceGetResponse], error)
 }
 
 // NewChannelServiceClient constructs a client for the huddle.v1.ChannelService service. By default,
@@ -65,19 +65,19 @@ func NewChannelServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	channelServiceMethods := v1.File_huddle_v1_channel_proto.Services().ByName("ChannelService").Methods()
 	return &channelServiceClient{
-		create: connect.NewClient[v1.CreateChannelRequest, v1.CreateChannelResponse](
+		create: connect.NewClient[v1.ChannelServiceCreateRequest, v1.ChannelServiceCreateResponse](
 			httpClient,
 			baseURL+ChannelServiceCreateProcedure,
 			connect.WithSchema(channelServiceMethods.ByName("Create")),
 			connect.WithClientOptions(opts...),
 		),
-		list: connect.NewClient[v1.ListChannelsRequest, v1.ListChannelsResponse](
+		list: connect.NewClient[v1.ChannelServiceListRequest, v1.ChannelServiceListResponse](
 			httpClient,
 			baseURL+ChannelServiceListProcedure,
 			connect.WithSchema(channelServiceMethods.ByName("List")),
 			connect.WithClientOptions(opts...),
 		),
-		get: connect.NewClient[v1.GetChannelRequest, v1.GetChannelResponse](
+		get: connect.NewClient[v1.ChannelServiceGetRequest, v1.ChannelServiceGetResponse](
 			httpClient,
 			baseURL+ChannelServiceGetProcedure,
 			connect.WithSchema(channelServiceMethods.ByName("Get")),
@@ -88,23 +88,23 @@ func NewChannelServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // channelServiceClient implements ChannelServiceClient.
 type channelServiceClient struct {
-	create *connect.Client[v1.CreateChannelRequest, v1.CreateChannelResponse]
-	list   *connect.Client[v1.ListChannelsRequest, v1.ListChannelsResponse]
-	get    *connect.Client[v1.GetChannelRequest, v1.GetChannelResponse]
+	create *connect.Client[v1.ChannelServiceCreateRequest, v1.ChannelServiceCreateResponse]
+	list   *connect.Client[v1.ChannelServiceListRequest, v1.ChannelServiceListResponse]
+	get    *connect.Client[v1.ChannelServiceGetRequest, v1.ChannelServiceGetResponse]
 }
 
 // Create calls huddle.v1.ChannelService.Create.
-func (c *channelServiceClient) Create(ctx context.Context, req *connect.Request[v1.CreateChannelRequest]) (*connect.Response[v1.CreateChannelResponse], error) {
+func (c *channelServiceClient) Create(ctx context.Context, req *connect.Request[v1.ChannelServiceCreateRequest]) (*connect.Response[v1.ChannelServiceCreateResponse], error) {
 	return c.create.CallUnary(ctx, req)
 }
 
 // List calls huddle.v1.ChannelService.List.
-func (c *channelServiceClient) List(ctx context.Context, req *connect.Request[v1.ListChannelsRequest]) (*connect.Response[v1.ListChannelsResponse], error) {
+func (c *channelServiceClient) List(ctx context.Context, req *connect.Request[v1.ChannelServiceListRequest]) (*connect.Response[v1.ChannelServiceListResponse], error) {
 	return c.list.CallUnary(ctx, req)
 }
 
 // Get calls huddle.v1.ChannelService.Get.
-func (c *channelServiceClient) Get(ctx context.Context, req *connect.Request[v1.GetChannelRequest]) (*connect.Response[v1.GetChannelResponse], error) {
+func (c *channelServiceClient) Get(ctx context.Context, req *connect.Request[v1.ChannelServiceGetRequest]) (*connect.Response[v1.ChannelServiceGetResponse], error) {
 	return c.get.CallUnary(ctx, req)
 }
 
@@ -112,13 +112,13 @@ func (c *channelServiceClient) Get(ctx context.Context, req *connect.Request[v1.
 type ChannelServiceHandler interface {
 	// Create a new channel inside an organization. Caller must be a member of
 	// the organization.
-	Create(context.Context, *connect.Request[v1.CreateChannelRequest]) (*connect.Response[v1.CreateChannelResponse], error)
+	Create(context.Context, *connect.Request[v1.ChannelServiceCreateRequest]) (*connect.Response[v1.ChannelServiceCreateResponse], error)
 	// List all channels in an organization, oldest first. Caller must be a
 	// member of the organization.
-	List(context.Context, *connect.Request[v1.ListChannelsRequest]) (*connect.Response[v1.ListChannelsResponse], error)
+	List(context.Context, *connect.Request[v1.ChannelServiceListRequest]) (*connect.Response[v1.ChannelServiceListResponse], error)
 	// Get a channel by ID. Caller must be a member of the channel's
 	// organization.
-	Get(context.Context, *connect.Request[v1.GetChannelRequest]) (*connect.Response[v1.GetChannelResponse], error)
+	Get(context.Context, *connect.Request[v1.ChannelServiceGetRequest]) (*connect.Response[v1.ChannelServiceGetResponse], error)
 }
 
 // NewChannelServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -163,14 +163,14 @@ func NewChannelServiceHandler(svc ChannelServiceHandler, opts ...connect.Handler
 // UnimplementedChannelServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedChannelServiceHandler struct{}
 
-func (UnimplementedChannelServiceHandler) Create(context.Context, *connect.Request[v1.CreateChannelRequest]) (*connect.Response[v1.CreateChannelResponse], error) {
+func (UnimplementedChannelServiceHandler) Create(context.Context, *connect.Request[v1.ChannelServiceCreateRequest]) (*connect.Response[v1.ChannelServiceCreateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.ChannelService.Create is not implemented"))
 }
 
-func (UnimplementedChannelServiceHandler) List(context.Context, *connect.Request[v1.ListChannelsRequest]) (*connect.Response[v1.ListChannelsResponse], error) {
+func (UnimplementedChannelServiceHandler) List(context.Context, *connect.Request[v1.ChannelServiceListRequest]) (*connect.Response[v1.ChannelServiceListResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.ChannelService.List is not implemented"))
 }
 
-func (UnimplementedChannelServiceHandler) Get(context.Context, *connect.Request[v1.GetChannelRequest]) (*connect.Response[v1.GetChannelResponse], error) {
+func (UnimplementedChannelServiceHandler) Get(context.Context, *connect.Request[v1.ChannelServiceGetRequest]) (*connect.Response[v1.ChannelServiceGetResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.ChannelService.Get is not implemented"))
 }

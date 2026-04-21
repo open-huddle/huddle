@@ -124,7 +124,7 @@ func (x *Channel) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-type CreateChannelRequest struct {
+type ChannelServiceCreateRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	OrganizationId string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
 	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -137,20 +137,20 @@ type CreateChannelRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateChannelRequest) Reset() {
-	*x = CreateChannelRequest{}
+func (x *ChannelServiceCreateRequest) Reset() {
+	*x = ChannelServiceCreateRequest{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateChannelRequest) String() string {
+func (x *ChannelServiceCreateRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateChannelRequest) ProtoMessage() {}
+func (*ChannelServiceCreateRequest) ProtoMessage() {}
 
-func (x *CreateChannelRequest) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceCreateRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -162,67 +162,67 @@ func (x *CreateChannelRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateChannelRequest.ProtoReflect.Descriptor instead.
-func (*CreateChannelRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceCreateRequest.ProtoReflect.Descriptor instead.
+func (*ChannelServiceCreateRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateChannelRequest) GetOrganizationId() string {
+func (x *ChannelServiceCreateRequest) GetOrganizationId() string {
 	if x != nil {
 		return x.OrganizationId
 	}
 	return ""
 }
 
-func (x *CreateChannelRequest) GetName() string {
+func (x *ChannelServiceCreateRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateChannelRequest) GetSlug() string {
+func (x *ChannelServiceCreateRequest) GetSlug() string {
 	if x != nil {
 		return x.Slug
 	}
 	return ""
 }
 
-func (x *CreateChannelRequest) GetTopic() string {
+func (x *ChannelServiceCreateRequest) GetTopic() string {
 	if x != nil {
 		return x.Topic
 	}
 	return ""
 }
 
-func (x *CreateChannelRequest) GetDescription() string {
+func (x *ChannelServiceCreateRequest) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-type CreateChannelResponse struct {
+type ChannelServiceCreateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channel       *Channel               `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateChannelResponse) Reset() {
-	*x = CreateChannelResponse{}
+func (x *ChannelServiceCreateResponse) Reset() {
+	*x = ChannelServiceCreateResponse{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateChannelResponse) String() string {
+func (x *ChannelServiceCreateResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateChannelResponse) ProtoMessage() {}
+func (*ChannelServiceCreateResponse) ProtoMessage() {}
 
-func (x *CreateChannelResponse) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceCreateResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -234,39 +234,39 @@ func (x *CreateChannelResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateChannelResponse.ProtoReflect.Descriptor instead.
-func (*CreateChannelResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceCreateResponse.ProtoReflect.Descriptor instead.
+func (*ChannelServiceCreateResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateChannelResponse) GetChannel() *Channel {
+func (x *ChannelServiceCreateResponse) GetChannel() *Channel {
 	if x != nil {
 		return x.Channel
 	}
 	return nil
 }
 
-type ListChannelsRequest struct {
+type ChannelServiceListRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	OrganizationId string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *ListChannelsRequest) Reset() {
-	*x = ListChannelsRequest{}
+func (x *ChannelServiceListRequest) Reset() {
+	*x = ChannelServiceListRequest{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListChannelsRequest) String() string {
+func (x *ChannelServiceListRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListChannelsRequest) ProtoMessage() {}
+func (*ChannelServiceListRequest) ProtoMessage() {}
 
-func (x *ListChannelsRequest) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceListRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -278,39 +278,39 @@ func (x *ListChannelsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListChannelsRequest.ProtoReflect.Descriptor instead.
-func (*ListChannelsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceListRequest.ProtoReflect.Descriptor instead.
+func (*ChannelServiceListRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListChannelsRequest) GetOrganizationId() string {
+func (x *ChannelServiceListRequest) GetOrganizationId() string {
 	if x != nil {
 		return x.OrganizationId
 	}
 	return ""
 }
 
-type ListChannelsResponse struct {
+type ChannelServiceListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channels      []*Channel             `protobuf:"bytes,1,rep,name=channels,proto3" json:"channels,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListChannelsResponse) Reset() {
-	*x = ListChannelsResponse{}
+func (x *ChannelServiceListResponse) Reset() {
+	*x = ChannelServiceListResponse{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListChannelsResponse) String() string {
+func (x *ChannelServiceListResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListChannelsResponse) ProtoMessage() {}
+func (*ChannelServiceListResponse) ProtoMessage() {}
 
-func (x *ListChannelsResponse) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceListResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -322,39 +322,39 @@ func (x *ListChannelsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListChannelsResponse.ProtoReflect.Descriptor instead.
-func (*ListChannelsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceListResponse.ProtoReflect.Descriptor instead.
+func (*ChannelServiceListResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ListChannelsResponse) GetChannels() []*Channel {
+func (x *ChannelServiceListResponse) GetChannels() []*Channel {
 	if x != nil {
 		return x.Channels
 	}
 	return nil
 }
 
-type GetChannelRequest struct {
+type ChannelServiceGetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetChannelRequest) Reset() {
-	*x = GetChannelRequest{}
+func (x *ChannelServiceGetRequest) Reset() {
+	*x = ChannelServiceGetRequest{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetChannelRequest) String() string {
+func (x *ChannelServiceGetRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetChannelRequest) ProtoMessage() {}
+func (*ChannelServiceGetRequest) ProtoMessage() {}
 
-func (x *GetChannelRequest) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceGetRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -366,39 +366,39 @@ func (x *GetChannelRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetChannelRequest.ProtoReflect.Descriptor instead.
-func (*GetChannelRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceGetRequest.ProtoReflect.Descriptor instead.
+func (*ChannelServiceGetRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetChannelRequest) GetId() string {
+func (x *ChannelServiceGetRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-type GetChannelResponse struct {
+type ChannelServiceGetResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channel       *Channel               `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetChannelResponse) Reset() {
-	*x = GetChannelResponse{}
+func (x *ChannelServiceGetResponse) Reset() {
+	*x = ChannelServiceGetResponse{}
 	mi := &file_huddle_v1_channel_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetChannelResponse) String() string {
+func (x *ChannelServiceGetResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetChannelResponse) ProtoMessage() {}
+func (*ChannelServiceGetResponse) ProtoMessage() {}
 
-func (x *GetChannelResponse) ProtoReflect() protoreflect.Message {
+func (x *ChannelServiceGetResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_channel_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -410,12 +410,12 @@ func (x *GetChannelResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetChannelResponse.ProtoReflect.Descriptor instead.
-func (*GetChannelResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelServiceGetResponse.ProtoReflect.Descriptor instead.
+func (*ChannelServiceGetResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_channel_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetChannelResponse) GetChannel() *Channel {
+func (x *ChannelServiceGetResponse) GetChannel() *Channel {
 	if x != nil {
 		return x.Channel
 	}
@@ -436,27 +436,27 @@ const file_huddle_v1_channel_proto_rawDesc = "" +
 	"\vdescription\x18\x06 \x01(\tR\vdescription\x12\"\n" +
 	"\rcreated_by_id\x18\a \x01(\tR\vcreatedById\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x9f\x01\n" +
-	"\x14CreateChannelRequest\x12'\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xa6\x01\n" +
+	"\x1bChannelServiceCreateRequest\x12'\n" +
 	"\x0forganization_id\x18\x01 \x01(\tR\x0eorganizationId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x14\n" +
 	"\x05topic\x18\x04 \x01(\tR\x05topic\x12 \n" +
-	"\vdescription\x18\x05 \x01(\tR\vdescription\"E\n" +
-	"\x15CreateChannelResponse\x12,\n" +
-	"\achannel\x18\x01 \x01(\v2\x12.huddle.v1.ChannelR\achannel\">\n" +
-	"\x13ListChannelsRequest\x12'\n" +
-	"\x0forganization_id\x18\x01 \x01(\tR\x0eorganizationId\"F\n" +
-	"\x14ListChannelsResponse\x12.\n" +
-	"\bchannels\x18\x01 \x03(\v2\x12.huddle.v1.ChannelR\bchannels\"#\n" +
-	"\x11GetChannelRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"B\n" +
-	"\x12GetChannelResponse\x12,\n" +
-	"\achannel\x18\x01 \x01(\v2\x12.huddle.v1.ChannelR\achannel2\xf0\x01\n" +
-	"\x0eChannelService\x12M\n" +
-	"\x06Create\x12\x1f.huddle.v1.CreateChannelRequest\x1a .huddle.v1.CreateChannelResponse\"\x00\x12I\n" +
-	"\x04List\x12\x1e.huddle.v1.ListChannelsRequest\x1a\x1f.huddle.v1.ListChannelsResponse\"\x00\x12D\n" +
-	"\x03Get\x12\x1c.huddle.v1.GetChannelRequest\x1a\x1d.huddle.v1.GetChannelResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"L\n" +
+	"\x1cChannelServiceCreateResponse\x12,\n" +
+	"\achannel\x18\x01 \x01(\v2\x12.huddle.v1.ChannelR\achannel\"D\n" +
+	"\x19ChannelServiceListRequest\x12'\n" +
+	"\x0forganization_id\x18\x01 \x01(\tR\x0eorganizationId\"L\n" +
+	"\x1aChannelServiceListResponse\x12.\n" +
+	"\bchannels\x18\x01 \x03(\v2\x12.huddle.v1.ChannelR\bchannels\"*\n" +
+	"\x18ChannelServiceGetRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"I\n" +
+	"\x19ChannelServiceGetResponse\x12,\n" +
+	"\achannel\x18\x01 \x01(\v2\x12.huddle.v1.ChannelR\achannel2\x98\x02\n" +
+	"\x0eChannelService\x12[\n" +
+	"\x06Create\x12&.huddle.v1.ChannelServiceCreateRequest\x1a'.huddle.v1.ChannelServiceCreateResponse\"\x00\x12U\n" +
+	"\x04List\x12$.huddle.v1.ChannelServiceListRequest\x1a%.huddle.v1.ChannelServiceListResponse\"\x00\x12R\n" +
+	"\x03Get\x12#.huddle.v1.ChannelServiceGetRequest\x1a$.huddle.v1.ChannelServiceGetResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_channel_proto_rawDescOnce sync.Once
@@ -472,26 +472,26 @@ func file_huddle_v1_channel_proto_rawDescGZIP() []byte {
 
 var file_huddle_v1_channel_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_huddle_v1_channel_proto_goTypes = []any{
-	(*Channel)(nil),               // 0: huddle.v1.Channel
-	(*CreateChannelRequest)(nil),  // 1: huddle.v1.CreateChannelRequest
-	(*CreateChannelResponse)(nil), // 2: huddle.v1.CreateChannelResponse
-	(*ListChannelsRequest)(nil),   // 3: huddle.v1.ListChannelsRequest
-	(*ListChannelsResponse)(nil),  // 4: huddle.v1.ListChannelsResponse
-	(*GetChannelRequest)(nil),     // 5: huddle.v1.GetChannelRequest
-	(*GetChannelResponse)(nil),    // 6: huddle.v1.GetChannelResponse
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*Channel)(nil),                      // 0: huddle.v1.Channel
+	(*ChannelServiceCreateRequest)(nil),  // 1: huddle.v1.ChannelServiceCreateRequest
+	(*ChannelServiceCreateResponse)(nil), // 2: huddle.v1.ChannelServiceCreateResponse
+	(*ChannelServiceListRequest)(nil),    // 3: huddle.v1.ChannelServiceListRequest
+	(*ChannelServiceListResponse)(nil),   // 4: huddle.v1.ChannelServiceListResponse
+	(*ChannelServiceGetRequest)(nil),     // 5: huddle.v1.ChannelServiceGetRequest
+	(*ChannelServiceGetResponse)(nil),    // 6: huddle.v1.ChannelServiceGetResponse
+	(*timestamppb.Timestamp)(nil),        // 7: google.protobuf.Timestamp
 }
 var file_huddle_v1_channel_proto_depIdxs = []int32{
 	7, // 0: huddle.v1.Channel.created_at:type_name -> google.protobuf.Timestamp
-	0, // 1: huddle.v1.CreateChannelResponse.channel:type_name -> huddle.v1.Channel
-	0, // 2: huddle.v1.ListChannelsResponse.channels:type_name -> huddle.v1.Channel
-	0, // 3: huddle.v1.GetChannelResponse.channel:type_name -> huddle.v1.Channel
-	1, // 4: huddle.v1.ChannelService.Create:input_type -> huddle.v1.CreateChannelRequest
-	3, // 5: huddle.v1.ChannelService.List:input_type -> huddle.v1.ListChannelsRequest
-	5, // 6: huddle.v1.ChannelService.Get:input_type -> huddle.v1.GetChannelRequest
-	2, // 7: huddle.v1.ChannelService.Create:output_type -> huddle.v1.CreateChannelResponse
-	4, // 8: huddle.v1.ChannelService.List:output_type -> huddle.v1.ListChannelsResponse
-	6, // 9: huddle.v1.ChannelService.Get:output_type -> huddle.v1.GetChannelResponse
+	0, // 1: huddle.v1.ChannelServiceCreateResponse.channel:type_name -> huddle.v1.Channel
+	0, // 2: huddle.v1.ChannelServiceListResponse.channels:type_name -> huddle.v1.Channel
+	0, // 3: huddle.v1.ChannelServiceGetResponse.channel:type_name -> huddle.v1.Channel
+	1, // 4: huddle.v1.ChannelService.Create:input_type -> huddle.v1.ChannelServiceCreateRequest
+	3, // 5: huddle.v1.ChannelService.List:input_type -> huddle.v1.ChannelServiceListRequest
+	5, // 6: huddle.v1.ChannelService.Get:input_type -> huddle.v1.ChannelServiceGetRequest
+	2, // 7: huddle.v1.ChannelService.Create:output_type -> huddle.v1.ChannelServiceCreateResponse
+	4, // 8: huddle.v1.ChannelService.List:output_type -> huddle.v1.ChannelServiceListResponse
+	6, // 9: huddle.v1.ChannelService.Get:output_type -> huddle.v1.ChannelServiceGetResponse
 	7, // [7:10] is the sub-list for method output_type
 	4, // [4:7] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name

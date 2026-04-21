@@ -13,15 +13,15 @@ option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
 service ChannelService {
   // Create a new channel inside an organization. Caller must be a member of
   // the organization.
-  rpc Create(CreateChannelRequest) returns (CreateChannelResponse) {}
+  rpc Create(ChannelServiceCreateRequest) returns (ChannelServiceCreateResponse) {}
 
   // List all channels in an organization, oldest first. Caller must be a
   // member of the organization.
-  rpc List(ListChannelsRequest) returns (ListChannelsResponse) {}
+  rpc List(ChannelServiceListRequest) returns (ChannelServiceListResponse) {}
 
   // Get a channel by ID. Caller must be a member of the channel's
   // organization.
-  rpc Get(GetChannelRequest) returns (GetChannelResponse) {}
+  rpc Get(ChannelServiceGetRequest) returns (ChannelServiceGetResponse) {}
 }
 
 message Channel {
@@ -37,7 +37,7 @@ message Channel {
   google.protobuf.Timestamp created_at = 8;
 }
 
-message CreateChannelRequest {
+message ChannelServiceCreateRequest {
   string organization_id = 1;
   string name = 2;
   // Per-organization unique. Lowercase + hyphens recommended; the server
@@ -46,20 +46,20 @@ message CreateChannelRequest {
   string topic = 4;
   string description = 5;
 }
-message CreateChannelResponse {
+message ChannelServiceCreateResponse {
   Channel channel = 1;
 }
 
-message ListChannelsRequest {
+message ChannelServiceListRequest {
   string organization_id = 1;
 }
-message ListChannelsResponse {
+message ChannelServiceListResponse {
   repeated Channel channels = 1;
 }
 
-message GetChannelRequest {
+message ChannelServiceGetRequest {
   string id = 1;
 }
-message GetChannelResponse {
+message ChannelServiceGetResponse {
   Channel channel = 1;
 }

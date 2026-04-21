@@ -59,7 +59,7 @@ func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, 
 	}
 }
 
-func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.SendMessageRequest]) (*connect.Response[huddlev1.SendMessageResponse], error) {
+func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.MessageServiceSendRequest]) (*connect.Response[huddlev1.MessageServiceSendResponse], error) {
 	channelID, err := uuid.Parse(req.Msg.ChannelId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid channel_id"))
@@ -109,12 +109,12 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.SendMe
 		s.logger.Warn("publish message.created", "err", err, "channel_id", out.ChannelId, "message_id", out.Id)
 	}
 
-	return connect.NewResponse(&huddlev1.SendMessageResponse{
+	return connect.NewResponse(&huddlev1.MessageServiceSendResponse{
 		Message: out,
 	}), nil
 }
 
-func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.SubscribeMessagesRequest], stream *connect.ServerStream[huddlev1.Message]) error {
+func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.MessageServiceSubscribeRequest], stream *connect.ServerStream[huddlev1.MessageServiceSubscribeResponse]) error {
 	channelID, err := uuid.Parse(req.Msg.ChannelId)
 	if err != nil {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New("invalid channel_id"))
@@ -154,7 +154,7 @@ func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.S
 				// reconnect.
 				return nil
 			}
-			if err := stream.Send(m); err != nil {
+			if err := stream.Send(&huddlev1.MessageServiceSubscribeResponse{Message: m}); err != nil {
 				// Most often a broken pipe — client went away. Returning the
 				// error lets Connect map it to the right transport state.
 				return err
@@ -163,7 +163,7 @@ func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.S
 	}
 }
 
-func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListMessagesRequest]) (*connect.Response[huddlev1.ListMessagesResponse], error) {
+func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.MessageServiceListRequest]) (*connect.Response[huddlev1.MessageServiceListResponse], error) {
 	channelID, err := uuid.Parse(req.Msg.ChannelId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid channel_id"))
@@ -209,7 +209,7 @@ func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListMe
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("list messages: %w", err))
 	}
 
-	resp := &huddlev1.ListMessagesResponse{
+	resp := &huddlev1.MessageServiceListResponse{
 		Messages: make([]*huddlev1.Message, 0, limit),
 	}
 	hasMore := len(rows) > limit

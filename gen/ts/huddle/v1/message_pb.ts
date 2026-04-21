@@ -12,7 +12,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/message.proto.
  */
 export const file_huddle_v1_message: GenFile = /*@__PURE__*/
-  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxInoKB01lc3NhZ2USCgoCaWQYASABKAkSEgoKY2hhbm5lbF9pZBgCIAEoCRIRCglhdXRob3JfaWQYAyABKAkSDAoEYm9keRgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI2ChJTZW5kTWVzc2FnZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJIjoKE1NlbmRNZXNzYWdlUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIkgKE0xpc3RNZXNzYWdlc1JlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiUQoUTGlzdE1lc3NhZ2VzUmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCSIuChhTdWJzY3JpYmVNZXNzYWdlc1JlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCTLuAQoOTWVzc2FnZVNlcnZpY2USRwoEU2VuZBIdLmh1ZGRsZS52MS5TZW5kTWVzc2FnZVJlcXVlc3QaHi5odWRkbGUudjEuU2VuZE1lc3NhZ2VSZXNwb25zZSIAEkkKBExpc3QSHi5odWRkbGUudjEuTGlzdE1lc3NhZ2VzUmVxdWVzdBofLmh1ZGRsZS52MS5MaXN0TWVzc2FnZXNSZXNwb25zZSIAEkgKCVN1YnNjcmliZRIjLmh1ZGRsZS52MS5TdWJzY3JpYmVNZXNzYWdlc1JlcXVlc3QaEi5odWRkbGUudjEuTWVzc2FnZSIAMAFCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxInoKB01lc3NhZ2USCgoCaWQYASABKAkSEgoKY2hhbm5lbF9pZBgCIAEoCRIRCglhdXRob3JfaWQYAyABKAkSDAoEYm9keRgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI9ChlNZXNzYWdlU2VydmljZVNlbmRSZXF1ZXN0EhIKCmNoYW5uZWxfaWQYASABKAkSDAoEYm9keRgCIAEoCSJBChpNZXNzYWdlU2VydmljZVNlbmRSZXNwb25zZRIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UiTgoZTWVzc2FnZVNlcnZpY2VMaXN0UmVxdWVzdBISCgpjaGFubmVsX2lkGAEgASgJEg4KBmJlZm9yZRgCIAEoCRINCgVsaW1pdBgDIAEoBSJXChpNZXNzYWdlU2VydmljZUxpc3RSZXNwb25zZRIkCghtZXNzYWdlcxgBIAMoCzISLmh1ZGRsZS52MS5NZXNzYWdlEhMKC25leHRfY3Vyc29yGAIgASgJIjQKHk1lc3NhZ2VTZXJ2aWNlU3Vic2NyaWJlUmVxdWVzdBISCgpjaGFubmVsX2lkGAEgASgJIkYKH01lc3NhZ2VTZXJ2aWNlU3Vic2NyaWJlUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlMqYCCg5NZXNzYWdlU2VydmljZRJVCgRTZW5kEiQuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlU2VuZFJlcXVlc3QaJS5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTZW5kUmVzcG9uc2UiABJVCgRMaXN0EiQuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlTGlzdFJlcXVlc3QaJS5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VMaXN0UmVzcG9uc2UiABJmCglTdWJzY3JpYmUSKS5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXF1ZXN0GiouaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlU3Vic2NyaWJlUmVzcG9uc2UiADABQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Message
@@ -56,9 +56,9 @@ export const MessageSchema: GenMessage<Message> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 0);
 
 /**
- * @generated from message huddle.v1.SendMessageRequest
+ * @generated from message huddle.v1.MessageServiceSendRequest
  */
-export type SendMessageRequest = Message$1<"huddle.v1.SendMessageRequest"> & {
+export type MessageServiceSendRequest = Message$1<"huddle.v1.MessageServiceSendRequest"> & {
   /**
    * @generated from field: string channel_id = 1;
    */
@@ -71,16 +71,16 @@ export type SendMessageRequest = Message$1<"huddle.v1.SendMessageRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.SendMessageRequest.
- * Use `create(SendMessageRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.MessageServiceSendRequest.
+ * Use `create(MessageServiceSendRequestSchema)` to create a new message.
  */
-export const SendMessageRequestSchema: GenMessage<SendMessageRequest> = /*@__PURE__*/
+export const MessageServiceSendRequestSchema: GenMessage<MessageServiceSendRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 1);
 
 /**
- * @generated from message huddle.v1.SendMessageResponse
+ * @generated from message huddle.v1.MessageServiceSendResponse
  */
-export type SendMessageResponse = Message$1<"huddle.v1.SendMessageResponse"> & {
+export type MessageServiceSendResponse = Message$1<"huddle.v1.MessageServiceSendResponse"> & {
   /**
    * @generated from field: huddle.v1.Message message = 1;
    */
@@ -88,16 +88,16 @@ export type SendMessageResponse = Message$1<"huddle.v1.SendMessageResponse"> & {
 };
 
 /**
- * Describes the message huddle.v1.SendMessageResponse.
- * Use `create(SendMessageResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.MessageServiceSendResponse.
+ * Use `create(MessageServiceSendResponseSchema)` to create a new message.
  */
-export const SendMessageResponseSchema: GenMessage<SendMessageResponse> = /*@__PURE__*/
+export const MessageServiceSendResponseSchema: GenMessage<MessageServiceSendResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 2);
 
 /**
- * @generated from message huddle.v1.ListMessagesRequest
+ * @generated from message huddle.v1.MessageServiceListRequest
  */
-export type ListMessagesRequest = Message$1<"huddle.v1.ListMessagesRequest"> & {
+export type MessageServiceListRequest = Message$1<"huddle.v1.MessageServiceListRequest"> & {
   /**
    * @generated from field: string channel_id = 1;
    */
@@ -121,16 +121,16 @@ export type ListMessagesRequest = Message$1<"huddle.v1.ListMessagesRequest"> & {
 };
 
 /**
- * Describes the message huddle.v1.ListMessagesRequest.
- * Use `create(ListMessagesRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.MessageServiceListRequest.
+ * Use `create(MessageServiceListRequestSchema)` to create a new message.
  */
-export const ListMessagesRequestSchema: GenMessage<ListMessagesRequest> = /*@__PURE__*/
+export const MessageServiceListRequestSchema: GenMessage<MessageServiceListRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 3);
 
 /**
- * @generated from message huddle.v1.ListMessagesResponse
+ * @generated from message huddle.v1.MessageServiceListResponse
  */
-export type ListMessagesResponse = Message$1<"huddle.v1.ListMessagesResponse"> & {
+export type MessageServiceListResponse = Message$1<"huddle.v1.MessageServiceListResponse"> & {
   /**
    * Newest first.
    *
@@ -148,16 +148,16 @@ export type ListMessagesResponse = Message$1<"huddle.v1.ListMessagesResponse"> &
 };
 
 /**
- * Describes the message huddle.v1.ListMessagesResponse.
- * Use `create(ListMessagesResponseSchema)` to create a new message.
+ * Describes the message huddle.v1.MessageServiceListResponse.
+ * Use `create(MessageServiceListResponseSchema)` to create a new message.
  */
-export const ListMessagesResponseSchema: GenMessage<ListMessagesResponse> = /*@__PURE__*/
+export const MessageServiceListResponseSchema: GenMessage<MessageServiceListResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 4);
 
 /**
- * @generated from message huddle.v1.SubscribeMessagesRequest
+ * @generated from message huddle.v1.MessageServiceSubscribeRequest
  */
-export type SubscribeMessagesRequest = Message$1<"huddle.v1.SubscribeMessagesRequest"> & {
+export type MessageServiceSubscribeRequest = Message$1<"huddle.v1.MessageServiceSubscribeRequest"> & {
   /**
    * @generated from field: string channel_id = 1;
    */
@@ -165,11 +165,31 @@ export type SubscribeMessagesRequest = Message$1<"huddle.v1.SubscribeMessagesReq
 };
 
 /**
- * Describes the message huddle.v1.SubscribeMessagesRequest.
- * Use `create(SubscribeMessagesRequestSchema)` to create a new message.
+ * Describes the message huddle.v1.MessageServiceSubscribeRequest.
+ * Use `create(MessageServiceSubscribeRequestSchema)` to create a new message.
  */
-export const SubscribeMessagesRequestSchema: GenMessage<SubscribeMessagesRequest> = /*@__PURE__*/
+export const MessageServiceSubscribeRequestSchema: GenMessage<MessageServiceSubscribeRequest> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 5);
+
+/**
+ * Wrapping the streamed Message lets us add future fields (event type,
+ * heartbeat, tombstone) without a breaking wire change.
+ *
+ * @generated from message huddle.v1.MessageServiceSubscribeResponse
+ */
+export type MessageServiceSubscribeResponse = Message$1<"huddle.v1.MessageServiceSubscribeResponse"> & {
+  /**
+   * @generated from field: huddle.v1.Message message = 1;
+   */
+  message?: Message;
+};
+
+/**
+ * Describes the message huddle.v1.MessageServiceSubscribeResponse.
+ * Use `create(MessageServiceSubscribeResponseSchema)` to create a new message.
+ */
+export const MessageServiceSubscribeResponseSchema: GenMessage<MessageServiceSubscribeResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 6);
 
 /**
  * MessageService handles message send and read for chat channels. Realtime
@@ -187,8 +207,8 @@ export const MessageService: GenService<{
    */
   send: {
     methodKind: "unary";
-    input: typeof SendMessageRequestSchema;
-    output: typeof SendMessageResponseSchema;
+    input: typeof MessageServiceSendRequestSchema;
+    output: typeof MessageServiceSendResponseSchema;
   },
   /**
    * List messages in a channel, newest first. Cursor-paginated: callers pass
@@ -198,8 +218,8 @@ export const MessageService: GenService<{
    */
   list: {
     methodKind: "unary";
-    input: typeof ListMessagesRequestSchema;
-    output: typeof ListMessagesResponseSchema;
+    input: typeof MessageServiceListRequestSchema;
+    output: typeof MessageServiceListResponseSchema;
   },
   /**
    * Subscribe streams new messages in a channel as they are sent. The stream
@@ -212,8 +232,8 @@ export const MessageService: GenService<{
    */
   subscribe: {
     methodKind: "server_streaming";
-    input: typeof SubscribeMessagesRequestSchema;
-    output: typeof MessageSchema;
+    input: typeof MessageServiceSubscribeRequestSchema;
+    output: typeof MessageServiceSubscribeResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_message, 0);

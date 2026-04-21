@@ -101,7 +101,7 @@ func (x *Message) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-type SendMessageRequest struct {
+type MessageServiceSendRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChannelId     string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
 	Body          string                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
@@ -109,20 +109,20 @@ type SendMessageRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SendMessageRequest) Reset() {
-	*x = SendMessageRequest{}
+func (x *MessageServiceSendRequest) Reset() {
+	*x = MessageServiceSendRequest{}
 	mi := &file_huddle_v1_message_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SendMessageRequest) String() string {
+func (x *MessageServiceSendRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SendMessageRequest) ProtoMessage() {}
+func (*MessageServiceSendRequest) ProtoMessage() {}
 
-func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
+func (x *MessageServiceSendRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_message_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -134,46 +134,46 @@ func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SendMessageRequest.ProtoReflect.Descriptor instead.
-func (*SendMessageRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageServiceSendRequest.ProtoReflect.Descriptor instead.
+func (*MessageServiceSendRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_message_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SendMessageRequest) GetChannelId() string {
+func (x *MessageServiceSendRequest) GetChannelId() string {
 	if x != nil {
 		return x.ChannelId
 	}
 	return ""
 }
 
-func (x *SendMessageRequest) GetBody() string {
+func (x *MessageServiceSendRequest) GetBody() string {
 	if x != nil {
 		return x.Body
 	}
 	return ""
 }
 
-type SendMessageResponse struct {
+type MessageServiceSendResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       *Message               `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SendMessageResponse) Reset() {
-	*x = SendMessageResponse{}
+func (x *MessageServiceSendResponse) Reset() {
+	*x = MessageServiceSendResponse{}
 	mi := &file_huddle_v1_message_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SendMessageResponse) String() string {
+func (x *MessageServiceSendResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SendMessageResponse) ProtoMessage() {}
+func (*MessageServiceSendResponse) ProtoMessage() {}
 
-func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
+func (x *MessageServiceSendResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_message_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -185,19 +185,19 @@ func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SendMessageResponse.ProtoReflect.Descriptor instead.
-func (*SendMessageResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageServiceSendResponse.ProtoReflect.Descriptor instead.
+func (*MessageServiceSendResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_message_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *SendMessageResponse) GetMessage() *Message {
+func (x *MessageServiceSendResponse) GetMessage() *Message {
 	if x != nil {
 		return x.Message
 	}
 	return nil
 }
 
-type ListMessagesRequest struct {
+type MessageServiceListRequest struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	ChannelId string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
 	// Opaque cursor returned by a previous List call. Empty means start from
@@ -210,20 +210,20 @@ type ListMessagesRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListMessagesRequest) Reset() {
-	*x = ListMessagesRequest{}
+func (x *MessageServiceListRequest) Reset() {
+	*x = MessageServiceListRequest{}
 	mi := &file_huddle_v1_message_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListMessagesRequest) String() string {
+func (x *MessageServiceListRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListMessagesRequest) ProtoMessage() {}
+func (*MessageServiceListRequest) ProtoMessage() {}
 
-func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
+func (x *MessageServiceListRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_message_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -235,33 +235,33 @@ func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListMessagesRequest.ProtoReflect.Descriptor instead.
-func (*ListMessagesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageServiceListRequest.ProtoReflect.Descriptor instead.
+func (*MessageServiceListRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_message_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListMessagesRequest) GetChannelId() string {
+func (x *MessageServiceListRequest) GetChannelId() string {
 	if x != nil {
 		return x.ChannelId
 	}
 	return ""
 }
 
-func (x *ListMessagesRequest) GetBefore() string {
+func (x *MessageServiceListRequest) GetBefore() string {
 	if x != nil {
 		return x.Before
 	}
 	return ""
 }
 
-func (x *ListMessagesRequest) GetLimit() int32 {
+func (x *MessageServiceListRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
 	}
 	return 0
 }
 
-type ListMessagesResponse struct {
+type MessageServiceListResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Newest first.
 	Messages []*Message `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
@@ -272,20 +272,20 @@ type ListMessagesResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListMessagesResponse) Reset() {
-	*x = ListMessagesResponse{}
+func (x *MessageServiceListResponse) Reset() {
+	*x = MessageServiceListResponse{}
 	mi := &file_huddle_v1_message_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListMessagesResponse) String() string {
+func (x *MessageServiceListResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListMessagesResponse) ProtoMessage() {}
+func (*MessageServiceListResponse) ProtoMessage() {}
 
-func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
+func (x *MessageServiceListResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_message_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -297,46 +297,46 @@ func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListMessagesResponse.ProtoReflect.Descriptor instead.
-func (*ListMessagesResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageServiceListResponse.ProtoReflect.Descriptor instead.
+func (*MessageServiceListResponse) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_message_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ListMessagesResponse) GetMessages() []*Message {
+func (x *MessageServiceListResponse) GetMessages() []*Message {
 	if x != nil {
 		return x.Messages
 	}
 	return nil
 }
 
-func (x *ListMessagesResponse) GetNextCursor() string {
+func (x *MessageServiceListResponse) GetNextCursor() string {
 	if x != nil {
 		return x.NextCursor
 	}
 	return ""
 }
 
-type SubscribeMessagesRequest struct {
+type MessageServiceSubscribeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChannelId     string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SubscribeMessagesRequest) Reset() {
-	*x = SubscribeMessagesRequest{}
+func (x *MessageServiceSubscribeRequest) Reset() {
+	*x = MessageServiceSubscribeRequest{}
 	mi := &file_huddle_v1_message_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SubscribeMessagesRequest) String() string {
+func (x *MessageServiceSubscribeRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SubscribeMessagesRequest) ProtoMessage() {}
+func (*MessageServiceSubscribeRequest) ProtoMessage() {}
 
-func (x *SubscribeMessagesRequest) ProtoReflect() protoreflect.Message {
+func (x *MessageServiceSubscribeRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_huddle_v1_message_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -348,16 +348,62 @@ func (x *SubscribeMessagesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SubscribeMessagesRequest.ProtoReflect.Descriptor instead.
-func (*SubscribeMessagesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageServiceSubscribeRequest.ProtoReflect.Descriptor instead.
+func (*MessageServiceSubscribeRequest) Descriptor() ([]byte, []int) {
 	return file_huddle_v1_message_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *SubscribeMessagesRequest) GetChannelId() string {
+func (x *MessageServiceSubscribeRequest) GetChannelId() string {
 	if x != nil {
 		return x.ChannelId
 	}
 	return ""
+}
+
+// Wrapping the streamed Message lets us add future fields (event type,
+// heartbeat, tombstone) without a breaking wire change.
+type MessageServiceSubscribeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       *Message               `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageServiceSubscribeResponse) Reset() {
+	*x = MessageServiceSubscribeResponse{}
+	mi := &file_huddle_v1_message_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageServiceSubscribeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageServiceSubscribeResponse) ProtoMessage() {}
+
+func (x *MessageServiceSubscribeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageServiceSubscribeResponse.ProtoReflect.Descriptor instead.
+func (*MessageServiceSubscribeResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *MessageServiceSubscribeResponse) GetMessage() *Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
 }
 
 var File_huddle_v1_message_proto protoreflect.FileDescriptor
@@ -372,29 +418,31 @@ const file_huddle_v1_message_proto_rawDesc = "" +
 	"\tauthor_id\x18\x03 \x01(\tR\bauthorId\x12\x12\n" +
 	"\x04body\x18\x04 \x01(\tR\x04body\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"G\n" +
-	"\x12SendMessageRequest\x12\x1d\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"N\n" +
+	"\x19MessageServiceSendRequest\x12\x1d\n" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x12\n" +
-	"\x04body\x18\x02 \x01(\tR\x04body\"C\n" +
-	"\x13SendMessageResponse\x12,\n" +
-	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage\"b\n" +
-	"\x13ListMessagesRequest\x12\x1d\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\"J\n" +
+	"\x1aMessageServiceSendResponse\x12,\n" +
+	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage\"h\n" +
+	"\x19MessageServiceListRequest\x12\x1d\n" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x16\n" +
 	"\x06before\x18\x02 \x01(\tR\x06before\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limit\"g\n" +
-	"\x14ListMessagesResponse\x12.\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"m\n" +
+	"\x1aMessageServiceListResponse\x12.\n" +
 	"\bmessages\x18\x01 \x03(\v2\x12.huddle.v1.MessageR\bmessages\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\"9\n" +
-	"\x18SubscribeMessagesRequest\x12\x1d\n" +
+	"nextCursor\"?\n" +
+	"\x1eMessageServiceSubscribeRequest\x12\x1d\n" +
 	"\n" +
-	"channel_id\x18\x01 \x01(\tR\tchannelId2\xee\x01\n" +
-	"\x0eMessageService\x12G\n" +
-	"\x04Send\x12\x1d.huddle.v1.SendMessageRequest\x1a\x1e.huddle.v1.SendMessageResponse\"\x00\x12I\n" +
-	"\x04List\x12\x1e.huddle.v1.ListMessagesRequest\x1a\x1f.huddle.v1.ListMessagesResponse\"\x00\x12H\n" +
-	"\tSubscribe\x12#.huddle.v1.SubscribeMessagesRequest\x1a\x12.huddle.v1.Message\"\x000\x01B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"channel_id\x18\x01 \x01(\tR\tchannelId\"O\n" +
+	"\x1fMessageServiceSubscribeResponse\x12,\n" +
+	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage2\xa6\x02\n" +
+	"\x0eMessageService\x12U\n" +
+	"\x04Send\x12$.huddle.v1.MessageServiceSendRequest\x1a%.huddle.v1.MessageServiceSendResponse\"\x00\x12U\n" +
+	"\x04List\x12$.huddle.v1.MessageServiceListRequest\x1a%.huddle.v1.MessageServiceListResponse\"\x00\x12f\n" +
+	"\tSubscribe\x12).huddle.v1.MessageServiceSubscribeRequest\x1a*.huddle.v1.MessageServiceSubscribeResponse\"\x000\x01B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_message_proto_rawDescOnce sync.Once
@@ -408,31 +456,33 @@ func file_huddle_v1_message_proto_rawDescGZIP() []byte {
 	return file_huddle_v1_message_proto_rawDescData
 }
 
-var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_huddle_v1_message_proto_goTypes = []any{
-	(*Message)(nil),                  // 0: huddle.v1.Message
-	(*SendMessageRequest)(nil),       // 1: huddle.v1.SendMessageRequest
-	(*SendMessageResponse)(nil),      // 2: huddle.v1.SendMessageResponse
-	(*ListMessagesRequest)(nil),      // 3: huddle.v1.ListMessagesRequest
-	(*ListMessagesResponse)(nil),     // 4: huddle.v1.ListMessagesResponse
-	(*SubscribeMessagesRequest)(nil), // 5: huddle.v1.SubscribeMessagesRequest
-	(*timestamppb.Timestamp)(nil),    // 6: google.protobuf.Timestamp
+	(*Message)(nil),                         // 0: huddle.v1.Message
+	(*MessageServiceSendRequest)(nil),       // 1: huddle.v1.MessageServiceSendRequest
+	(*MessageServiceSendResponse)(nil),      // 2: huddle.v1.MessageServiceSendResponse
+	(*MessageServiceListRequest)(nil),       // 3: huddle.v1.MessageServiceListRequest
+	(*MessageServiceListResponse)(nil),      // 4: huddle.v1.MessageServiceListResponse
+	(*MessageServiceSubscribeRequest)(nil),  // 5: huddle.v1.MessageServiceSubscribeRequest
+	(*MessageServiceSubscribeResponse)(nil), // 6: huddle.v1.MessageServiceSubscribeResponse
+	(*timestamppb.Timestamp)(nil),           // 7: google.protobuf.Timestamp
 }
 var file_huddle_v1_message_proto_depIdxs = []int32{
-	6, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	0, // 1: huddle.v1.SendMessageResponse.message:type_name -> huddle.v1.Message
-	0, // 2: huddle.v1.ListMessagesResponse.messages:type_name -> huddle.v1.Message
-	1, // 3: huddle.v1.MessageService.Send:input_type -> huddle.v1.SendMessageRequest
-	3, // 4: huddle.v1.MessageService.List:input_type -> huddle.v1.ListMessagesRequest
-	5, // 5: huddle.v1.MessageService.Subscribe:input_type -> huddle.v1.SubscribeMessagesRequest
-	2, // 6: huddle.v1.MessageService.Send:output_type -> huddle.v1.SendMessageResponse
-	4, // 7: huddle.v1.MessageService.List:output_type -> huddle.v1.ListMessagesResponse
-	0, // 8: huddle.v1.MessageService.Subscribe:output_type -> huddle.v1.Message
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	7, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	0, // 1: huddle.v1.MessageServiceSendResponse.message:type_name -> huddle.v1.Message
+	0, // 2: huddle.v1.MessageServiceListResponse.messages:type_name -> huddle.v1.Message
+	0, // 3: huddle.v1.MessageServiceSubscribeResponse.message:type_name -> huddle.v1.Message
+	1, // 4: huddle.v1.MessageService.Send:input_type -> huddle.v1.MessageServiceSendRequest
+	3, // 5: huddle.v1.MessageService.List:input_type -> huddle.v1.MessageServiceListRequest
+	5, // 6: huddle.v1.MessageService.Subscribe:input_type -> huddle.v1.MessageServiceSubscribeRequest
+	2, // 7: huddle.v1.MessageService.Send:output_type -> huddle.v1.MessageServiceSendResponse
+	4, // 8: huddle.v1.MessageService.List:output_type -> huddle.v1.MessageServiceListResponse
+	6, // 9: huddle.v1.MessageService.Subscribe:output_type -> huddle.v1.MessageServiceSubscribeResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_huddle_v1_message_proto_init() }
@@ -446,7 +496,7 @@ func file_huddle_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_huddle_v1_message_proto_rawDesc), len(file_huddle_v1_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

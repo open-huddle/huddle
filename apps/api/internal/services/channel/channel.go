@@ -35,7 +35,7 @@ func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, 
 	return &Service{client: client, resolver: resolver, authz: authz, logger: logger}
 }
 
-func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.CreateChannelRequest]) (*connect.Response[huddlev1.CreateChannelResponse], error) {
+func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.ChannelServiceCreateRequest]) (*connect.Response[huddlev1.ChannelServiceCreateResponse], error) {
 	if req.Msg.Name == "" || req.Msg.Slug == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name and slug are required"))
 	}
@@ -71,12 +71,12 @@ func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.Crea
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create channel: %w", err))
 	}
 
-	return connect.NewResponse(&huddlev1.CreateChannelResponse{
+	return connect.NewResponse(&huddlev1.ChannelServiceCreateResponse{
 		Channel: toProto(ch, orgID, caller.ID),
 	}), nil
 }
 
-func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListChannelsRequest]) (*connect.Response[huddlev1.ListChannelsResponse], error) {
+func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ChannelServiceListRequest]) (*connect.Response[huddlev1.ChannelServiceListResponse], error) {
 	orgID, err := uuid.Parse(req.Msg.OrganizationId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid organization_id"))
@@ -108,7 +108,7 @@ func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListCh
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("list channels: %w", err))
 	}
 
-	resp := &huddlev1.ListChannelsResponse{
+	resp := &huddlev1.ChannelServiceListResponse{
 		Channels: make([]*huddlev1.Channel, 0, len(rows)),
 	}
 	for _, ch := range rows {
@@ -117,7 +117,7 @@ func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.ListCh
 	return connect.NewResponse(resp), nil
 }
 
-func (s *Service) Get(ctx context.Context, req *connect.Request[huddlev1.GetChannelRequest]) (*connect.Response[huddlev1.GetChannelResponse], error) {
+func (s *Service) Get(ctx context.Context, req *connect.Request[huddlev1.ChannelServiceGetRequest]) (*connect.Response[huddlev1.ChannelServiceGetResponse], error) {
 	id, err := uuid.Parse(req.Msg.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid id"))
@@ -149,7 +149,7 @@ func (s *Service) Get(ctx context.Context, req *connect.Request[huddlev1.GetChan
 		return nil, s.denyErr(err)
 	}
 
-	return connect.NewResponse(&huddlev1.GetChannelResponse{
+	return connect.NewResponse(&huddlev1.ChannelServiceGetResponse{
 		Channel: toProto(ch, orgID, createdByID(ch)),
 	}), nil
 }

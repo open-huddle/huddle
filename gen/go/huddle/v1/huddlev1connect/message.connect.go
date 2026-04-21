@@ -46,16 +46,16 @@ const (
 type MessageServiceClient interface {
 	// Send a message to a channel. Caller must be a member of the channel's
 	// organization.
-	Send(context.Context, *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error)
+	Send(context.Context, *connect.Request[v1.MessageServiceSendRequest]) (*connect.Response[v1.MessageServiceSendResponse], error)
 	// List messages in a channel, newest first. Cursor-paginated: callers pass
 	// the next_cursor from a previous response to fetch older messages.
-	List(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error)
+	List(context.Context, *connect.Request[v1.MessageServiceListRequest]) (*connect.Response[v1.MessageServiceListResponse], error)
 	// Subscribe streams new messages in a channel as they are sent. The stream
 	// starts at "now" — older messages are fetched via List on reconnect.
 	// Closing the call (client disconnect or context cancel) cleans up the
 	// server-side subscription. The token is verified once at stream open;
 	// long-lived clients should reconnect periodically with a fresh token.
-	Subscribe(context.Context, *connect.Request[v1.SubscribeMessagesRequest]) (*connect.ServerStreamForClient[v1.Message], error)
+	Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest]) (*connect.ServerStreamForClient[v1.MessageServiceSubscribeResponse], error)
 }
 
 // NewMessageServiceClient constructs a client for the huddle.v1.MessageService service. By default,
@@ -69,19 +69,19 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	messageServiceMethods := v1.File_huddle_v1_message_proto.Services().ByName("MessageService").Methods()
 	return &messageServiceClient{
-		send: connect.NewClient[v1.SendMessageRequest, v1.SendMessageResponse](
+		send: connect.NewClient[v1.MessageServiceSendRequest, v1.MessageServiceSendResponse](
 			httpClient,
 			baseURL+MessageServiceSendProcedure,
 			connect.WithSchema(messageServiceMethods.ByName("Send")),
 			connect.WithClientOptions(opts...),
 		),
-		list: connect.NewClient[v1.ListMessagesRequest, v1.ListMessagesResponse](
+		list: connect.NewClient[v1.MessageServiceListRequest, v1.MessageServiceListResponse](
 			httpClient,
 			baseURL+MessageServiceListProcedure,
 			connect.WithSchema(messageServiceMethods.ByName("List")),
 			connect.WithClientOptions(opts...),
 		),
-		subscribe: connect.NewClient[v1.SubscribeMessagesRequest, v1.Message](
+		subscribe: connect.NewClient[v1.MessageServiceSubscribeRequest, v1.MessageServiceSubscribeResponse](
 			httpClient,
 			baseURL+MessageServiceSubscribeProcedure,
 			connect.WithSchema(messageServiceMethods.ByName("Subscribe")),
@@ -92,23 +92,23 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // messageServiceClient implements MessageServiceClient.
 type messageServiceClient struct {
-	send      *connect.Client[v1.SendMessageRequest, v1.SendMessageResponse]
-	list      *connect.Client[v1.ListMessagesRequest, v1.ListMessagesResponse]
-	subscribe *connect.Client[v1.SubscribeMessagesRequest, v1.Message]
+	send      *connect.Client[v1.MessageServiceSendRequest, v1.MessageServiceSendResponse]
+	list      *connect.Client[v1.MessageServiceListRequest, v1.MessageServiceListResponse]
+	subscribe *connect.Client[v1.MessageServiceSubscribeRequest, v1.MessageServiceSubscribeResponse]
 }
 
 // Send calls huddle.v1.MessageService.Send.
-func (c *messageServiceClient) Send(ctx context.Context, req *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error) {
+func (c *messageServiceClient) Send(ctx context.Context, req *connect.Request[v1.MessageServiceSendRequest]) (*connect.Response[v1.MessageServiceSendResponse], error) {
 	return c.send.CallUnary(ctx, req)
 }
 
 // List calls huddle.v1.MessageService.List.
-func (c *messageServiceClient) List(ctx context.Context, req *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
+func (c *messageServiceClient) List(ctx context.Context, req *connect.Request[v1.MessageServiceListRequest]) (*connect.Response[v1.MessageServiceListResponse], error) {
 	return c.list.CallUnary(ctx, req)
 }
 
 // Subscribe calls huddle.v1.MessageService.Subscribe.
-func (c *messageServiceClient) Subscribe(ctx context.Context, req *connect.Request[v1.SubscribeMessagesRequest]) (*connect.ServerStreamForClient[v1.Message], error) {
+func (c *messageServiceClient) Subscribe(ctx context.Context, req *connect.Request[v1.MessageServiceSubscribeRequest]) (*connect.ServerStreamForClient[v1.MessageServiceSubscribeResponse], error) {
 	return c.subscribe.CallServerStream(ctx, req)
 }
 
@@ -116,16 +116,16 @@ func (c *messageServiceClient) Subscribe(ctx context.Context, req *connect.Reque
 type MessageServiceHandler interface {
 	// Send a message to a channel. Caller must be a member of the channel's
 	// organization.
-	Send(context.Context, *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error)
+	Send(context.Context, *connect.Request[v1.MessageServiceSendRequest]) (*connect.Response[v1.MessageServiceSendResponse], error)
 	// List messages in a channel, newest first. Cursor-paginated: callers pass
 	// the next_cursor from a previous response to fetch older messages.
-	List(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error)
+	List(context.Context, *connect.Request[v1.MessageServiceListRequest]) (*connect.Response[v1.MessageServiceListResponse], error)
 	// Subscribe streams new messages in a channel as they are sent. The stream
 	// starts at "now" — older messages are fetched via List on reconnect.
 	// Closing the call (client disconnect or context cancel) cleans up the
 	// server-side subscription. The token is verified once at stream open;
 	// long-lived clients should reconnect periodically with a fresh token.
-	Subscribe(context.Context, *connect.Request[v1.SubscribeMessagesRequest], *connect.ServerStream[v1.Message]) error
+	Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest], *connect.ServerStream[v1.MessageServiceSubscribeResponse]) error
 }
 
 // NewMessageServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -170,14 +170,14 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 // UnimplementedMessageServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedMessageServiceHandler struct{}
 
-func (UnimplementedMessageServiceHandler) Send(context.Context, *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error) {
+func (UnimplementedMessageServiceHandler) Send(context.Context, *connect.Request[v1.MessageServiceSendRequest]) (*connect.Response[v1.MessageServiceSendResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.Send is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) List(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
+func (UnimplementedMessageServiceHandler) List(context.Context, *connect.Request[v1.MessageServiceListRequest]) (*connect.Response[v1.MessageServiceListResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.List is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) Subscribe(context.Context, *connect.Request[v1.SubscribeMessagesRequest], *connect.ServerStream[v1.Message]) error {
+func (UnimplementedMessageServiceHandler) Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest], *connect.ServerStream[v1.MessageServiceSubscribeResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.Subscribe is not implemented"))
 }
