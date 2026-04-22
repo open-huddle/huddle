@@ -185,6 +185,7 @@ var (
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "resource_id", Type: field.TypeUUID},
 		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "indexed_at", Type: field.TypeTime, Nullable: true},
 	}
 	// OutboxEventsTable holds the schema information for the "outbox_events" table.
 	OutboxEventsTable = &schema.Table{
@@ -196,6 +197,11 @@ var (
 				Name:    "outboxevent_published_at_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{OutboxEventsColumns[11], OutboxEventsColumns[1]},
+			},
+			{
+				Name:    "outboxevent_indexed_at_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{OutboxEventsColumns[12], OutboxEventsColumns[1]},
 			},
 			{
 				Name:    "outboxevent_created_at_id",

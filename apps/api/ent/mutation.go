@@ -3600,6 +3600,7 @@ type OutboxEventMutation struct {
 	resource_type      *string
 	resource_id        *uuid.UUID
 	published_at       *time.Time
+	indexed_at         *time.Time
 	clearedFields      map[string]struct{}
 	audit_event        *uuid.UUID
 	clearedaudit_event bool
@@ -4147,6 +4148,55 @@ func (m *OutboxEventMutation) ResetPublishedAt() {
 	delete(m.clearedFields, outboxevent.FieldPublishedAt)
 }
 
+// SetIndexedAt sets the "indexed_at" field.
+func (m *OutboxEventMutation) SetIndexedAt(t time.Time) {
+	m.indexed_at = &t
+}
+
+// IndexedAt returns the value of the "indexed_at" field in the mutation.
+func (m *OutboxEventMutation) IndexedAt() (r time.Time, exists bool) {
+	v := m.indexed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIndexedAt returns the old "indexed_at" field's value of the OutboxEvent entity.
+// If the OutboxEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OutboxEventMutation) OldIndexedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIndexedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIndexedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIndexedAt: %w", err)
+	}
+	return oldValue.IndexedAt, nil
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (m *OutboxEventMutation) ClearIndexedAt() {
+	m.indexed_at = nil
+	m.clearedFields[outboxevent.FieldIndexedAt] = struct{}{}
+}
+
+// IndexedAtCleared returns if the "indexed_at" field was cleared in this mutation.
+func (m *OutboxEventMutation) IndexedAtCleared() bool {
+	_, ok := m.clearedFields[outboxevent.FieldIndexedAt]
+	return ok
+}
+
+// ResetIndexedAt resets all changes to the "indexed_at" field.
+func (m *OutboxEventMutation) ResetIndexedAt() {
+	m.indexed_at = nil
+	delete(m.clearedFields, outboxevent.FieldIndexedAt)
+}
+
 // SetAuditEventID sets the "audit_event" edge to the AuditEvent entity by id.
 func (m *OutboxEventMutation) SetAuditEventID(id uuid.UUID) {
 	m.audit_event = &id
@@ -4220,7 +4270,7 @@ func (m *OutboxEventMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OutboxEventMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, outboxevent.FieldCreatedAt)
 	}
@@ -4254,6 +4304,9 @@ func (m *OutboxEventMutation) Fields() []string {
 	if m.published_at != nil {
 		fields = append(fields, outboxevent.FieldPublishedAt)
 	}
+	if m.indexed_at != nil {
+		fields = append(fields, outboxevent.FieldIndexedAt)
+	}
 	return fields
 }
 
@@ -4284,6 +4337,8 @@ func (m *OutboxEventMutation) Field(name string) (ent.Value, bool) {
 		return m.ResourceID()
 	case outboxevent.FieldPublishedAt:
 		return m.PublishedAt()
+	case outboxevent.FieldIndexedAt:
+		return m.IndexedAt()
 	}
 	return nil, false
 }
@@ -4315,6 +4370,8 @@ func (m *OutboxEventMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldResourceID(ctx)
 	case outboxevent.FieldPublishedAt:
 		return m.OldPublishedAt(ctx)
+	case outboxevent.FieldIndexedAt:
+		return m.OldIndexedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown OutboxEvent field %s", name)
 }
@@ -4401,6 +4458,13 @@ func (m *OutboxEventMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPublishedAt(v)
 		return nil
+	case outboxevent.FieldIndexedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIndexedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown OutboxEvent field %s", name)
 }
@@ -4440,6 +4504,9 @@ func (m *OutboxEventMutation) ClearedFields() []string {
 	if m.FieldCleared(outboxevent.FieldPublishedAt) {
 		fields = append(fields, outboxevent.FieldPublishedAt)
 	}
+	if m.FieldCleared(outboxevent.FieldIndexedAt) {
+		fields = append(fields, outboxevent.FieldIndexedAt)
+	}
 	return fields
 }
 
@@ -4462,6 +4529,9 @@ func (m *OutboxEventMutation) ClearField(name string) error {
 		return nil
 	case outboxevent.FieldPublishedAt:
 		m.ClearPublishedAt()
+		return nil
+	case outboxevent.FieldIndexedAt:
+		m.ClearIndexedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown OutboxEvent nullable field %s", name)
@@ -4503,6 +4573,9 @@ func (m *OutboxEventMutation) ResetField(name string) error {
 		return nil
 	case outboxevent.FieldPublishedAt:
 		m.ResetPublishedAt()
+		return nil
+	case outboxevent.FieldIndexedAt:
+		m.ResetIndexedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown OutboxEvent field %s", name)

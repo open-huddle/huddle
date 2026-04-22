@@ -9,18 +9,31 @@ import (
 )
 
 type Config struct {
-	Addr     string   `mapstructure:"addr"`
-	Version  string   `mapstructure:"version"`
-	Database Database `mapstructure:"database"`
-	Valkey   Valkey   `mapstructure:"valkey"`
-	Auth     Auth     `mapstructure:"auth"`
-	Nats     Nats     `mapstructure:"nats"`
+	Addr       string     `mapstructure:"addr"`
+	Version    string     `mapstructure:"version"`
+	Database   Database   `mapstructure:"database"`
+	Valkey     Valkey     `mapstructure:"valkey"`
+	Auth       Auth       `mapstructure:"auth"`
+	Nats       Nats       `mapstructure:"nats"`
+	OpenSearch OpenSearch `mapstructure:"opensearch"`
 }
 
 // Nats configures the JetStream connection used for realtime fan-out and
 // (future) audit / search / notifications consumers.
 type Nats struct {
 	URL string `mapstructure:"url"`
+}
+
+// OpenSearch configures the full-text search backend. The indexer worker
+// writes message projections here and SearchService queries them. Index
+// names use the alias-over-versioned-index pattern — callers always talk to
+// the alias, reindex flips it.
+type OpenSearch struct {
+	URL string `mapstructure:"url"`
+	// MessagesIndex is the alias that SearchService queries and the indexer
+	// writes to. The concrete index name (e.g. huddle-messages-v1) is a
+	// deployment detail owned by whoever bootstraps the cluster.
+	MessagesIndex string `mapstructure:"messages_index"`
 }
 
 // Auth controls OIDC token verification. Issuer is the full URL of the realm
@@ -65,6 +78,8 @@ func Load() (*Config, error) {
 	v.SetDefault("auth.issuer_url", "http://localhost:8180/realms/huddle")
 	v.SetDefault("auth.audience", "huddle-api")
 	v.SetDefault("nats.url", "nats://localhost:4222")
+	v.SetDefault("opensearch.url", "http://localhost:9200")
+	v.SetDefault("opensearch.messages_index", "huddle-messages")
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

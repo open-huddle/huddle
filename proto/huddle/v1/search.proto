@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// SearchService runs full-text queries against the projections the
+// internal/search indexer maintains in OpenSearch. Caller must be a member
+// of the organization they are searching in — the handler enforces that
+// plus a tenant-isolation filter on every underlying OpenSearch query.
+service SearchService {
+  // Search messages within one organization. Pagination is cursor-based
+  // (OpenSearch search_after encoded opaquely); there is no offset-based
+  // variant to keep deep pagination cheap.
+  rpc SearchMessages(SearchServiceSearchMessagesRequest) returns (SearchServiceSearchMessagesResponse) {}
+}
+
+// MessageHit is a single match for a SearchMessages call. Snippet is a
+// Markdown fragment with matched tokens wrapped in **bold** — keeps
+// rendering uniform with the rest of the app, which already treats message
+// bodies as Markdown.
+message MessageHit {
+  string id = 1;
+  string channel_id = 2;
+  string author_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  // Markdown snippet; matched tokens wrapped in **…**. Empty when the
+  // backend returns no highlight (short bodies, phrase miss, etc.).
+  string snippet = 5;
+  // Relevance score from the backend; use only for ordering within one
+  // response. Not comparable across queries.
+  float score = 6;
+}
+
+message SearchServiceSearchMessagesRequest {
+  // Required. Tenant scope — the caller must be a member of this org.
+  string organization_id = 1;
+  // Required. Free-text query. The server does not interpret operators
+  // today; treat the whole string as a bag of terms against the message
+  // body.
+  string query = 2;
+  // Optional. When set, restrict hits to messages in these channels.
+  // Empty means "every channel in the org the caller can read".
+  repeated string channel_ids = 3;
+  // Optional. Inclusive lower bound on message created_at.
+  google.protobuf.Timestamp after = 4;
+  // Optional. Exclusive upper bound on message created_at.
+  google.protobuf.Timestamp before = 5;
+  // Page size. Defaults to 25 when zero or negative; clamped to 100 max.
+  int32 limit = 6;
+  // Opaque cursor returned by a previous SearchMessages call. Empty means
+  // start from the most relevant / newest hit. Cursors encode OpenSearch's
+  // search_after tuple; do not parse or construct them on the client.
+  string cursor = 7;
+}
+
+message SearchServiceSearchMessagesResponse {
+  // Newest-first within equal relevance — tie-break on created_at desc then
+  // id desc so the cursor ordering is stable.
+  repeated MessageHit hits = 1;
+  // Pass to a subsequent SearchMessages call to fetch the next page. Empty
+  // when no more pages exist.
+  string next_cursor = 2;
+}

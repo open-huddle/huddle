@@ -67,6 +67,15 @@ func (OutboxEvent) Fields() []ent.Field {
 		// Set when the NATS publish succeeded. Nil means "pending" — the
 		// publisher worker's polling filter.
 		field.Time("published_at").Optional().Nillable(),
+
+		// Set when the OpenSearch indexer has written the doc. Nil means
+		// "not yet indexed" — the search.Indexer worker's polling filter.
+		// Separate from published_at because the publisher and the indexer
+		// fail (and succeed) independently; one row may be published but
+		// not indexed, or vice versa. Eventually also a precondition for
+		// outbox GC: a row is only safe to trim once it is published,
+		// audited, AND indexed.
+		field.Time("indexed_at").Optional().Nillable(),
 	}
 }
 
@@ -85,6 +94,9 @@ func (OutboxEvent) Indexes() []ent.Index {
 		// Leading column is nullable, which lets Postgres skip already-
 		// published rows cheaply as the table grows.
 		index.Fields("published_at", "created_at"),
+		// Same shape as published_at — lets search.Indexer scan only the
+		// un-indexed backlog on every tick as the table grows.
+		index.Fields("indexed_at", "created_at"),
 		// Audit-consumer cursor + general chronological queries.
 		index.Fields("created_at", "id"),
 	}

@@ -50,6 +50,26 @@ func (_u *OutboxEventUpdate) ClearPublishedAt() *OutboxEventUpdate {
 	return _u
 }
 
+// SetIndexedAt sets the "indexed_at" field.
+func (_u *OutboxEventUpdate) SetIndexedAt(v time.Time) *OutboxEventUpdate {
+	_u.mutation.SetIndexedAt(v)
+	return _u
+}
+
+// SetNillableIndexedAt sets the "indexed_at" field if the given value is not nil.
+func (_u *OutboxEventUpdate) SetNillableIndexedAt(v *time.Time) *OutboxEventUpdate {
+	if v != nil {
+		_u.SetIndexedAt(*v)
+	}
+	return _u
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (_u *OutboxEventUpdate) ClearIndexedAt() *OutboxEventUpdate {
+	_u.mutation.ClearIndexedAt()
+	return _u
+}
+
 // SetAuditEventID sets the "audit_event" edge to the AuditEvent entity by ID.
 func (_u *OutboxEventUpdate) SetAuditEventID(id uuid.UUID) *OutboxEventUpdate {
 	_u.mutation.SetAuditEventID(id)
@@ -128,6 +148,12 @@ func (_u *OutboxEventUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	if _u.mutation.PublishedAtCleared() {
 		_spec.ClearField(outboxevent.FieldPublishedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.IndexedAt(); ok {
+		_spec.SetField(outboxevent.FieldIndexedAt, field.TypeTime, value)
+	}
+	if _u.mutation.IndexedAtCleared() {
+		_spec.ClearField(outboxevent.FieldIndexedAt, field.TypeTime)
+	}
 	if _u.mutation.AuditEventCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
@@ -194,6 +220,26 @@ func (_u *OutboxEventUpdateOne) SetNillablePublishedAt(v *time.Time) *OutboxEven
 // ClearPublishedAt clears the value of the "published_at" field.
 func (_u *OutboxEventUpdateOne) ClearPublishedAt() *OutboxEventUpdateOne {
 	_u.mutation.ClearPublishedAt()
+	return _u
+}
+
+// SetIndexedAt sets the "indexed_at" field.
+func (_u *OutboxEventUpdateOne) SetIndexedAt(v time.Time) *OutboxEventUpdateOne {
+	_u.mutation.SetIndexedAt(v)
+	return _u
+}
+
+// SetNillableIndexedAt sets the "indexed_at" field if the given value is not nil.
+func (_u *OutboxEventUpdateOne) SetNillableIndexedAt(v *time.Time) *OutboxEventUpdateOne {
+	if v != nil {
+		_u.SetIndexedAt(*v)
+	}
+	return _u
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (_u *OutboxEventUpdateOne) ClearIndexedAt() *OutboxEventUpdateOne {
+	_u.mutation.ClearIndexedAt()
 	return _u
 }
 
@@ -304,6 +350,12 @@ func (_u *OutboxEventUpdateOne) sqlSave(ctx context.Context) (_node *OutboxEvent
 	}
 	if _u.mutation.PublishedAtCleared() {
 		_spec.ClearField(outboxevent.FieldPublishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.IndexedAt(); ok {
+		_spec.SetField(outboxevent.FieldIndexedAt, field.TypeTime, value)
+	}
+	if _u.mutation.IndexedAtCleared() {
+		_spec.ClearField(outboxevent.FieldIndexedAt, field.TypeTime)
 	}
 	if _u.mutation.AuditEventCleared() {
 		edge := &sqlgraph.EdgeSpec{

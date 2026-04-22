@@ -17,6 +17,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/outbox"
+	"github.com/open-huddle/huddle/apps/api/internal/search"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
 )
 
@@ -80,16 +81,33 @@ func run(logger *slog.Logger) error {
 	}
 	defer bus.Close()
 
-	// Background workers: drain the transactional outbox to NATS, and mirror
-	// outbox rows into the audit log. Both share the signal-cancellable ctx
-	// so they stop when SIGINT/SIGTERM fires — any rows they didn't reach
-	// stay durable in the DB and get picked up at next startup.
+	// OpenSearch: same fail-fast story as NATS — search being broken at
+	// startup should surface immediately, not on the first query. EnsureIndex
+	// creates the concrete index + alias idempotently.
+	searchClient, err := search.NewOpenSearch(cfg.OpenSearch.URL, cfg.OpenSearch.MessagesIndex)
+	if err != nil {
+		return fmt.Errorf("init opensearch: %w", err)
+	}
+	ensureCtx, ecancel := context.WithTimeout(ctx, 15*time.Second)
+	if err := searchClient.EnsureIndex(ensureCtx); err != nil {
+		ecancel()
+		return fmt.Errorf("opensearch ensure index: %w", err)
+	}
+	ecancel()
+
+	// Background workers: drain the transactional outbox to NATS, mirror
+	// outbox rows into the audit log, and index message projections into
+	// OpenSearch. All share the signal-cancellable ctx so they stop when
+	// SIGINT/SIGTERM fires — rows they didn't reach stay durable in the DB
+	// and get picked up at next startup.
 	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger)
 	auditConsumer := audit.NewConsumer(db.Ent, logger)
+	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger)
 	go outboxPublisher.Run(ctx)
 	go auditConsumer.Run(ctx)
+	go searchIndexer.Run(ctx)
 
-	srv := server.New(cfg, logger, db, verifier, bus)
+	srv := server.New(cfg, logger, db, verifier, bus, searchClient)
 
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,

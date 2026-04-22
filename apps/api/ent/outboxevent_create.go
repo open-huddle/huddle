@@ -123,6 +123,20 @@ func (_c *OutboxEventCreate) SetNillablePublishedAt(v *time.Time) *OutboxEventCr
 	return _c
 }
 
+// SetIndexedAt sets the "indexed_at" field.
+func (_c *OutboxEventCreate) SetIndexedAt(v time.Time) *OutboxEventCreate {
+	_c.mutation.SetIndexedAt(v)
+	return _c
+}
+
+// SetNillableIndexedAt sets the "indexed_at" field if the given value is not nil.
+func (_c *OutboxEventCreate) SetNillableIndexedAt(v *time.Time) *OutboxEventCreate {
+	if v != nil {
+		_c.SetIndexedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *OutboxEventCreate) SetID(v uuid.UUID) *OutboxEventCreate {
 	_c.mutation.SetID(v)
@@ -327,6 +341,10 @@ func (_c *OutboxEventCreate) createSpec() (*OutboxEvent, *sqlgraph.CreateSpec) {
 		_spec.SetField(outboxevent.FieldPublishedAt, field.TypeTime, value)
 		_node.PublishedAt = &value
 	}
+	if value, ok := _c.mutation.IndexedAt(); ok {
+		_spec.SetField(outboxevent.FieldIndexedAt, field.TypeTime, value)
+		_node.IndexedAt = &value
+	}
 	if nodes := _c.mutation.AuditEventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
@@ -410,6 +428,24 @@ func (u *OutboxEventUpsert) UpdatePublishedAt() *OutboxEventUpsert {
 // ClearPublishedAt clears the value of the "published_at" field.
 func (u *OutboxEventUpsert) ClearPublishedAt() *OutboxEventUpsert {
 	u.SetNull(outboxevent.FieldPublishedAt)
+	return u
+}
+
+// SetIndexedAt sets the "indexed_at" field.
+func (u *OutboxEventUpsert) SetIndexedAt(v time.Time) *OutboxEventUpsert {
+	u.Set(outboxevent.FieldIndexedAt, v)
+	return u
+}
+
+// UpdateIndexedAt sets the "indexed_at" field to the value that was provided on create.
+func (u *OutboxEventUpsert) UpdateIndexedAt() *OutboxEventUpsert {
+	u.SetExcluded(outboxevent.FieldIndexedAt)
+	return u
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (u *OutboxEventUpsert) ClearIndexedAt() *OutboxEventUpsert {
+	u.SetNull(outboxevent.FieldIndexedAt)
 	return u
 }
 
@@ -509,6 +545,27 @@ func (u *OutboxEventUpsertOne) UpdatePublishedAt() *OutboxEventUpsertOne {
 func (u *OutboxEventUpsertOne) ClearPublishedAt() *OutboxEventUpsertOne {
 	return u.Update(func(s *OutboxEventUpsert) {
 		s.ClearPublishedAt()
+	})
+}
+
+// SetIndexedAt sets the "indexed_at" field.
+func (u *OutboxEventUpsertOne) SetIndexedAt(v time.Time) *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.SetIndexedAt(v)
+	})
+}
+
+// UpdateIndexedAt sets the "indexed_at" field to the value that was provided on create.
+func (u *OutboxEventUpsertOne) UpdateIndexedAt() *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.UpdateIndexedAt()
+	})
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (u *OutboxEventUpsertOne) ClearIndexedAt() *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.ClearIndexedAt()
 	})
 }
 
@@ -775,6 +832,27 @@ func (u *OutboxEventUpsertBulk) UpdatePublishedAt() *OutboxEventUpsertBulk {
 func (u *OutboxEventUpsertBulk) ClearPublishedAt() *OutboxEventUpsertBulk {
 	return u.Update(func(s *OutboxEventUpsert) {
 		s.ClearPublishedAt()
+	})
+}
+
+// SetIndexedAt sets the "indexed_at" field.
+func (u *OutboxEventUpsertBulk) SetIndexedAt(v time.Time) *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.SetIndexedAt(v)
+	})
+}
+
+// UpdateIndexedAt sets the "indexed_at" field to the value that was provided on create.
+func (u *OutboxEventUpsertBulk) UpdateIndexedAt() *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.UpdateIndexedAt()
+	})
+}
+
+// ClearIndexedAt clears the value of the "indexed_at" field.
+func (u *OutboxEventUpsertBulk) ClearIndexedAt() *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.ClearIndexedAt()
 	})
 }
 

@@ -111,6 +111,11 @@ func PublishedAt(v time.Time) predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldEQ(FieldPublishedAt, v))
 }
 
+// IndexedAt applies equality check predicate on the "indexed_at" field. It's identical to IndexedAtEQ.
+func IndexedAt(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldEQ(FieldIndexedAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldEQ(FieldCreatedAt, v))
@@ -679,6 +684,56 @@ func PublishedAtIsNil() predicate.OutboxEvent {
 // PublishedAtNotNil applies the NotNil predicate on the "published_at" field.
 func PublishedAtNotNil() predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldNotNull(FieldPublishedAt))
+}
+
+// IndexedAtEQ applies the EQ predicate on the "indexed_at" field.
+func IndexedAtEQ(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldEQ(FieldIndexedAt, v))
+}
+
+// IndexedAtNEQ applies the NEQ predicate on the "indexed_at" field.
+func IndexedAtNEQ(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNEQ(FieldIndexedAt, v))
+}
+
+// IndexedAtIn applies the In predicate on the "indexed_at" field.
+func IndexedAtIn(vs ...time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldIn(FieldIndexedAt, vs...))
+}
+
+// IndexedAtNotIn applies the NotIn predicate on the "indexed_at" field.
+func IndexedAtNotIn(vs ...time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNotIn(FieldIndexedAt, vs...))
+}
+
+// IndexedAtGT applies the GT predicate on the "indexed_at" field.
+func IndexedAtGT(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldGT(FieldIndexedAt, v))
+}
+
+// IndexedAtGTE applies the GTE predicate on the "indexed_at" field.
+func IndexedAtGTE(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldGTE(FieldIndexedAt, v))
+}
+
+// IndexedAtLT applies the LT predicate on the "indexed_at" field.
+func IndexedAtLT(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldLT(FieldIndexedAt, v))
+}
+
+// IndexedAtLTE applies the LTE predicate on the "indexed_at" field.
+func IndexedAtLTE(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldLTE(FieldIndexedAt, v))
+}
+
+// IndexedAtIsNil applies the IsNil predicate on the "indexed_at" field.
+func IndexedAtIsNil() predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldIsNull(FieldIndexedAt))
+}
+
+// IndexedAtNotNil applies the NotNil predicate on the "indexed_at" field.
+func IndexedAtNotNil() predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNotNull(FieldIndexedAt))
 }
 
 // HasAuditEvent applies the HasEdge predicate on the "audit_event" edge.

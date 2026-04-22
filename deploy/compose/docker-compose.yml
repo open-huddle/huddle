@@ -95,7 +95,41 @@ services:
       retries: 10
       start_period: 5s
 
+  opensearch:
+    image: ${OPENSEARCH_IMAGE:-opensearchproject/opensearch:2.17.1}
+    restart: unless-stopped
+    environment:
+      # Dev-only single-node mode. The security plugin is off locally so we
+      # don't need a demo TLS cert on every laptop — Helm turns it back on in
+      # production. Heap is capped below the 1 GiB default to fit on an API
+      # developer's machine alongside Postgres + Keycloak + NATS.
+      discovery.type: "single-node"
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      # Dev memory lock off — laptops without mlock capability otherwise fail to start.
+      bootstrap.memory_lock: "false"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      # The cluster health endpoint returns yellow on single-node (no replicas
+      # possible), so we accept yellow-or-green as "ready".
+      test: [ "CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
 volumes:
   postgres-data:
   valkey-data:
   nats-data:
+  opensearch-data:
