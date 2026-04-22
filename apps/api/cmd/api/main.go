@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"entgo.io/ent/dialect"
+
 	"github.com/open-huddle/huddle/apps/api/internal/audit"
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
@@ -101,9 +103,13 @@ func run(logger *slog.Logger) error {
 	// Outbox.Retention. All share the signal-cancellable ctx so they stop
 	// when SIGINT/SIGTERM fires — rows they didn't reach stay durable in
 	// the DB and get picked up at next startup.
-	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger)
+	// Postgres is the production dialect (internal/database pins it); the
+	// option enables FOR UPDATE SKIP LOCKED so multiple API replicas drain
+	// disjoint rows from the outbox. SQLite-backed unit tests omit this
+	// option and exercise the unlocked path.
+	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger, outbox.WithDialect(dialect.Postgres))
 	auditConsumer := audit.NewConsumer(db.Ent, logger)
-	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger)
+	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger, search.WithIndexerDialect(dialect.Postgres))
 	outboxGC := outbox.NewGC(db.Ent, logger, outbox.WithGCRetention(cfg.Outbox.Retention))
 	go outboxPublisher.Run(ctx)
 	go auditConsumer.Run(ctx)

@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 
@@ -36,6 +38,8 @@ type Indexer struct {
 
 	interval  time.Duration
 	batchSize int
+	// dialect gates FOR UPDATE SKIP LOCKED — same story as outbox.Publisher.
+	dialect string
 }
 
 // IndexerOption configures an Indexer; zero options yields production defaults.
@@ -50,6 +54,12 @@ func WithIndexerInterval(d time.Duration) IndexerOption {
 // WithIndexerBatchSize caps the rows processed in one tick.
 func WithIndexerBatchSize(n int) IndexerOption {
 	return func(i *Indexer) { i.batchSize = n }
+}
+
+// WithIndexerDialect enables FOR UPDATE SKIP LOCKED on the claim query
+// when the caller is running against Postgres. Omitted in tests.
+func WithIndexerDialect(d string) IndexerOption {
+	return func(i *Indexer) { i.dialect = d }
 }
 
 // NewIndexer wires an Indexer against the given ent client and search
@@ -95,15 +105,35 @@ func (i *Indexer) Run(ctx context.Context) {
 
 // IndexBatch does one iteration. Exported so tests can drive the loop
 // deterministically.
+//
+// Wrapped in a transaction so the SELECT can hold FOR UPDATE SKIP LOCKED
+// on Postgres — same multi-replica claim pattern as outbox.Publisher.
+// OpenSearch write runs under the lock; commit releases it. OpenSearch
+// upserts by outbox event UUID anyway, so the worst a retry does is
+// rewrite the same document.
 func (i *Indexer) IndexBatch(ctx context.Context) error {
-	rows, err := i.client.OutboxEvent.Query().
+	tx, err := i.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	q := tx.OutboxEvent.Query().
 		Where(
 			outboxevent.IndexedAtIsNil(),
 			outboxevent.EventTypeEQ(eventTypeMessageCreated),
 		).
 		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(i.batchSize).
-		All(ctx)
+		Limit(i.batchSize)
+	if i.dialect == dialect.Postgres {
+		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
+	}
+	rows, err := q.All(ctx)
 	if err != nil {
 		return fmt.Errorf("query un-indexed: %w", err)
 	}
@@ -114,7 +144,7 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 			// Malformed payload is a bug, not a transient failure — stamp
 			// indexed_at anyway so the worker doesn't hot-loop on a bad row.
 			i.logger.Warn("search-indexer: decode", "err", err, "outbox_id", row.ID)
-			if stampErr := i.stamp(ctx, row.ID); stampErr != nil {
+			if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
 				i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
 			}
 			continue
@@ -126,17 +156,22 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 			i.logger.Warn("search-indexer: index", "err", err, "outbox_id", row.ID)
 			continue
 		}
-		if err := i.stamp(ctx, row.ID); err != nil {
+		if err := stampInTx(ctx, tx, row.ID); err != nil {
 			// Failure to stamp means we'll re-index next tick — safe because
 			// _id is the outbox event UUID (upsert).
 			i.logger.Warn("search-indexer: stamp", "err", err, "outbox_id", row.ID)
 		}
 	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+	committed = true
 	return nil
 }
 
-func (i *Indexer) stamp(ctx context.Context, id uuid.UUID) error {
-	return i.client.OutboxEvent.UpdateOneID(id).
+func stampInTx(ctx context.Context, tx *ent.Tx, id uuid.UUID) error {
+	return tx.OutboxEvent.UpdateOneID(id).
 		SetIndexedAt(time.Now()).
 		Exec(ctx)
 }

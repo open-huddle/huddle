@@ -3,12 +3,14 @@
 // as the originating mutation; this worker publishes them downstream and
 // marks them done.
 //
-// Single-replica dedup is fine for now: each API replica runs one Publisher;
-// with multiple replicas the same row may publish twice. NATS subscribers are
-// expected to be idempotent (they key on the message UUID). A proper fix —
-// `SELECT ... FOR UPDATE SKIP LOCKED` or advisory-lock leader election — is a
-// known follow-up; it's not in this PR because it's Postgres-specific and we
-// don't have multi-replica deployments running yet.
+// Multi-replica safety: the publisher polls inside a transaction and uses
+// `SELECT ... FOR UPDATE SKIP LOCKED` so two replicas drain disjoint rows.
+// Per-row publish + stamp happens while the lock is held; commit releases
+// ownership. Subscribers still key on message UUID, so a duplicate publish
+// under pathological retry is safe, but the common case is now exactly-once.
+// SQLite (unit tests) doesn't support the lock suffix; the publisher skips
+// it on non-Postgres dialects — Postgres integration tests exercise the
+// real path.
 package outbox
 
 import (
@@ -17,6 +19,9 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
+
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
@@ -36,6 +41,10 @@ type Publisher struct {
 
 	interval  time.Duration
 	batchSize int
+	// dialect gates FOR UPDATE SKIP LOCKED — only Postgres supports it.
+	// Empty string (the default) means "don't apply the lock clause",
+	// which is the right behavior for SQLite-backed unit tests.
+	dialect string
 }
 
 // Option tunes Publisher; zero options yields production defaults.
@@ -51,6 +60,15 @@ func WithInterval(d time.Duration) Option {
 // worst-case latency of a single loop body.
 func WithBatchSize(n int) Option {
 	return func(p *Publisher) { p.batchSize = n }
+}
+
+// WithDialect tells the publisher what SQL dialect it is running against.
+// When set to dialect.Postgres, the poll query is suffixed with
+// FOR UPDATE SKIP LOCKED so concurrent replicas drain disjoint rows. Other
+// dialects skip the clause. Tests typically omit this option and exercise
+// the unlocked path against SQLite.
+func WithDialect(d string) Option {
+	return func(p *Publisher) { p.dialect = d }
 }
 
 func NewPublisher(client *ent.Client, bus events.Publisher, logger *slog.Logger, opts ...Option) *Publisher {
@@ -94,12 +112,31 @@ func (p *Publisher) Run(ctx context.Context) {
 
 // PublishBatch does one drain iteration. Exported so tests can drive the
 // loop deterministically.
+//
+// Runs inside a transaction so the SELECT can hold FOR UPDATE SKIP LOCKED
+// on Postgres — other replicas skip our rows and pick up the next batch.
+// The per-row publish runs while locks are held; commit releases them. On
+// SQLite the lock clause is omitted and the tx is just a read-write wrapper.
 func (p *Publisher) PublishBatch(ctx context.Context) error {
-	rows, err := p.client.OutboxEvent.Query().
+	tx, err := p.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	q := tx.OutboxEvent.Query().
 		Where(outboxevent.PublishedAtIsNil()).
 		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(p.batchSize).
-		All(ctx)
+		Limit(p.batchSize)
+	if p.dialect == dialect.Postgres {
+		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
+	}
+	rows, err := q.All(ctx)
 	if err != nil {
 		return fmt.Errorf("query unpublished: %w", err)
 	}
@@ -107,12 +144,12 @@ func (p *Publisher) PublishBatch(ctx context.Context) error {
 	for _, row := range rows {
 		// Publish errors are logged but don't abort the batch — a transient
 		// broker failure on one row shouldn't stall the rest. The row stays
-		// unpublished and retries next iteration.
+		// unpublished (its UPDATE never runs) and retries next iteration.
 		if err := p.bus.Publish(ctx, row.Subject, row.Payload); err != nil {
 			p.logger.Warn("outbox: publish", "err", err, "id", row.ID, "subject", row.Subject)
 			continue
 		}
-		if err := p.client.OutboxEvent.UpdateOneID(row.ID).
+		if err := tx.OutboxEvent.UpdateOneID(row.ID).
 			SetPublishedAt(time.Now()).
 			Exec(ctx); err != nil {
 			// Failure to mark published is also non-fatal: the event *did*
@@ -121,5 +158,10 @@ func (p *Publisher) PublishBatch(ctx context.Context) error {
 			p.logger.Warn("outbox: mark published", "err", err, "id", row.ID)
 		}
 	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+	committed = true
 	return nil
 }
