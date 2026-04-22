@@ -7,12 +7,25 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
+// TokenVerifier is the surface the auth interceptor depends on. Returning an
+// interface (rather than *Verifier) lets tests inject a fake JWT verifier
+// without standing up a real OIDC provider. *Verifier is the production
+// implementation; see fake_verifier_test.go for the test stub.
+type TokenVerifier interface {
+	Verify(ctx context.Context, rawToken string) (Claims, error)
+}
+
 // Verifier wraps an *oidc.IDTokenVerifier with the audience this API expects.
 // Keeping the wrapper narrow lets handlers and interceptors depend on a small
 // surface instead of the full go-oidc API.
 type Verifier struct {
 	verifier *oidc.IDTokenVerifier
 }
+
+// Compile-time check that Verifier satisfies TokenVerifier. If this
+// assertion ever breaks, tests would still catch it, but failing at compile
+// time is faster.
+var _ TokenVerifier = (*Verifier)(nil)
 
 // NewVerifier dials the OIDC discovery endpoint at issuerURL, fetches the
 // JWKS, and returns a Verifier pinned to the given audience. The returned
