@@ -96,16 +96,19 @@ func run(logger *slog.Logger) error {
 	ecancel()
 
 	// Background workers: drain the transactional outbox to NATS, mirror
-	// outbox rows into the audit log, and index message projections into
-	// OpenSearch. All share the signal-cancellable ctx so they stop when
-	// SIGINT/SIGTERM fires — rows they didn't reach stay durable in the DB
-	// and get picked up at next startup.
+	// outbox rows into the audit log, index message projections into
+	// OpenSearch, and GC fully-processed outbox rows once they age past
+	// Outbox.Retention. All share the signal-cancellable ctx so they stop
+	// when SIGINT/SIGTERM fires — rows they didn't reach stay durable in
+	// the DB and get picked up at next startup.
 	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger)
 	auditConsumer := audit.NewConsumer(db.Ent, logger)
 	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger)
+	outboxGC := outbox.NewGC(db.Ent, logger, outbox.WithGCRetention(cfg.Outbox.Retention))
 	go outboxPublisher.Run(ctx)
 	go auditConsumer.Run(ctx)
 	go searchIndexer.Run(ctx)
+	go outboxGC.Run(ctx)
 
 	srv := server.New(cfg, logger, db, verifier, bus, searchClient)
 

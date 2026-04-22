@@ -59,18 +59,7 @@ func (_u *AuditEventUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *AuditEventUpdate) check() error {
-	if _u.mutation.OutboxEventCleared() && len(_u.mutation.OutboxEventIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "AuditEvent.outbox_event"`)
-	}
-	return nil
-}
-
 func (_u *AuditEventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(auditevent.Table, auditevent.Columns, sqlgraph.NewFieldSpec(auditevent.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -150,18 +139,7 @@ func (_u *AuditEventUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *AuditEventUpdateOne) check() error {
-	if _u.mutation.OutboxEventCleared() && len(_u.mutation.OutboxEventIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "AuditEvent.outbox_event"`)
-	}
-	return nil
-}
-
 func (_u *AuditEventUpdateOne) sqlSave(ctx context.Context) (_node *AuditEvent, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(auditevent.Table, auditevent.Columns, sqlgraph.NewFieldSpec(auditevent.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {

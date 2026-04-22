@@ -87,8 +87,8 @@ func TestConsumeBatch_MirrorsOutboxFields(t *testing.T) {
 		t.Fatalf("want 1 audit row, got %d", len(audits))
 	}
 	a := audits[0]
-	if a.OutboxEventID != row.ID {
-		t.Errorf("outbox_event_id: want %s got %s", row.ID, a.OutboxEventID)
+	if a.OutboxEventID == nil || *a.OutboxEventID != row.ID {
+		t.Errorf("outbox_event_id: want %s got %v", row.ID, a.OutboxEventID)
 	}
 	if a.EventType != "message.created" {
 		t.Errorf("event_type: want message.created got %s", a.EventType)

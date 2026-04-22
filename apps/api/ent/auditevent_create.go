@@ -45,6 +45,14 @@ func (_c *AuditEventCreate) SetOutboxEventID(v uuid.UUID) *AuditEventCreate {
 	return _c
 }
 
+// SetNillableOutboxEventID sets the "outbox_event_id" field if the given value is not nil.
+func (_c *AuditEventCreate) SetNillableOutboxEventID(v *uuid.UUID) *AuditEventCreate {
+	if v != nil {
+		_c.SetOutboxEventID(*v)
+	}
+	return _c
+}
+
 // SetEventType sets the "event_type" field.
 func (_c *AuditEventCreate) SetEventType(v string) *AuditEventCreate {
 	_c.mutation.SetEventType(v)
@@ -166,9 +174,6 @@ func (_c *AuditEventCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "AuditEvent.created_at"`)}
 	}
-	if _, ok := _c.mutation.OutboxEventID(); !ok {
-		return &ValidationError{Name: "outbox_event_id", err: errors.New(`ent: missing required field "AuditEvent.outbox_event_id"`)}
-	}
 	if _, ok := _c.mutation.EventType(); !ok {
 		return &ValidationError{Name: "event_type", err: errors.New(`ent: missing required field "AuditEvent.event_type"`)}
 	}
@@ -190,9 +195,6 @@ func (_c *AuditEventCreate) check() error {
 	}
 	if _, ok := _c.mutation.Payload(); !ok {
 		return &ValidationError{Name: "payload", err: errors.New(`ent: missing required field "AuditEvent.payload"`)}
-	}
-	if len(_c.mutation.OutboxEventIDs()) == 0 {
-		return &ValidationError{Name: "outbox_event", err: errors.New(`ent: missing required edge "AuditEvent.outbox_event"`)}
 	}
 	return nil
 }
@@ -272,7 +274,7 @@ func (_c *AuditEventCreate) createSpec() (*AuditEvent, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.OutboxEventID = nodes[0]
+		_node.OutboxEventID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

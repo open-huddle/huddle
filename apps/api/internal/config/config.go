@@ -16,6 +16,18 @@ type Config struct {
 	Auth       Auth       `mapstructure:"auth"`
 	Nats       Nats       `mapstructure:"nats"`
 	OpenSearch OpenSearch `mapstructure:"opensearch"`
+	Outbox     Outbox     `mapstructure:"outbox"`
+}
+
+// Outbox configures the transactional-outbox workers. The publisher and
+// audit/search consumers run on tight cadences tuned in code; operators
+// typically only override Retention, which controls how long fully-stamped
+// rows live in the outbox before GC reaps them.
+type Outbox struct {
+	// Retention is the minimum age before a fully-published, fully-audited,
+	// fully-indexed outbox row is eligible for deletion. Longer is safer
+	// (larger window to diagnose a bad publish) but keeps the table bigger.
+	Retention time.Duration `mapstructure:"retention"`
 }
 
 // Nats configures the JetStream connection used for realtime fan-out and
@@ -80,6 +92,7 @@ func Load() (*Config, error) {
 	v.SetDefault("nats.url", "nats://localhost:4222")
 	v.SetDefault("opensearch.url", "http://localhost:9200")
 	v.SetDefault("opensearch.messages_index", "huddle-messages")
+	v.SetDefault("outbox.retention", 24*time.Hour)
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

@@ -18,7 +18,7 @@ var (
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "resource_id", Type: field.TypeUUID},
 		{Name: "payload", Type: field.TypeBytes},
-		{Name: "outbox_event_id", Type: field.TypeUUID, Unique: true},
+		{Name: "outbox_event_id", Type: field.TypeUUID, Unique: true, Nullable: true},
 	}
 	// AuditEventsTable holds the schema information for the "audit_events" table.
 	AuditEventsTable = &schema.Table{
@@ -30,7 +30,7 @@ var (
 				Symbol:     "audit_events_outbox_events_audit_event",
 				Columns:    []*schema.Column{AuditEventsColumns[8]},
 				RefColumns: []*schema.Column{OutboxEventsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{

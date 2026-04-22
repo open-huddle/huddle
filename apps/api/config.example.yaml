@@ -36,3 +36,12 @@ opensearch:
   # stable — concrete index names (huddle-messages-v1, -v2, …) are a
   # deployment detail; clients always talk to the alias.
   messages_index: "huddle-messages"
+
+outbox:
+  # Retention window for fully-processed outbox rows. A row is eligible
+  # for deletion by the outbox GC worker only once all three downstream
+  # consumers have stamped their markers (published_at, indexed_at,
+  # sibling audit_events row) AND the row is older than this value.
+  # Longer values give more room to diagnose a bad publish; shorter
+  # values keep the outbox table small.
+  retention: 24h

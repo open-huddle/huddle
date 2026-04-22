@@ -156,6 +156,16 @@ func OutboxEventIDNotIn(vs ...uuid.UUID) predicate.AuditEvent {
 	return predicate.AuditEvent(sql.FieldNotIn(FieldOutboxEventID, vs...))
 }
 
+// OutboxEventIDIsNil applies the IsNil predicate on the "outbox_event_id" field.
+func OutboxEventIDIsNil() predicate.AuditEvent {
+	return predicate.AuditEvent(sql.FieldIsNull(FieldOutboxEventID))
+}
+
+// OutboxEventIDNotNil applies the NotNil predicate on the "outbox_event_id" field.
+func OutboxEventIDNotNil() predicate.AuditEvent {
+	return predicate.AuditEvent(sql.FieldNotNull(FieldOutboxEventID))
+}
+
 // EventTypeEQ applies the EQ predicate on the "event_type" field.
 func EventTypeEQ(v string) predicate.AuditEvent {
 	return predicate.AuditEvent(sql.FieldEQ(FieldEventType, v))
