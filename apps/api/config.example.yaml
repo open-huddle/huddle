@@ -25,5 +25,14 @@ auth:
 
 nats:
   # JetStream URL. The API publishes message events here and streaming
-  # subscribers read them back. Future: search/audit/notification consumers.
+  # subscribers read them back. Future: notification consumers.
   url: "nats://localhost:4222"
+
+opensearch:
+  # OpenSearch cluster URL. The indexer worker writes message projections
+  # here; SearchService queries against the alias below.
+  url: "http://localhost:9200"
+  # Index alias the service reads from and the indexer writes to. Keep it
+  # stable — concrete index names (huddle-messages-v1, -v2, …) are a
+  # deployment detail; clients always talk to the alias.
+  messages_index: "huddle-messages"

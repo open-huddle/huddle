@@ -1,5 +1,6 @@
-h1:9tQmJx10zHSFLrKRs3wSncj03JaYklFfF6ZH/wfYr8I=
+h1:/WbDIo/moGZNefRerXB5JO9hdGO1G+izYOYsSqjlIKU=
 20260420154905_initial.sql h1:sogXEEQpozH1bu8KRf3KCziirkJ4IptGi5y6U7aiCfE=
 20260420194933_add_channels.sql h1:+4upbtLDdAuIZ/y61Jdblgx+3GHg2u/20JRy7pFMX/s=
 20260420203608_add_messages.sql h1:g1hGBuFSVFLuWckEBY97QctTsVxBFG3wnD+8Db74n/E=
 20260421220110_add_outbox_and_audit.sql h1:QuRCYs8YKOv55ncPO9cqP6y03A+eZTpRhDgiDM3YphM=
+20260422131158_add_outbox_indexed_at.sql h1:dLBRB+Hzd6xJRyKiRTLvynOud44dDH3TeCcO+c4HKqM=

@@ -13,6 +13,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/nats-io/nats.go v1.51.0
 	github.com/open-huddle/huddle/gen/go v0.0.0-00010101000000-000000000000
+	github.com/opensearch-project/opensearch-go/v4 v4.6.0
 	github.com/spf13/viper v1.19.0
 	golang.org/x/net v0.51.0
 	google.golang.org/protobuf v1.36.3
