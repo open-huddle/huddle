@@ -1,4 +1,4 @@
-.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-lint web-run web-build web-lint web-typecheck dev-up dev-down lint test tidy fmt ent-generate migrate-diff migrate-apply migrate-status
+.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-test-integration api-lint web-run web-build web-lint web-typecheck dev-up dev-down lint test test-integration tidy fmt ent-generate migrate-diff migrate-apply migrate-status
 
 # Postgres image used by both the local compose stack and the throwaway
 # container that Atlas/Ent uses to compute schema diffs. Bumping here bumps
@@ -31,8 +31,11 @@ api-run: ## Run the Go API locally
 api-build: ## Build the Go API binary
 	cd apps/api && go build -o bin/api ./cmd/api
 
-api-test: ## Run Go tests
+api-test: ## Run Go tests (unit only; Postgres-backed suite runs via api-test-integration)
 	cd apps/api && go test ./...
+
+api-test-integration: ## Run Go tests with the `integration` build tag (requires Docker — spins up Postgres via testcontainers)
+	cd apps/api && go test -tags integration -count=1 ./...
 
 api-lint: ## Lint Go code (requires golangci-lint)
 	cd apps/api && golangci-lint run ./...
@@ -57,7 +60,9 @@ dev-down: ## Stop local dependencies
 
 lint: api-lint web-lint proto-lint ## Run all linters
 
-test: api-test ## Run all tests
+test: api-test ## Run all unit tests
+
+test-integration: api-test-integration ## Run Postgres-backed integration tests (Docker required)
 
 tidy: ## go mod tidy across the workspace
 	cd apps/api && go mod tidy

@@ -61,6 +61,31 @@ jobs:
           working-directory: apps/api
           args: --timeout=5m
 
+  go-integration:
+    name: Go integration (testcontainers Postgres)
+    runs-on: ubuntu-latest
+    # Runs independently of the `go` job: if a Postgres-specific behavior
+    # regresses, we want the red signal even if the unit suite is green.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            apps/api/go.sum
+            gen/go/go.sum
+
+      - name: Sync workspace
+        run: go work sync
+
+      - name: Run integration tests
+        # GitHub-hosted Ubuntu runners ship with Docker pre-installed;
+        # testcontainers-go reuses the daemon to start a Postgres per test
+        # package. `-count=1` disables the test cache so we always exercise
+        # the container path.
+        run: cd apps/api && go test -tags integration -count=1 -timeout 10m ./...
+
   web:
     name: Web (typecheck, lint, build)
     runs-on: ubuntu-latest
