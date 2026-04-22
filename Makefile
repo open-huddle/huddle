@@ -68,7 +68,7 @@ fmt: ## Format Go + TS code
 	pnpm --filter @open-huddle/web format
 
 ent-generate: ## Regenerate Ent code from apps/api/ent/schema
-	cd apps/api && go tool ent generate --feature sql/versioned-migration --feature sql/upsert ./ent/schema
+	cd apps/api && go tool ent generate --feature sql/versioned-migration --feature sql/upsert --feature sql/lock ./ent/schema
 
 migrate-diff: ## Generate an Atlas migration from Ent schema changes (NAME=desc)
 	@if [ -z "$(NAME)" ]; then echo "NAME is required (e.g., make migrate-diff NAME=add_channels)"; exit 1; fi
