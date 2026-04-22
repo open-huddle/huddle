@@ -16,12 +16,15 @@ import (
 // Implemented as a full Interceptor rather than UnaryInterceptorFunc so
 // streaming handlers (e.g. MessageService.Subscribe) are wrapped too —
 // otherwise streams would skip authentication entirely.
-func NewInterceptor(v *Verifier) connect.Interceptor {
+//
+// Takes TokenVerifier (interface) rather than *Verifier so tests can drop
+// in a fake without standing up a real OIDC provider.
+func NewInterceptor(v TokenVerifier) connect.Interceptor {
 	return &interceptor{v: v}
 }
 
 type interceptor struct {
-	v *Verifier
+	v TokenVerifier
 }
 
 func (i *interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
