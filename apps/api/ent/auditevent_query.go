@@ -406,7 +406,10 @@ func (_q *AuditEventQuery) loadOutboxEvent(ctx context.Context, query *OutboxEve
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*AuditEvent)
 	for i := range nodes {
-		fk := nodes[i].OutboxEventID
+		if nodes[i].OutboxEventID == nil {
+			continue
+		}
+		fk := *nodes[i].OutboxEventID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}

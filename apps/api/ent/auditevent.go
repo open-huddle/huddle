@@ -22,7 +22,7 @@ type AuditEvent struct {
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// OutboxEventID holds the value of the "outbox_event_id" field.
-	OutboxEventID uuid.UUID `json:"outbox_event_id,omitempty"`
+	OutboxEventID *uuid.UUID `json:"outbox_event_id,omitempty"`
 	// EventType holds the value of the "event_type" field.
 	EventType string `json:"event_type,omitempty"`
 	// ActorID holds the value of the "actor_id" field.
@@ -66,7 +66,7 @@ func (*AuditEvent) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case auditevent.FieldActorID, auditevent.FieldOrganizationID:
+		case auditevent.FieldOutboxEventID, auditevent.FieldActorID, auditevent.FieldOrganizationID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case auditevent.FieldPayload:
 			values[i] = new([]byte)
@@ -74,7 +74,7 @@ func (*AuditEvent) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case auditevent.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case auditevent.FieldID, auditevent.FieldOutboxEventID, auditevent.FieldResourceID:
+		case auditevent.FieldID, auditevent.FieldResourceID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -104,10 +104,11 @@ func (_m *AuditEvent) assignValues(columns []string, values []any) error {
 				_m.CreatedAt = value.Time
 			}
 		case auditevent.FieldOutboxEventID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field outbox_event_id", values[i])
-			} else if value != nil {
-				_m.OutboxEventID = *value
+			} else if value.Valid {
+				_m.OutboxEventID = new(uuid.UUID)
+				*_m.OutboxEventID = *value.S.(*uuid.UUID)
 			}
 		case auditevent.FieldEventType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -191,8 +192,10 @@ func (_m *AuditEvent) String() string {
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("outbox_event_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OutboxEventID))
+	if v := _m.OutboxEventID; v != nil {
+		builder.WriteString("outbox_event_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("event_type=")
 	builder.WriteString(_m.EventType)

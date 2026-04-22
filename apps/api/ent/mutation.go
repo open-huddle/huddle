@@ -218,7 +218,7 @@ func (m *AuditEventMutation) OutboxEventID() (r uuid.UUID, exists bool) {
 // OldOutboxEventID returns the old "outbox_event_id" field's value of the AuditEvent entity.
 // If the AuditEvent object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AuditEventMutation) OldOutboxEventID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *AuditEventMutation) OldOutboxEventID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldOutboxEventID is only allowed on UpdateOne operations")
 	}
@@ -232,9 +232,22 @@ func (m *AuditEventMutation) OldOutboxEventID(ctx context.Context) (v uuid.UUID,
 	return oldValue.OutboxEventID, nil
 }
 
+// ClearOutboxEventID clears the value of the "outbox_event_id" field.
+func (m *AuditEventMutation) ClearOutboxEventID() {
+	m.outbox_event = nil
+	m.clearedFields[auditevent.FieldOutboxEventID] = struct{}{}
+}
+
+// OutboxEventIDCleared returns if the "outbox_event_id" field was cleared in this mutation.
+func (m *AuditEventMutation) OutboxEventIDCleared() bool {
+	_, ok := m.clearedFields[auditevent.FieldOutboxEventID]
+	return ok
+}
+
 // ResetOutboxEventID resets all changes to the "outbox_event_id" field.
 func (m *AuditEventMutation) ResetOutboxEventID() {
 	m.outbox_event = nil
+	delete(m.clearedFields, auditevent.FieldOutboxEventID)
 }
 
 // SetEventType sets the "event_type" field.
@@ -487,7 +500,7 @@ func (m *AuditEventMutation) ClearOutboxEvent() {
 
 // OutboxEventCleared reports if the "outbox_event" edge to the OutboxEvent entity was cleared.
 func (m *AuditEventMutation) OutboxEventCleared() bool {
-	return m.clearedoutbox_event
+	return m.OutboxEventIDCleared() || m.clearedoutbox_event
 }
 
 // OutboxEventIDs returns the "outbox_event" edge IDs in the mutation.
@@ -709,6 +722,9 @@ func (m *AuditEventMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *AuditEventMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(auditevent.FieldOutboxEventID) {
+		fields = append(fields, auditevent.FieldOutboxEventID)
+	}
 	if m.FieldCleared(auditevent.FieldActorID) {
 		fields = append(fields, auditevent.FieldActorID)
 	}
@@ -729,6 +745,9 @@ func (m *AuditEventMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *AuditEventMutation) ClearField(name string) error {
 	switch name {
+	case auditevent.FieldOutboxEventID:
+		m.ClearOutboxEventID()
+		return nil
 	case auditevent.FieldActorID:
 		m.ClearActorID()
 		return nil
