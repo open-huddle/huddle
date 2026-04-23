@@ -18,6 +18,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
 	"github.com/open-huddle/huddle/apps/api/ent/notification"
+	"github.com/open-huddle/huddle/apps/api/ent/notificationpreference"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
@@ -194,6 +195,21 @@ func (_u *UserUpdate) AddMentionedIn(v ...*MessageMention) *UserUpdate {
 	return _u.AddMentionedInIDs(ids...)
 }
 
+// AddNotificationPreferenceIDs adds the "notification_preferences" edge to the NotificationPreference entity by IDs.
+func (_u *UserUpdate) AddNotificationPreferenceIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// AddNotificationPreferences adds the "notification_preferences" edges to the NotificationPreference entity.
+func (_u *UserUpdate) AddNotificationPreferences(v ...*NotificationPreference) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddNotificationPreferenceIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -344,6 +360,27 @@ func (_u *UserUpdate) RemoveMentionedIn(v ...*MessageMention) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMentionedInIDs(ids...)
+}
+
+// ClearNotificationPreferences clears all "notification_preferences" edges to the NotificationPreference entity.
+func (_u *UserUpdate) ClearNotificationPreferences() *UserUpdate {
+	_u.mutation.ClearNotificationPreferences()
+	return _u
+}
+
+// RemoveNotificationPreferenceIDs removes the "notification_preferences" edge to NotificationPreference entities by IDs.
+func (_u *UserUpdate) RemoveNotificationPreferenceIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// RemoveNotificationPreferences removes "notification_preferences" edges to NotificationPreference entities.
+func (_u *UserUpdate) RemoveNotificationPreferences(v ...*NotificationPreference) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveNotificationPreferenceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -739,6 +776,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.NotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedNotificationPreferencesIDs(); len(nodes) > 0 && !_u.mutation.NotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.NotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -918,6 +1000,21 @@ func (_u *UserUpdateOne) AddMentionedIn(v ...*MessageMention) *UserUpdateOne {
 	return _u.AddMentionedInIDs(ids...)
 }
 
+// AddNotificationPreferenceIDs adds the "notification_preferences" edge to the NotificationPreference entity by IDs.
+func (_u *UserUpdateOne) AddNotificationPreferenceIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// AddNotificationPreferences adds the "notification_preferences" edges to the NotificationPreference entity.
+func (_u *UserUpdateOne) AddNotificationPreferences(v ...*NotificationPreference) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddNotificationPreferenceIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -1068,6 +1165,27 @@ func (_u *UserUpdateOne) RemoveMentionedIn(v ...*MessageMention) *UserUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMentionedInIDs(ids...)
+}
+
+// ClearNotificationPreferences clears all "notification_preferences" edges to the NotificationPreference entity.
+func (_u *UserUpdateOne) ClearNotificationPreferences() *UserUpdateOne {
+	_u.mutation.ClearNotificationPreferences()
+	return _u
+}
+
+// RemoveNotificationPreferenceIDs removes the "notification_preferences" edge to NotificationPreference entities by IDs.
+func (_u *UserUpdateOne) RemoveNotificationPreferenceIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// RemoveNotificationPreferences removes "notification_preferences" edges to NotificationPreference entities.
+func (_u *UserUpdateOne) RemoveNotificationPreferences(v ...*NotificationPreference) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveNotificationPreferenceIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1486,6 +1604,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(messagemention.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.NotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedNotificationPreferencesIDs(); len(nodes) > 0 && !_u.mutation.NotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.NotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

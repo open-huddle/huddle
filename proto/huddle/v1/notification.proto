@@ -21,6 +21,16 @@ service NotificationService {
   // notification the caller doesn't own returns NotFound (not Forbidden,
   // to avoid confirming the id exists).
   rpc MarkRead(NotificationServiceMarkReadRequest) returns (NotificationServiceMarkReadResponse) {}
+
+  // GetPreferences returns the caller's notification preferences with
+  // industry-standard opt-out defaults applied: a kind the caller has
+  // never touched comes back as email_enabled = true. Preferences are
+  // strictly the caller's own — no admin / cross-user surface.
+  rpc GetPreferences(NotificationServiceGetPreferencesRequest) returns (NotificationServiceGetPreferencesResponse) {}
+
+  // SetPreference upserts the caller's preference for one kind.
+  // Idempotent: calling with the same value twice is a no-op.
+  rpc SetPreference(NotificationServiceSetPreferenceRequest) returns (NotificationServiceSetPreferenceResponse) {}
 }
 
 message Notification {
@@ -61,4 +71,25 @@ message NotificationServiceMarkReadRequest {
 }
 message NotificationServiceMarkReadResponse {
   Notification notification = 1;
+}
+
+message NotificationPreference {
+  // "mention" for MVP — aligned with Notification.kind.
+  string kind = 1;
+  bool email_enabled = 2;
+}
+
+message NotificationServiceGetPreferencesRequest {}
+message NotificationServiceGetPreferencesResponse {
+  // One entry per kind the server knows about. Kinds the caller hasn't
+  // explicitly set come back with the default (email_enabled = true).
+  repeated NotificationPreference preferences = 1;
+}
+
+message NotificationServiceSetPreferenceRequest {
+  string kind = 1;
+  bool email_enabled = 2;
+}
+message NotificationServiceSetPreferenceResponse {
+  NotificationPreference preference = 1;
 }

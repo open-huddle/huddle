@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Addr       string     `mapstructure:"addr"`
 	Version    string     `mapstructure:"version"`
+	App        App        `mapstructure:"app"`
 	Database   Database   `mapstructure:"database"`
 	Valkey     Valkey     `mapstructure:"valkey"`
 	Auth       Auth       `mapstructure:"auth"`
@@ -19,6 +20,14 @@ type Config struct {
 	Outbox     Outbox     `mapstructure:"outbox"`
 	Invites    Invites    `mapstructure:"invites"`
 	Email      Email      `mapstructure:"email"`
+}
+
+// App is the small set of public-facing values every email template and
+// CLI surface needs. BaseURL is the web app's root — the notifications
+// mailer appends channel + message paths to it; future password-reset
+// and digest emails will reuse the same root.
+type App struct {
+	BaseURL string `mapstructure:"base_url"`
 }
 
 // Invites configures the email-invitation subsystem. Secret is the HMAC
@@ -124,6 +133,7 @@ func Load() (*Config, error) {
 
 	v.SetDefault("addr", ":8080")
 	v.SetDefault("version", "dev")
+	v.SetDefault("app.base_url", "http://localhost:5173")
 	v.SetDefault("database.url", "postgres://huddle:huddle@localhost:5432/huddle?sslmode=disable")
 	v.SetDefault("database.max_open_conns", 25)
 	v.SetDefault("database.max_idle_conns", 5)

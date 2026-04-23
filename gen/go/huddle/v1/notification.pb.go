@@ -334,6 +334,237 @@ func (x *NotificationServiceMarkReadResponse) GetNotification() *Notification {
 	return nil
 }
 
+type NotificationPreference struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// "mention" for MVP — aligned with Notification.kind.
+	Kind          string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	EmailEnabled  bool   `protobuf:"varint,2,opt,name=email_enabled,json=emailEnabled,proto3" json:"email_enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationPreference) Reset() {
+	*x = NotificationPreference{}
+	mi := &file_huddle_v1_notification_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationPreference) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationPreference) ProtoMessage() {}
+
+func (x *NotificationPreference) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_notification_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationPreference.ProtoReflect.Descriptor instead.
+func (*NotificationPreference) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_notification_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *NotificationPreference) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *NotificationPreference) GetEmailEnabled() bool {
+	if x != nil {
+		return x.EmailEnabled
+	}
+	return false
+}
+
+type NotificationServiceGetPreferencesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationServiceGetPreferencesRequest) Reset() {
+	*x = NotificationServiceGetPreferencesRequest{}
+	mi := &file_huddle_v1_notification_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationServiceGetPreferencesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationServiceGetPreferencesRequest) ProtoMessage() {}
+
+func (x *NotificationServiceGetPreferencesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_notification_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationServiceGetPreferencesRequest.ProtoReflect.Descriptor instead.
+func (*NotificationServiceGetPreferencesRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_notification_proto_rawDescGZIP(), []int{6}
+}
+
+type NotificationServiceGetPreferencesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// One entry per kind the server knows about. Kinds the caller hasn't
+	// explicitly set come back with the default (email_enabled = true).
+	Preferences   []*NotificationPreference `protobuf:"bytes,1,rep,name=preferences,proto3" json:"preferences,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationServiceGetPreferencesResponse) Reset() {
+	*x = NotificationServiceGetPreferencesResponse{}
+	mi := &file_huddle_v1_notification_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationServiceGetPreferencesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationServiceGetPreferencesResponse) ProtoMessage() {}
+
+func (x *NotificationServiceGetPreferencesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_notification_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationServiceGetPreferencesResponse.ProtoReflect.Descriptor instead.
+func (*NotificationServiceGetPreferencesResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_notification_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *NotificationServiceGetPreferencesResponse) GetPreferences() []*NotificationPreference {
+	if x != nil {
+		return x.Preferences
+	}
+	return nil
+}
+
+type NotificationServiceSetPreferenceRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	EmailEnabled  bool                   `protobuf:"varint,2,opt,name=email_enabled,json=emailEnabled,proto3" json:"email_enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationServiceSetPreferenceRequest) Reset() {
+	*x = NotificationServiceSetPreferenceRequest{}
+	mi := &file_huddle_v1_notification_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationServiceSetPreferenceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationServiceSetPreferenceRequest) ProtoMessage() {}
+
+func (x *NotificationServiceSetPreferenceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_notification_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationServiceSetPreferenceRequest.ProtoReflect.Descriptor instead.
+func (*NotificationServiceSetPreferenceRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_notification_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *NotificationServiceSetPreferenceRequest) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *NotificationServiceSetPreferenceRequest) GetEmailEnabled() bool {
+	if x != nil {
+		return x.EmailEnabled
+	}
+	return false
+}
+
+type NotificationServiceSetPreferenceResponse struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Preference    *NotificationPreference `protobuf:"bytes,1,opt,name=preference,proto3" json:"preference,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotificationServiceSetPreferenceResponse) Reset() {
+	*x = NotificationServiceSetPreferenceResponse{}
+	mi := &file_huddle_v1_notification_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationServiceSetPreferenceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationServiceSetPreferenceResponse) ProtoMessage() {}
+
+func (x *NotificationServiceSetPreferenceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_notification_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationServiceSetPreferenceResponse.ProtoReflect.Descriptor instead.
+func (*NotificationServiceSetPreferenceResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_notification_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *NotificationServiceSetPreferenceResponse) GetPreference() *NotificationPreference {
+	if x != nil {
+		return x.Preference
+	}
+	return nil
+}
+
 var File_huddle_v1_notification_proto protoreflect.FileDescriptor
 
 const file_huddle_v1_notification_proto_rawDesc = "" +
@@ -362,10 +593,25 @@ const file_huddle_v1_notification_proto_rawDesc = "" +
 	"\"NotificationServiceMarkReadRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"b\n" +
 	"#NotificationServiceMarkReadResponse\x12;\n" +
-	"\fnotification\x18\x01 \x01(\v2\x17.huddle.v1.NotificationR\fnotification2\xe3\x01\n" +
+	"\fnotification\x18\x01 \x01(\v2\x17.huddle.v1.NotificationR\fnotification\"Q\n" +
+	"\x16NotificationPreference\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12#\n" +
+	"\remail_enabled\x18\x02 \x01(\bR\femailEnabled\"*\n" +
+	"(NotificationServiceGetPreferencesRequest\"p\n" +
+	")NotificationServiceGetPreferencesResponse\x12C\n" +
+	"\vpreferences\x18\x01 \x03(\v2!.huddle.v1.NotificationPreferenceR\vpreferences\"b\n" +
+	"'NotificationServiceSetPreferenceRequest\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12#\n" +
+	"\remail_enabled\x18\x02 \x01(\bR\femailEnabled\"m\n" +
+	"(NotificationServiceSetPreferenceResponse\x12A\n" +
+	"\n" +
+	"preference\x18\x01 \x01(\v2!.huddle.v1.NotificationPreferenceR\n" +
+	"preference2\xde\x03\n" +
 	"\x13NotificationService\x12_\n" +
 	"\x04List\x12).huddle.v1.NotificationServiceListRequest\x1a*.huddle.v1.NotificationServiceListResponse\"\x00\x12k\n" +
-	"\bMarkRead\x12-.huddle.v1.NotificationServiceMarkReadRequest\x1a..huddle.v1.NotificationServiceMarkReadResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"\bMarkRead\x12-.huddle.v1.NotificationServiceMarkReadRequest\x1a..huddle.v1.NotificationServiceMarkReadResponse\"\x00\x12}\n" +
+	"\x0eGetPreferences\x123.huddle.v1.NotificationServiceGetPreferencesRequest\x1a4.huddle.v1.NotificationServiceGetPreferencesResponse\"\x00\x12z\n" +
+	"\rSetPreference\x122.huddle.v1.NotificationServiceSetPreferenceRequest\x1a3.huddle.v1.NotificationServiceSetPreferenceResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_notification_proto_rawDescOnce sync.Once
@@ -379,29 +625,40 @@ func file_huddle_v1_notification_proto_rawDescGZIP() []byte {
 	return file_huddle_v1_notification_proto_rawDescData
 }
 
-var file_huddle_v1_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_huddle_v1_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_huddle_v1_notification_proto_goTypes = []any{
-	(*Notification)(nil),                        // 0: huddle.v1.Notification
-	(*NotificationServiceListRequest)(nil),      // 1: huddle.v1.NotificationServiceListRequest
-	(*NotificationServiceListResponse)(nil),     // 2: huddle.v1.NotificationServiceListResponse
-	(*NotificationServiceMarkReadRequest)(nil),  // 3: huddle.v1.NotificationServiceMarkReadRequest
-	(*NotificationServiceMarkReadResponse)(nil), // 4: huddle.v1.NotificationServiceMarkReadResponse
-	(*timestamppb.Timestamp)(nil),               // 5: google.protobuf.Timestamp
+	(*Notification)(nil),                              // 0: huddle.v1.Notification
+	(*NotificationServiceListRequest)(nil),            // 1: huddle.v1.NotificationServiceListRequest
+	(*NotificationServiceListResponse)(nil),           // 2: huddle.v1.NotificationServiceListResponse
+	(*NotificationServiceMarkReadRequest)(nil),        // 3: huddle.v1.NotificationServiceMarkReadRequest
+	(*NotificationServiceMarkReadResponse)(nil),       // 4: huddle.v1.NotificationServiceMarkReadResponse
+	(*NotificationPreference)(nil),                    // 5: huddle.v1.NotificationPreference
+	(*NotificationServiceGetPreferencesRequest)(nil),  // 6: huddle.v1.NotificationServiceGetPreferencesRequest
+	(*NotificationServiceGetPreferencesResponse)(nil), // 7: huddle.v1.NotificationServiceGetPreferencesResponse
+	(*NotificationServiceSetPreferenceRequest)(nil),   // 8: huddle.v1.NotificationServiceSetPreferenceRequest
+	(*NotificationServiceSetPreferenceResponse)(nil),  // 9: huddle.v1.NotificationServiceSetPreferenceResponse
+	(*timestamppb.Timestamp)(nil),                     // 10: google.protobuf.Timestamp
 }
 var file_huddle_v1_notification_proto_depIdxs = []int32{
-	5, // 0: huddle.v1.Notification.created_at:type_name -> google.protobuf.Timestamp
-	5, // 1: huddle.v1.Notification.read_at:type_name -> google.protobuf.Timestamp
-	0, // 2: huddle.v1.NotificationServiceListResponse.notifications:type_name -> huddle.v1.Notification
-	0, // 3: huddle.v1.NotificationServiceMarkReadResponse.notification:type_name -> huddle.v1.Notification
-	1, // 4: huddle.v1.NotificationService.List:input_type -> huddle.v1.NotificationServiceListRequest
-	3, // 5: huddle.v1.NotificationService.MarkRead:input_type -> huddle.v1.NotificationServiceMarkReadRequest
-	2, // 6: huddle.v1.NotificationService.List:output_type -> huddle.v1.NotificationServiceListResponse
-	4, // 7: huddle.v1.NotificationService.MarkRead:output_type -> huddle.v1.NotificationServiceMarkReadResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	10, // 0: huddle.v1.Notification.created_at:type_name -> google.protobuf.Timestamp
+	10, // 1: huddle.v1.Notification.read_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: huddle.v1.NotificationServiceListResponse.notifications:type_name -> huddle.v1.Notification
+	0,  // 3: huddle.v1.NotificationServiceMarkReadResponse.notification:type_name -> huddle.v1.Notification
+	5,  // 4: huddle.v1.NotificationServiceGetPreferencesResponse.preferences:type_name -> huddle.v1.NotificationPreference
+	5,  // 5: huddle.v1.NotificationServiceSetPreferenceResponse.preference:type_name -> huddle.v1.NotificationPreference
+	1,  // 6: huddle.v1.NotificationService.List:input_type -> huddle.v1.NotificationServiceListRequest
+	3,  // 7: huddle.v1.NotificationService.MarkRead:input_type -> huddle.v1.NotificationServiceMarkReadRequest
+	6,  // 8: huddle.v1.NotificationService.GetPreferences:input_type -> huddle.v1.NotificationServiceGetPreferencesRequest
+	8,  // 9: huddle.v1.NotificationService.SetPreference:input_type -> huddle.v1.NotificationServiceSetPreferenceRequest
+	2,  // 10: huddle.v1.NotificationService.List:output_type -> huddle.v1.NotificationServiceListResponse
+	4,  // 11: huddle.v1.NotificationService.MarkRead:output_type -> huddle.v1.NotificationServiceMarkReadResponse
+	7,  // 12: huddle.v1.NotificationService.GetPreferences:output_type -> huddle.v1.NotificationServiceGetPreferencesResponse
+	9,  // 13: huddle.v1.NotificationService.SetPreference:output_type -> huddle.v1.NotificationServiceSetPreferenceResponse
+	10, // [10:14] is the sub-list for method output_type
+	6,  // [6:10] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_huddle_v1_notification_proto_init() }
@@ -415,7 +672,7 @@ func file_huddle_v1_notification_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_huddle_v1_notification_proto_rawDesc), len(file_huddle_v1_notification_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

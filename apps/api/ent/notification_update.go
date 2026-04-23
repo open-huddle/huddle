@@ -54,6 +54,26 @@ func (_u *NotificationUpdate) ClearReadAt() *NotificationUpdate {
 	return _u
 }
 
+// SetEmailedAt sets the "emailed_at" field.
+func (_u *NotificationUpdate) SetEmailedAt(v time.Time) *NotificationUpdate {
+	_u.mutation.SetEmailedAt(v)
+	return _u
+}
+
+// SetNillableEmailedAt sets the "emailed_at" field if the given value is not nil.
+func (_u *NotificationUpdate) SetNillableEmailedAt(v *time.Time) *NotificationUpdate {
+	if v != nil {
+		_u.SetEmailedAt(*v)
+	}
+	return _u
+}
+
+// ClearEmailedAt clears the value of the "emailed_at" field.
+func (_u *NotificationUpdate) ClearEmailedAt() *NotificationUpdate {
+	_u.mutation.ClearEmailedAt()
+	return _u
+}
+
 // Mutation returns the NotificationMutation object of the builder.
 func (_u *NotificationUpdate) Mutation() *NotificationMutation {
 	return _u.mutation
@@ -127,6 +147,12 @@ func (_u *NotificationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.ReadAtCleared() {
 		_spec.ClearField(notification.FieldReadAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.EmailedAt(); ok {
+		_spec.SetField(notification.FieldEmailedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EmailedAtCleared() {
+		_spec.ClearField(notification.FieldEmailedAt, field.TypeTime)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{notification.Label}
@@ -170,6 +196,26 @@ func (_u *NotificationUpdateOne) SetNillableReadAt(v *time.Time) *NotificationUp
 // ClearReadAt clears the value of the "read_at" field.
 func (_u *NotificationUpdateOne) ClearReadAt() *NotificationUpdateOne {
 	_u.mutation.ClearReadAt()
+	return _u
+}
+
+// SetEmailedAt sets the "emailed_at" field.
+func (_u *NotificationUpdateOne) SetEmailedAt(v time.Time) *NotificationUpdateOne {
+	_u.mutation.SetEmailedAt(v)
+	return _u
+}
+
+// SetNillableEmailedAt sets the "emailed_at" field if the given value is not nil.
+func (_u *NotificationUpdateOne) SetNillableEmailedAt(v *time.Time) *NotificationUpdateOne {
+	if v != nil {
+		_u.SetEmailedAt(*v)
+	}
+	return _u
+}
+
+// ClearEmailedAt clears the value of the "emailed_at" field.
+func (_u *NotificationUpdateOne) ClearEmailedAt() *NotificationUpdateOne {
+	_u.mutation.ClearEmailedAt()
 	return _u
 }
 
@@ -275,6 +321,12 @@ func (_u *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificati
 	}
 	if _u.mutation.ReadAtCleared() {
 		_spec.ClearField(notification.FieldReadAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.EmailedAt(); ok {
+		_spec.SetField(notification.FieldEmailedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EmailedAtCleared() {
+		_spec.ClearField(notification.FieldEmailedAt, field.TypeTime)
 	}
 	_node = &Notification{config: _u.config}
 	_spec.Assign = _node.assignValues

@@ -14,6 +14,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
 	"github.com/open-huddle/huddle/apps/api/ent/notification"
+	"github.com/open-huddle/huddle/apps/api/ent/notificationpreference"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/schema"
@@ -210,6 +211,31 @@ func init() {
 	notificationDescID := notificationMixinFields0[0].Descriptor()
 	// notification.DefaultID holds the default value on creation for the id field.
 	notification.DefaultID = notificationDescID.Default.(func() uuid.UUID)
+	notificationpreferenceMixin := schema.NotificationPreference{}.Mixin()
+	notificationpreferenceMixinFields0 := notificationpreferenceMixin[0].Fields()
+	_ = notificationpreferenceMixinFields0
+	notificationpreferenceMixinFields1 := notificationpreferenceMixin[1].Fields()
+	_ = notificationpreferenceMixinFields1
+	notificationpreferenceFields := schema.NotificationPreference{}.Fields()
+	_ = notificationpreferenceFields
+	// notificationpreferenceDescCreatedAt is the schema descriptor for created_at field.
+	notificationpreferenceDescCreatedAt := notificationpreferenceMixinFields1[0].Descriptor()
+	// notificationpreference.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notificationpreference.DefaultCreatedAt = notificationpreferenceDescCreatedAt.Default.(func() time.Time)
+	// notificationpreferenceDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationpreferenceDescUpdatedAt := notificationpreferenceMixinFields1[1].Descriptor()
+	// notificationpreference.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notificationpreference.DefaultUpdatedAt = notificationpreferenceDescUpdatedAt.Default.(func() time.Time)
+	// notificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notificationpreference.UpdateDefaultUpdatedAt = notificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// notificationpreferenceDescEmailEnabled is the schema descriptor for email_enabled field.
+	notificationpreferenceDescEmailEnabled := notificationpreferenceFields[2].Descriptor()
+	// notificationpreference.DefaultEmailEnabled holds the default value on creation for the email_enabled field.
+	notificationpreference.DefaultEmailEnabled = notificationpreferenceDescEmailEnabled.Default.(bool)
+	// notificationpreferenceDescID is the schema descriptor for id field.
+	notificationpreferenceDescID := notificationpreferenceMixinFields0[0].Descriptor()
+	// notificationpreference.DefaultID holds the default value on creation for the id field.
+	notificationpreference.DefaultID = notificationpreferenceDescID.Default.(func() uuid.UUID)
 	organizationMixin := schema.Organization{}.Mixin()
 	organizationMixinFields0 := organizationMixin[0].Fields()
 	_ = organizationMixinFields0

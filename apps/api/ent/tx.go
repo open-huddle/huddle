@@ -28,6 +28,8 @@ type Tx struct {
 	MessageMention *MessageMentionClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// NotificationPreference is the client for interacting with the NotificationPreference builders.
+	NotificationPreference *NotificationPreferenceClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// OutboxEvent is the client for interacting with the OutboxEvent builders.
@@ -173,6 +175,7 @@ func (tx *Tx) init() {
 	tx.Message = NewMessageClient(tx.config)
 	tx.MessageMention = NewMessageMentionClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
+	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.OutboxEvent = NewOutboxEventClient(tx.config)
 	tx.User = NewUserClient(tx.config)

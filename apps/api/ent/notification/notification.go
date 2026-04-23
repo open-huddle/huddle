@@ -32,6 +32,8 @@ const (
 	FieldOrganizationID = "organization_id"
 	// FieldReadAt holds the string denoting the read_at field in the database.
 	FieldReadAt = "read_at"
+	// FieldEmailedAt holds the string denoting the emailed_at field in the database.
+	FieldEmailedAt = "emailed_at"
 	// EdgeRecipient holds the string denoting the recipient edge name in mutations.
 	EdgeRecipient = "recipient"
 	// EdgeMessage holds the string denoting the message edge name in mutations.
@@ -83,6 +85,7 @@ var Columns = []string{
 	FieldChannelID,
 	FieldOrganizationID,
 	FieldReadAt,
+	FieldEmailedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -174,6 +177,11 @@ func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
 // ByReadAt orders the results by the read_at field.
 func ByReadAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReadAt, opts...).ToFunc()
+}
+
+// ByEmailedAt orders the results by the emailed_at field.
+func ByEmailedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmailedAt, opts...).ToFunc()
 }
 
 // ByRecipientField orders the results by recipient field.
