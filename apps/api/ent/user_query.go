@@ -18,6 +18,8 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
+	"github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
@@ -34,6 +36,8 @@ type UserQuery struct {
 	withMessages            *MessageQuery
 	withInvitationsSent     *InvitationQuery
 	withInvitationsAccepted *InvitationQuery
+	withNotifications       *NotificationQuery
+	withMentionedIn         *MessageMentionQuery
 	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -174,6 +178,50 @@ func (_q *UserQuery) QueryInvitationsAccepted() *InvitationQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(invitation.Table, invitation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.InvitationsAcceptedTable, user.InvitationsAcceptedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNotifications chains the current query on the "notifications" edge.
+func (_q *UserQuery) QueryNotifications() *NotificationQuery {
+	query := (&NotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.NotificationsTable, user.NotificationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMentionedIn chains the current query on the "mentioned_in" edge.
+func (_q *UserQuery) QueryMentionedIn() *MessageMentionQuery {
+	query := (&MessageMentionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(messagemention.Table, messagemention.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MentionedInTable, user.MentionedInColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -378,6 +426,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withMessages:            _q.withMessages.Clone(),
 		withInvitationsSent:     _q.withInvitationsSent.Clone(),
 		withInvitationsAccepted: _q.withInvitationsAccepted.Clone(),
+		withNotifications:       _q.withNotifications.Clone(),
+		withMentionedIn:         _q.withMentionedIn.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -436,6 +486,28 @@ func (_q *UserQuery) WithInvitationsAccepted(opts ...func(*InvitationQuery)) *Us
 		opt(query)
 	}
 	_q.withInvitationsAccepted = query
+	return _q
+}
+
+// WithNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNotifications(opts ...func(*NotificationQuery)) *UserQuery {
+	query := (&NotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withNotifications = query
+	return _q
+}
+
+// WithMentionedIn tells the query-builder to eager-load the nodes that are connected to
+// the "mentioned_in" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithMentionedIn(opts ...func(*MessageMentionQuery)) *UserQuery {
+	query := (&MessageMentionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMentionedIn = query
 	return _q
 }
 
@@ -517,12 +589,14 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [7]bool{
 			_q.withMemberships != nil,
 			_q.withCreatedChannels != nil,
 			_q.withMessages != nil,
 			_q.withInvitationsSent != nil,
 			_q.withInvitationsAccepted != nil,
+			_q.withNotifications != nil,
+			_q.withMentionedIn != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -578,6 +652,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadInvitationsAccepted(ctx, query, nodes,
 			func(n *User) { n.Edges.InvitationsAccepted = []*Invitation{} },
 			func(n *User, e *Invitation) { n.Edges.InvitationsAccepted = append(n.Edges.InvitationsAccepted, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withNotifications; query != nil {
+		if err := _q.loadNotifications(ctx, query, nodes,
+			func(n *User) { n.Edges.Notifications = []*Notification{} },
+			func(n *User, e *Notification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMentionedIn; query != nil {
+		if err := _q.loadMentionedIn(ctx, query, nodes,
+			func(n *User) { n.Edges.MentionedIn = []*MessageMention{} },
+			func(n *User, e *MessageMention) { n.Edges.MentionedIn = append(n.Edges.MentionedIn, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -733,6 +821,66 @@ func (_q *UserQuery) loadInvitationsAccepted(ctx context.Context, query *Invitat
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_invitations_accepted" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadNotifications(ctx context.Context, query *NotificationQuery, nodes []*User, init func(*User), assign func(*User, *Notification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(notification.FieldRecipientUserID)
+	}
+	query.Where(predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.NotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RecipientUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "recipient_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadMentionedIn(ctx context.Context, query *MessageMentionQuery, nodes []*User, init func(*User), assign func(*User, *MessageMention)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(messagemention.FieldUserID)
+	}
+	query.Where(predicate.MessageMention(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.MentionedInColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

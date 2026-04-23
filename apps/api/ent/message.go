@@ -42,9 +42,13 @@ type MessageEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// Author holds the value of the author edge.
 	Author *User `json:"author,omitempty"`
+	// Mentions holds the value of the mentions edge.
+	Mentions []*MessageMention `json:"mentions,omitempty"`
+	// Notifications holds the value of the notifications edge.
+	Notifications []*Notification `json:"notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -67,6 +71,24 @@ func (e MessageEdges) AuthorOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "author"}
+}
+
+// MentionsOrErr returns the Mentions value or an error if the edge
+// was not loaded in eager-loading.
+func (e MessageEdges) MentionsOrErr() ([]*MessageMention, error) {
+	if e.loadedTypes[2] {
+		return e.Mentions, nil
+	}
+	return nil, &NotLoadedError{edge: "mentions"}
+}
+
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e MessageEdges) NotificationsOrErr() ([]*Notification, error) {
+	if e.loadedTypes[3] {
+		return e.Notifications, nil
+	}
+	return nil, &NotLoadedError{edge: "notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -152,6 +174,16 @@ func (_m *Message) QueryChannel() *ChannelQuery {
 // QueryAuthor queries the "author" edge of the Message entity.
 func (_m *Message) QueryAuthor() *UserQuery {
 	return NewMessageClient(_m.config).QueryAuthor(_m)
+}
+
+// QueryMentions queries the "mentions" edge of the Message entity.
+func (_m *Message) QueryMentions() *MessageMentionQuery {
+	return NewMessageClient(_m.config).QueryMentions(_m)
+}
+
+// QueryNotifications queries the "notifications" edge of the Message entity.
+func (_m *Message) QueryNotifications() *NotificationQuery {
+	return NewMessageClient(_m.config).QueryNotifications(_m)
 }
 
 // Update returns a builder for updating this Message.

@@ -46,9 +46,13 @@ type UserEdges struct {
 	InvitationsSent []*Invitation `json:"invitations_sent,omitempty"`
 	// InvitationsAccepted holds the value of the invitations_accepted edge.
 	InvitationsAccepted []*Invitation `json:"invitations_accepted,omitempty"`
+	// Notifications holds the value of the notifications edge.
+	Notifications []*Notification `json:"notifications,omitempty"`
+	// MentionedIn holds the value of the mentioned_in edge.
+	MentionedIn []*MessageMention `json:"mentioned_in,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [7]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -94,6 +98,24 @@ func (e UserEdges) InvitationsAcceptedOrErr() ([]*Invitation, error) {
 		return e.InvitationsAccepted, nil
 	}
 	return nil, &NotLoadedError{edge: "invitations_accepted"}
+}
+
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) NotificationsOrErr() ([]*Notification, error) {
+	if e.loadedTypes[5] {
+		return e.Notifications, nil
+	}
+	return nil, &NotLoadedError{edge: "notifications"}
+}
+
+// MentionedInOrErr returns the MentionedIn value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MentionedInOrErr() ([]*MessageMention, error) {
+	if e.loadedTypes[6] {
+		return e.MentionedIn, nil
+	}
+	return nil, &NotLoadedError{edge: "mentioned_in"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -194,6 +216,16 @@ func (_m *User) QueryInvitationsSent() *InvitationQuery {
 // QueryInvitationsAccepted queries the "invitations_accepted" edge of the User entity.
 func (_m *User) QueryInvitationsAccepted() *InvitationQuery {
 	return NewUserClient(_m.config).QueryInvitationsAccepted(_m)
+}
+
+// QueryNotifications queries the "notifications" edge of the User entity.
+func (_m *User) QueryNotifications() *NotificationQuery {
+	return NewUserClient(_m.config).QueryNotifications(_m)
+}
+
+// QueryMentionedIn queries the "mentioned_in" edge of the User entity.
+func (_m *User) QueryMentionedIn() *MessageMentionQuery {
+	return NewUserClient(_m.config).QueryMentionedIn(_m)
 }
 
 // Update returns a builder for updating this User.

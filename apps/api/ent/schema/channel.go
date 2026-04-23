@@ -43,6 +43,10 @@ func (Channel) Edges() []ent.Edge {
 			Unique(),
 		// Messages posted in this channel.
 		edge.To("messages", Message.Type),
+		// Notifications whose source message lives in this channel —
+		// back-edge for symmetry with Message/Organization, not currently
+		// queried directly.
+		edge.To("notifications", Notification.Type),
 	}
 }
 

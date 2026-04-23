@@ -481,6 +481,52 @@ func HasInvitationsAcceptedWith(preds ...predicate.Invitation) predicate.User {
 	})
 }
 
+// HasNotifications applies the HasEdge predicate on the "notifications" edge.
+func HasNotifications() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNotificationsWith applies the HasEdge predicate on the "notifications" edge with a given conditions (other predicates).
+func HasNotificationsWith(preds ...predicate.Notification) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newNotificationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMentionedIn applies the HasEdge predicate on the "mentioned_in" edge.
+func HasMentionedIn() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MentionedInTable, MentionedInColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMentionedInWith applies the HasEdge predicate on the "mentioned_in" edge with a given conditions (other predicates).
+func HasMentionedInWith(preds ...predicate.MessageMention) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newMentionedInStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

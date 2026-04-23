@@ -116,6 +116,11 @@ func IndexedAt(v time.Time) predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldEQ(FieldIndexedAt, v))
 }
 
+// NotifiedAt applies equality check predicate on the "notified_at" field. It's identical to NotifiedAtEQ.
+func NotifiedAt(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldEQ(FieldNotifiedAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldEQ(FieldCreatedAt, v))
@@ -734,6 +739,56 @@ func IndexedAtIsNil() predicate.OutboxEvent {
 // IndexedAtNotNil applies the NotNil predicate on the "indexed_at" field.
 func IndexedAtNotNil() predicate.OutboxEvent {
 	return predicate.OutboxEvent(sql.FieldNotNull(FieldIndexedAt))
+}
+
+// NotifiedAtEQ applies the EQ predicate on the "notified_at" field.
+func NotifiedAtEQ(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldEQ(FieldNotifiedAt, v))
+}
+
+// NotifiedAtNEQ applies the NEQ predicate on the "notified_at" field.
+func NotifiedAtNEQ(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNEQ(FieldNotifiedAt, v))
+}
+
+// NotifiedAtIn applies the In predicate on the "notified_at" field.
+func NotifiedAtIn(vs ...time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldIn(FieldNotifiedAt, vs...))
+}
+
+// NotifiedAtNotIn applies the NotIn predicate on the "notified_at" field.
+func NotifiedAtNotIn(vs ...time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNotIn(FieldNotifiedAt, vs...))
+}
+
+// NotifiedAtGT applies the GT predicate on the "notified_at" field.
+func NotifiedAtGT(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldGT(FieldNotifiedAt, v))
+}
+
+// NotifiedAtGTE applies the GTE predicate on the "notified_at" field.
+func NotifiedAtGTE(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldGTE(FieldNotifiedAt, v))
+}
+
+// NotifiedAtLT applies the LT predicate on the "notified_at" field.
+func NotifiedAtLT(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldLT(FieldNotifiedAt, v))
+}
+
+// NotifiedAtLTE applies the LTE predicate on the "notified_at" field.
+func NotifiedAtLTE(v time.Time) predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldLTE(FieldNotifiedAt, v))
+}
+
+// NotifiedAtIsNil applies the IsNil predicate on the "notified_at" field.
+func NotifiedAtIsNil() predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldIsNull(FieldNotifiedAt))
+}
+
+// NotifiedAtNotNil applies the NotNil predicate on the "notified_at" field.
+func NotifiedAtNotNil() predicate.OutboxEvent {
+	return predicate.OutboxEvent(sql.FieldNotNull(FieldNotifiedAt))
 }
 
 // HasAuditEvent applies the HasEdge predicate on the "audit_event" edge.

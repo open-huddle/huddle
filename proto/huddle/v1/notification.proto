@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package huddle.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1";
+
+// NotificationService serves the per-user in-app notifications inbox.
+// Every RPC returns / acts on rows owned by the calling principal only —
+// there is no cross-user administrative surface here by design. Ownership
+// check is via recipient_user_id match, no policy.Engine call.
+service NotificationService {
+  // List the caller's notifications, newest first. Unread-only by default;
+  // pass include_read = true to fetch the full history. Cursor-paginated
+  // same as Message.List.
+  rpc List(NotificationServiceListRequest) returns (NotificationServiceListResponse) {}
+
+  // MarkRead stamps read_at on a notification owned by the caller. A
+  // second call on an already-read row is a no-op; a call for a
+  // notification the caller doesn't own returns NotFound (not Forbidden,
+  // to avoid confirming the id exists).
+  rpc MarkRead(NotificationServiceMarkReadRequest) returns (NotificationServiceMarkReadResponse) {}
+}
+
+message Notification {
+  string id = 1;
+  string recipient_user_id = 2;
+  // "mention" for MVP; new values will be added as features land.
+  string kind = 3;
+  string organization_id = 4;
+  // Source message, set for kind=mention. Empty for future kinds that
+  // don't originate from a message (e.g. a future "welcome" kind).
+  string message_id = 5;
+  string channel_id = 6;
+  google.protobuf.Timestamp created_at = 7;
+  // Set when the recipient has read the notification. Empty means unread.
+  google.protobuf.Timestamp read_at = 8;
+}
+
+message NotificationServiceListRequest {
+  // When true, include notifications where read_at is set. Defaults to
+  // false (unread-only), which is the "inbox" semantics.
+  bool include_read = 1;
+  // Opaque cursor returned by a previous List call. Empty means start
+  // from the newest. Same encoding as Message.List cursors.
+  string before = 2;
+  // Page size. Defaults to 50 when zero or negative; clamped to 200 max.
+  int32 limit = 3;
+}
+message NotificationServiceListResponse {
+  // Newest first.
+  repeated Notification notifications = 1;
+  // Pass to a subsequent List call to fetch older rows. Empty when no
+  // more pages exist.
+  string next_cursor = 2;
+}
+
+message NotificationServiceMarkReadRequest {
+  string id = 1;
+}
+message NotificationServiceMarkReadResponse {
+  Notification notification = 1;
+}

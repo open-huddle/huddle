@@ -35,6 +35,10 @@ const (
 	EdgeInvitationsSent = "invitations_sent"
 	// EdgeInvitationsAccepted holds the string denoting the invitations_accepted edge name in mutations.
 	EdgeInvitationsAccepted = "invitations_accepted"
+	// EdgeNotifications holds the string denoting the notifications edge name in mutations.
+	EdgeNotifications = "notifications"
+	// EdgeMentionedIn holds the string denoting the mentioned_in edge name in mutations.
+	EdgeMentionedIn = "mentioned_in"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// MembershipsTable is the table that holds the memberships relation/edge.
@@ -72,6 +76,20 @@ const (
 	InvitationsAcceptedInverseTable = "invitations"
 	// InvitationsAcceptedColumn is the table column denoting the invitations_accepted relation/edge.
 	InvitationsAcceptedColumn = "user_invitations_accepted"
+	// NotificationsTable is the table that holds the notifications relation/edge.
+	NotificationsTable = "notifications"
+	// NotificationsInverseTable is the table name for the Notification entity.
+	// It exists in this package in order to avoid circular dependency with the "notification" package.
+	NotificationsInverseTable = "notifications"
+	// NotificationsColumn is the table column denoting the notifications relation/edge.
+	NotificationsColumn = "recipient_user_id"
+	// MentionedInTable is the table that holds the mentioned_in relation/edge.
+	MentionedInTable = "message_mentions"
+	// MentionedInInverseTable is the table name for the MessageMention entity.
+	// It exists in this package in order to avoid circular dependency with the "messagemention" package.
+	MentionedInInverseTable = "message_mentions"
+	// MentionedInColumn is the table column denoting the mentioned_in relation/edge.
+	MentionedInColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -211,6 +229,34 @@ func ByInvitationsAccepted(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newInvitationsAcceptedStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByNotificationsCount orders the results by notifications count.
+func ByNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotificationsStep(), opts...)
+	}
+}
+
+// ByNotifications orders the results by notifications terms.
+func ByNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMentionedInCount orders the results by mentioned_in count.
+func ByMentionedInCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMentionedInStep(), opts...)
+	}
+}
+
+// ByMentionedIn orders the results by mentioned_in terms.
+func ByMentionedIn(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMentionedInStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -244,5 +290,19 @@ func newInvitationsAcceptedStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(InvitationsAcceptedInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, InvitationsAcceptedTable, InvitationsAcceptedColumn),
+	)
+}
+func newNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+	)
+}
+func newMentionedInStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MentionedInInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MentionedInTable, MentionedInColumn),
 	)
 }

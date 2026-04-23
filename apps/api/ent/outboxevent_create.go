@@ -137,6 +137,20 @@ func (_c *OutboxEventCreate) SetNillableIndexedAt(v *time.Time) *OutboxEventCrea
 	return _c
 }
 
+// SetNotifiedAt sets the "notified_at" field.
+func (_c *OutboxEventCreate) SetNotifiedAt(v time.Time) *OutboxEventCreate {
+	_c.mutation.SetNotifiedAt(v)
+	return _c
+}
+
+// SetNillableNotifiedAt sets the "notified_at" field if the given value is not nil.
+func (_c *OutboxEventCreate) SetNillableNotifiedAt(v *time.Time) *OutboxEventCreate {
+	if v != nil {
+		_c.SetNotifiedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *OutboxEventCreate) SetID(v uuid.UUID) *OutboxEventCreate {
 	_c.mutation.SetID(v)
@@ -345,6 +359,10 @@ func (_c *OutboxEventCreate) createSpec() (*OutboxEvent, *sqlgraph.CreateSpec) {
 		_spec.SetField(outboxevent.FieldIndexedAt, field.TypeTime, value)
 		_node.IndexedAt = &value
 	}
+	if value, ok := _c.mutation.NotifiedAt(); ok {
+		_spec.SetField(outboxevent.FieldNotifiedAt, field.TypeTime, value)
+		_node.NotifiedAt = &value
+	}
 	if nodes := _c.mutation.AuditEventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
@@ -446,6 +464,24 @@ func (u *OutboxEventUpsert) UpdateIndexedAt() *OutboxEventUpsert {
 // ClearIndexedAt clears the value of the "indexed_at" field.
 func (u *OutboxEventUpsert) ClearIndexedAt() *OutboxEventUpsert {
 	u.SetNull(outboxevent.FieldIndexedAt)
+	return u
+}
+
+// SetNotifiedAt sets the "notified_at" field.
+func (u *OutboxEventUpsert) SetNotifiedAt(v time.Time) *OutboxEventUpsert {
+	u.Set(outboxevent.FieldNotifiedAt, v)
+	return u
+}
+
+// UpdateNotifiedAt sets the "notified_at" field to the value that was provided on create.
+func (u *OutboxEventUpsert) UpdateNotifiedAt() *OutboxEventUpsert {
+	u.SetExcluded(outboxevent.FieldNotifiedAt)
+	return u
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (u *OutboxEventUpsert) ClearNotifiedAt() *OutboxEventUpsert {
+	u.SetNull(outboxevent.FieldNotifiedAt)
 	return u
 }
 
@@ -566,6 +602,27 @@ func (u *OutboxEventUpsertOne) UpdateIndexedAt() *OutboxEventUpsertOne {
 func (u *OutboxEventUpsertOne) ClearIndexedAt() *OutboxEventUpsertOne {
 	return u.Update(func(s *OutboxEventUpsert) {
 		s.ClearIndexedAt()
+	})
+}
+
+// SetNotifiedAt sets the "notified_at" field.
+func (u *OutboxEventUpsertOne) SetNotifiedAt(v time.Time) *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.SetNotifiedAt(v)
+	})
+}
+
+// UpdateNotifiedAt sets the "notified_at" field to the value that was provided on create.
+func (u *OutboxEventUpsertOne) UpdateNotifiedAt() *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.UpdateNotifiedAt()
+	})
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (u *OutboxEventUpsertOne) ClearNotifiedAt() *OutboxEventUpsertOne {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.ClearNotifiedAt()
 	})
 }
 
@@ -853,6 +910,27 @@ func (u *OutboxEventUpsertBulk) UpdateIndexedAt() *OutboxEventUpsertBulk {
 func (u *OutboxEventUpsertBulk) ClearIndexedAt() *OutboxEventUpsertBulk {
 	return u.Update(func(s *OutboxEventUpsert) {
 		s.ClearIndexedAt()
+	})
+}
+
+// SetNotifiedAt sets the "notified_at" field.
+func (u *OutboxEventUpsertBulk) SetNotifiedAt(v time.Time) *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.SetNotifiedAt(v)
+	})
+}
+
+// UpdateNotifiedAt sets the "notified_at" field to the value that was provided on create.
+func (u *OutboxEventUpsertBulk) UpdateNotifiedAt() *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.UpdateNotifiedAt()
+	})
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (u *OutboxEventUpsertBulk) ClearNotifiedAt() *OutboxEventUpsertBulk {
+	return u.Update(func(s *OutboxEventUpsert) {
+		s.ClearNotifiedAt()
 	})
 }
 

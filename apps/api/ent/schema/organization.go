@@ -26,5 +26,6 @@ func (Organization) Edges() []ent.Edge {
 		edge.To("memberships", Membership.Type),
 		edge.To("channels", Channel.Type),
 		edge.To("invitations", Invitation.Type),
+		edge.To("notifications", Notification.Type),
 	}
 }

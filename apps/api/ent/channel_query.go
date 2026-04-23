@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -24,15 +25,16 @@ import (
 // ChannelQuery is the builder for querying Channel entities.
 type ChannelQuery struct {
 	config
-	ctx              *QueryContext
-	order            []channel.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Channel
-	withOrganization *OrganizationQuery
-	withCreatedBy    *UserQuery
-	withMessages     *MessageQuery
-	withFKs          bool
-	modifiers        []func(*sql.Selector)
+	ctx               *QueryContext
+	order             []channel.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.Channel
+	withOrganization  *OrganizationQuery
+	withCreatedBy     *UserQuery
+	withMessages      *MessageQuery
+	withNotifications *NotificationQuery
+	withFKs           bool
+	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -128,6 +130,28 @@ func (_q *ChannelQuery) QueryMessages() *MessageQuery {
 			sqlgraph.From(channel.Table, channel.FieldID, selector),
 			sqlgraph.To(message.Table, message.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.MessagesTable, channel.MessagesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNotifications chains the current query on the "notifications" edge.
+func (_q *ChannelQuery) QueryNotifications() *NotificationQuery {
+	query := (&NotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.NotificationsTable, channel.NotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -322,14 +346,15 @@ func (_q *ChannelQuery) Clone() *ChannelQuery {
 		return nil
 	}
 	return &ChannelQuery{
-		config:           _q.config,
-		ctx:              _q.ctx.Clone(),
-		order:            append([]channel.OrderOption{}, _q.order...),
-		inters:           append([]Interceptor{}, _q.inters...),
-		predicates:       append([]predicate.Channel{}, _q.predicates...),
-		withOrganization: _q.withOrganization.Clone(),
-		withCreatedBy:    _q.withCreatedBy.Clone(),
-		withMessages:     _q.withMessages.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]channel.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.Channel{}, _q.predicates...),
+		withOrganization:  _q.withOrganization.Clone(),
+		withCreatedBy:     _q.withCreatedBy.Clone(),
+		withMessages:      _q.withMessages.Clone(),
+		withNotifications: _q.withNotifications.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -366,6 +391,17 @@ func (_q *ChannelQuery) WithMessages(opts ...func(*MessageQuery)) *ChannelQuery 
 		opt(query)
 	}
 	_q.withMessages = query
+	return _q
+}
+
+// WithNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithNotifications(opts ...func(*NotificationQuery)) *ChannelQuery {
+	query := (&NotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withNotifications = query
 	return _q
 }
 
@@ -448,10 +484,11 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 		nodes       = []*Channel{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withOrganization != nil,
 			_q.withCreatedBy != nil,
 			_q.withMessages != nil,
+			_q.withNotifications != nil,
 		}
 	)
 	if _q.withOrganization != nil || _q.withCreatedBy != nil {
@@ -497,6 +534,13 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 		if err := _q.loadMessages(ctx, query, nodes,
 			func(n *Channel) { n.Edges.Messages = []*Message{} },
 			func(n *Channel, e *Message) { n.Edges.Messages = append(n.Edges.Messages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withNotifications; query != nil {
+		if err := _q.loadNotifications(ctx, query, nodes,
+			func(n *Channel) { n.Edges.Notifications = []*Notification{} },
+			func(n *Channel, e *Notification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -592,6 +636,39 @@ func (_q *ChannelQuery) loadMessages(ctx context.Context, query *MessageQuery, n
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "channel_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ChannelQuery) loadNotifications(ctx context.Context, query *NotificationQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *Notification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Channel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(notification.FieldChannelID)
+	}
+	query.Where(predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(channel.NotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ChannelID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "channel_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

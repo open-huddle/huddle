@@ -44,5 +44,11 @@ func (User) Edges() []ent.Edge {
 		// Invitations this user consumed on signup. Optional on the
 		// Invitation side — rows remain with NULL until accept.
 		edge.To("invitations_accepted", Invitation.Type),
+		// In-app notifications targeted at this user (@-mentions today;
+		// more kinds as features land).
+		edge.To("notifications", Notification.Type),
+		// Messages where this user has been @-mentioned. Powers the
+		// future "my mentions" UI.
+		edge.To("mentioned_in", MessageMention.Type),
 	}
 }

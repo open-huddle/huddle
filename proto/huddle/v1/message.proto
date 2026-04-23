@@ -35,11 +35,21 @@ message Message {
   // enum. If a future variant is needed it will land as a separate field.
   string body = 4;
   google.protobuf.Timestamp created_at = 5;
+  // User IDs explicitly mentioned by the sender. Populated from the
+  // message_mentions join table on reads; these are the users the
+  // notifications consumer will fan out Notification rows for. Server
+  // enforces that every id is a member of the channel's organization;
+  // self-mentions are silently dropped. See ADR-0005 for why mentions
+  // are a separate field rather than parsed out of `body`.
+  repeated string mention_user_ids = 6;
 }
 
 message MessageServiceSendRequest {
   string channel_id = 1;
   string body = 2;
+  // Explicit @-mentions. Server validates + de-duplicates + drops
+  // self-mentions. Providing a non-member id returns InvalidArgument.
+  repeated string mention_user_ids = 3;
 }
 message MessageServiceSendResponse {
   Message message = 1;

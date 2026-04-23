@@ -22,9 +22,11 @@ type stampOpts struct {
 	createdAt   time.Time
 	published   bool
 	indexed     bool
+	notified    bool
 	withAudit   bool
 	publishedAt time.Time // defaults to createdAt when zero
 	indexedAt   time.Time // defaults to createdAt when zero
+	notifiedAt  time.Time // defaults to createdAt when zero
 }
 
 // seedStampedOutbox inserts an outbox row at the given createdAt, then
@@ -66,6 +68,15 @@ func seedStampedOutbox(ctx context.Context, t *testing.T, client *ent.Client, op
 			t.Fatalf("stamp indexed_at: %v", err)
 		}
 	}
+	if opts.notified {
+		ts := opts.notifiedAt
+		if ts.IsZero() {
+			ts = opts.createdAt
+		}
+		if err := client.OutboxEvent.UpdateOneID(row.ID).SetNotifiedAt(ts).Exec(ctx); err != nil {
+			t.Fatalf("stamp notified_at: %v", err)
+		}
+	}
 	if opts.withAudit {
 		if _, err := client.AuditEvent.Create().
 			SetOutboxEventID(row.ID).
@@ -103,6 +114,7 @@ func TestGC_DeletesOnlyFullyStampedAgedRows(t *testing.T) {
 		createdAt: aged,
 		published: true,
 		indexed:   true,
+		notified:  true,
 		withAudit: true,
 	})
 
@@ -114,15 +126,22 @@ func TestGC_DeletesOnlyFullyStampedAgedRows(t *testing.T) {
 		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, published: true}),
 		// Only indexed.
 		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, indexed: true}),
-		// Published + indexed but no audit sibling.
+		// Only notified.
+		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, notified: true}),
+		// Published + indexed but no audit sibling + no notified.
 		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, published: true, indexed: true}),
-		// Published + audited but not indexed.
+		// Published + audited but not indexed + not notified.
 		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, published: true, withAudit: true}),
-		// Indexed + audited but not published.
+		// Indexed + audited but not published + not notified.
 		seedStampedOutbox(ctx, t, client, stampOpts{createdAt: aged, indexed: true, withAudit: true}),
+		// Three of four stamps but missing notified — the new predicate
+		// term introduced alongside the notifications consumer.
+		seedStampedOutbox(ctx, t, client, stampOpts{
+			createdAt: aged, published: true, indexed: true, withAudit: true,
+		}),
 		// Fully stamped but fresh — retention not yet elapsed.
 		seedStampedOutbox(ctx, t, client, stampOpts{
-			createdAt: fresh, published: true, indexed: true, withAudit: true,
+			createdAt: fresh, published: true, indexed: true, notified: true, withAudit: true,
 		}),
 	}
 
@@ -155,6 +174,7 @@ func TestGC_FKSetNullLeavesAuditRowIntact(t *testing.T) {
 		createdAt: aged,
 		published: true,
 		indexed:   true,
+		notified:  true,
 		withAudit: true,
 	})
 
@@ -194,10 +214,10 @@ func TestGC_UniqueConstraintAllowsMultipleNullFKs(t *testing.T) {
 	// Two fully-stamped aged rows — after GC, both audit siblings should
 	// have NULL outbox_event_id without tripping the UNIQUE constraint.
 	seedStampedOutbox(ctx, t, client, stampOpts{
-		createdAt: aged, published: true, indexed: true, withAudit: true,
+		createdAt: aged, published: true, indexed: true, notified: true, withAudit: true,
 	})
 	seedStampedOutbox(ctx, t, client, stampOpts{
-		createdAt: aged, published: true, indexed: true, withAudit: true,
+		createdAt: aged, published: true, indexed: true, notified: true, withAudit: true,
 	})
 
 	n, err := gc.DeleteBatch(ctx)
@@ -237,7 +257,7 @@ func TestGC_RespectsBatchSize(t *testing.T) {
 	// 5 eligible rows; batch cap is 3, so one sweep drains 3 of them.
 	for range 5 {
 		seedStampedOutbox(ctx, t, client, stampOpts{
-			createdAt: aged, published: true, indexed: true, withAudit: true,
+			createdAt: aged, published: true, indexed: true, notified: true, withAudit: true,
 		})
 	}
 

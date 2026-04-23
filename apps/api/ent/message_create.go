@@ -15,6 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
+	"github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
 
@@ -94,6 +96,36 @@ func (_c *MessageCreate) SetChannel(v *Channel) *MessageCreate {
 // SetAuthor sets the "author" edge to the User entity.
 func (_c *MessageCreate) SetAuthor(v *User) *MessageCreate {
 	return _c.SetAuthorID(v.ID)
+}
+
+// AddMentionIDs adds the "mentions" edge to the MessageMention entity by IDs.
+func (_c *MessageCreate) AddMentionIDs(ids ...uuid.UUID) *MessageCreate {
+	_c.mutation.AddMentionIDs(ids...)
+	return _c
+}
+
+// AddMentions adds the "mentions" edges to the MessageMention entity.
+func (_c *MessageCreate) AddMentions(v ...*MessageMention) *MessageCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMentionIDs(ids...)
+}
+
+// AddNotificationIDs adds the "notifications" edge to the Notification entity by IDs.
+func (_c *MessageCreate) AddNotificationIDs(ids ...uuid.UUID) *MessageCreate {
+	_c.mutation.AddNotificationIDs(ids...)
+	return _c
+}
+
+// AddNotifications adds the "notifications" edges to the Notification entity.
+func (_c *MessageCreate) AddNotifications(v ...*Notification) *MessageCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddNotificationIDs(ids...)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -253,6 +285,38 @@ func (_c *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.AuthorID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MentionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   message.MentionsTable,
+			Columns: []string{message.MentionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(messagemention.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   message.NotificationsTable,
+			Columns: []string{message.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

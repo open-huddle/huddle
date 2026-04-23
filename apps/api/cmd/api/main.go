@@ -20,6 +20,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/email"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/invitations"
+	"github.com/open-huddle/huddle/apps/api/internal/notifications"
 	"github.com/open-huddle/huddle/apps/api/internal/outbox"
 	"github.com/open-huddle/huddle/apps/api/internal/search"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
@@ -125,11 +126,13 @@ func run(logger *slog.Logger) error {
 		cfg.Email.FromAddress, cfg.Email.FromName, cfg.Invites.LinkBaseURL,
 		invitations.WithDialect(dialect.Postgres),
 	)
+	notificationsConsumer := notifications.NewConsumer(db.Ent, logger, notifications.WithDialect(dialect.Postgres))
 	go outboxPublisher.Run(ctx)
 	go auditConsumer.Run(ctx)
 	go searchIndexer.Run(ctx)
 	go outboxGC.Run(ctx)
 	go mailer.Run(ctx)
+	go notificationsConsumer.Run(ctx)
 
 	// Warn on the dev default for invites.secret — every real deployment
 	// MUST override HUDDLE_INVITES_SECRET. Forging a token with the known

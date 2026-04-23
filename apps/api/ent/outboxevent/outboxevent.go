@@ -39,6 +39,8 @@ const (
 	FieldPublishedAt = "published_at"
 	// FieldIndexedAt holds the string denoting the indexed_at field in the database.
 	FieldIndexedAt = "indexed_at"
+	// FieldNotifiedAt holds the string denoting the notified_at field in the database.
+	FieldNotifiedAt = "notified_at"
 	// EdgeAuditEvent holds the string denoting the audit_event edge name in mutations.
 	EdgeAuditEvent = "audit_event"
 	// Table holds the table name of the outboxevent in the database.
@@ -67,6 +69,7 @@ var Columns = []string{
 	FieldResourceID,
 	FieldPublishedAt,
 	FieldIndexedAt,
+	FieldNotifiedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -155,6 +158,11 @@ func ByPublishedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByIndexedAt orders the results by the indexed_at field.
 func ByIndexedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIndexedAt, opts...).ToFunc()
+}
+
+// ByNotifiedAt orders the results by the notified_at field.
+func ByNotifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotifiedAt, opts...).ToFunc()
 }
 
 // ByAuditEventField orders the results by audit_event field.
