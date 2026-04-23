@@ -30,10 +30,17 @@ type Message struct {
 	// Markdown text. Server treats as opaque; clients render. Max 8 KiB.
 	// Format is intentionally not parameterised — there is no body_format
 	// enum. If a future variant is needed it will land as a separate field.
-	Body          string                 `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Body      string                 `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// User IDs explicitly mentioned by the sender. Populated from the
+	// message_mentions join table on reads; these are the users the
+	// notifications consumer will fan out Notification rows for. Server
+	// enforces that every id is a member of the channel's organization;
+	// self-mentions are silently dropped. See ADR-0005 for why mentions
+	// are a separate field rather than parsed out of `body`.
+	MentionUserIds []string `protobuf:"bytes,6,rep,name=mention_user_ids,json=mentionUserIds,proto3" json:"mention_user_ids,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Message) Reset() {
@@ -101,12 +108,22 @@ func (x *Message) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Message) GetMentionUserIds() []string {
+	if x != nil {
+		return x.MentionUserIds
+	}
+	return nil
+}
+
 type MessageServiceSendRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ChannelId     string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	Body          string                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	ChannelId string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Body      string                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
+	// Explicit @-mentions. Server validates + de-duplicates + drops
+	// self-mentions. Providing a non-member id returns InvalidArgument.
+	MentionUserIds []string `protobuf:"bytes,3,rep,name=mention_user_ids,json=mentionUserIds,proto3" json:"mention_user_ids,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *MessageServiceSendRequest) Reset() {
@@ -151,6 +168,13 @@ func (x *MessageServiceSendRequest) GetBody() string {
 		return x.Body
 	}
 	return ""
+}
+
+func (x *MessageServiceSendRequest) GetMentionUserIds() []string {
+	if x != nil {
+		return x.MentionUserIds
+	}
+	return nil
 }
 
 type MessageServiceSendResponse struct {
@@ -410,7 +434,7 @@ var File_huddle_v1_message_proto protoreflect.FileDescriptor
 
 const file_huddle_v1_message_proto_rawDesc = "" +
 	"\n" +
-	"\x17huddle/v1/message.proto\x12\thuddle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa4\x01\n" +
+	"\x17huddle/v1/message.proto\x12\thuddle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -418,11 +442,13 @@ const file_huddle_v1_message_proto_rawDesc = "" +
 	"\tauthor_id\x18\x03 \x01(\tR\bauthorId\x12\x12\n" +
 	"\x04body\x18\x04 \x01(\tR\x04body\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"N\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12(\n" +
+	"\x10mention_user_ids\x18\x06 \x03(\tR\x0ementionUserIds\"x\n" +
 	"\x19MessageServiceSendRequest\x12\x1d\n" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x12\n" +
-	"\x04body\x18\x02 \x01(\tR\x04body\"J\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\x12(\n" +
+	"\x10mention_user_ids\x18\x03 \x03(\tR\x0ementionUserIds\"J\n" +
 	"\x1aMessageServiceSendResponse\x12,\n" +
 	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage\"h\n" +
 	"\x19MessageServiceListRequest\x12\x1d\n" +

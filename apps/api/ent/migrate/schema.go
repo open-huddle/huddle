@@ -236,6 +236,105 @@ var (
 			},
 		},
 	}
+	// MessageMentionsColumns holds the columns for the "message_mentions" table.
+	MessageMentionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "message_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// MessageMentionsTable holds the schema information for the "message_mentions" table.
+	MessageMentionsTable = &schema.Table{
+		Name:       "message_mentions",
+		Columns:    MessageMentionsColumns,
+		PrimaryKey: []*schema.Column{MessageMentionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "message_mentions_messages_mentions",
+				Columns:    []*schema.Column{MessageMentionsColumns[1]},
+				RefColumns: []*schema.Column{MessagesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "message_mentions_users_mentioned_in",
+				Columns:    []*schema.Column{MessageMentionsColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "messagemention_message_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{MessageMentionsColumns[1], MessageMentionsColumns[2]},
+			},
+			{
+				Name:    "messagemention_user_id_message_id",
+				Unique:  false,
+				Columns: []*schema.Column{MessageMentionsColumns[2], MessageMentionsColumns[1]},
+			},
+		},
+	}
+	// NotificationsColumns holds the columns for the "notifications" table.
+	NotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"mention"}},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "message_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "organization_id", Type: field.TypeUUID},
+		{Name: "recipient_user_id", Type: field.TypeUUID},
+	}
+	// NotificationsTable holds the schema information for the "notifications" table.
+	NotificationsTable = &schema.Table{
+		Name:       "notifications",
+		Columns:    NotificationsColumns,
+		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "notifications_channels_notifications",
+				Columns:    []*schema.Column{NotificationsColumns[5]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "notifications_messages_notifications",
+				Columns:    []*schema.Column{NotificationsColumns[6]},
+				RefColumns: []*schema.Column{MessagesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "notifications_organizations_notifications",
+				Columns:    []*schema.Column{NotificationsColumns[7]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "notifications_users_notifications",
+				Columns:    []*schema.Column{NotificationsColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notification_recipient_user_id_read_at_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[4], NotificationsColumns[1]},
+			},
+			{
+				Name:    "notification_recipient_user_id_message_id_kind",
+				Unique:  true,
+				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[6], NotificationsColumns[3]},
+			},
+			{
+				Name:    "notification_organization_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationsColumns[7], NotificationsColumns[1]},
+			},
+		},
+	}
 	// OrganizationsColumns holds the columns for the "organizations" table.
 	OrganizationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -265,6 +364,7 @@ var (
 		{Name: "resource_id", Type: field.TypeUUID},
 		{Name: "published_at", Type: field.TypeTime, Nullable: true},
 		{Name: "indexed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "notified_at", Type: field.TypeTime, Nullable: true},
 	}
 	// OutboxEventsTable holds the schema information for the "outbox_events" table.
 	OutboxEventsTable = &schema.Table{
@@ -281,6 +381,11 @@ var (
 				Name:    "outboxevent_indexed_at_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{OutboxEventsColumns[12], OutboxEventsColumns[1]},
+			},
+			{
+				Name:    "outboxevent_notified_at_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{OutboxEventsColumns[13], OutboxEventsColumns[1]},
 			},
 			{
 				Name:    "outboxevent_created_at_id",
@@ -319,6 +424,8 @@ var (
 		InvitationsTable,
 		MembershipsTable,
 		MessagesTable,
+		MessageMentionsTable,
+		NotificationsTable,
 		OrganizationsTable,
 		OutboxEventsTable,
 		UsersTable,
@@ -337,4 +444,10 @@ func init() {
 	MembershipsTable.ForeignKeys[1].RefTable = UsersTable
 	MessagesTable.ForeignKeys[0].RefTable = ChannelsTable
 	MessagesTable.ForeignKeys[1].RefTable = UsersTable
+	MessageMentionsTable.ForeignKeys[0].RefTable = MessagesTable
+	MessageMentionsTable.ForeignKeys[1].RefTable = UsersTable
+	NotificationsTable.ForeignKeys[0].RefTable = ChannelsTable
+	NotificationsTable.ForeignKeys[1].RefTable = MessagesTable
+	NotificationsTable.ForeignKeys[2].RefTable = OrganizationsTable
+	NotificationsTable.ForeignKeys[3].RefTable = UsersTable
 }

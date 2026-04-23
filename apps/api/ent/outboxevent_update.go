@@ -70,6 +70,26 @@ func (_u *OutboxEventUpdate) ClearIndexedAt() *OutboxEventUpdate {
 	return _u
 }
 
+// SetNotifiedAt sets the "notified_at" field.
+func (_u *OutboxEventUpdate) SetNotifiedAt(v time.Time) *OutboxEventUpdate {
+	_u.mutation.SetNotifiedAt(v)
+	return _u
+}
+
+// SetNillableNotifiedAt sets the "notified_at" field if the given value is not nil.
+func (_u *OutboxEventUpdate) SetNillableNotifiedAt(v *time.Time) *OutboxEventUpdate {
+	if v != nil {
+		_u.SetNotifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (_u *OutboxEventUpdate) ClearNotifiedAt() *OutboxEventUpdate {
+	_u.mutation.ClearNotifiedAt()
+	return _u
+}
+
 // SetAuditEventID sets the "audit_event" edge to the AuditEvent entity by ID.
 func (_u *OutboxEventUpdate) SetAuditEventID(id uuid.UUID) *OutboxEventUpdate {
 	_u.mutation.SetAuditEventID(id)
@@ -153,6 +173,12 @@ func (_u *OutboxEventUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	}
 	if _u.mutation.IndexedAtCleared() {
 		_spec.ClearField(outboxevent.FieldIndexedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.NotifiedAt(); ok {
+		_spec.SetField(outboxevent.FieldNotifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.NotifiedAtCleared() {
+		_spec.ClearField(outboxevent.FieldNotifiedAt, field.TypeTime)
 	}
 	if _u.mutation.AuditEventCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -240,6 +266,26 @@ func (_u *OutboxEventUpdateOne) SetNillableIndexedAt(v *time.Time) *OutboxEventU
 // ClearIndexedAt clears the value of the "indexed_at" field.
 func (_u *OutboxEventUpdateOne) ClearIndexedAt() *OutboxEventUpdateOne {
 	_u.mutation.ClearIndexedAt()
+	return _u
+}
+
+// SetNotifiedAt sets the "notified_at" field.
+func (_u *OutboxEventUpdateOne) SetNotifiedAt(v time.Time) *OutboxEventUpdateOne {
+	_u.mutation.SetNotifiedAt(v)
+	return _u
+}
+
+// SetNillableNotifiedAt sets the "notified_at" field if the given value is not nil.
+func (_u *OutboxEventUpdateOne) SetNillableNotifiedAt(v *time.Time) *OutboxEventUpdateOne {
+	if v != nil {
+		_u.SetNotifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (_u *OutboxEventUpdateOne) ClearNotifiedAt() *OutboxEventUpdateOne {
+	_u.mutation.ClearNotifiedAt()
 	return _u
 }
 
@@ -356,6 +402,12 @@ func (_u *OutboxEventUpdateOne) sqlSave(ctx context.Context) (_node *OutboxEvent
 	}
 	if _u.mutation.IndexedAtCleared() {
 		_spec.ClearField(outboxevent.FieldIndexedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.NotifiedAt(); ok {
+		_spec.SetField(outboxevent.FieldNotifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.NotifiedAtCleared() {
+		_spec.ClearField(outboxevent.FieldNotifiedAt, field.TypeTime)
 	}
 	if _u.mutation.AuditEventCleared() {
 		edge := &sqlgraph.EdgeSpec{

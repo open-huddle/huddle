@@ -43,6 +43,8 @@ type OutboxEvent struct {
 	PublishedAt *time.Time `json:"published_at,omitempty"`
 	// IndexedAt holds the value of the "indexed_at" field.
 	IndexedAt *time.Time `json:"indexed_at,omitempty"`
+	// NotifiedAt holds the value of the "notified_at" field.
+	NotifiedAt *time.Time `json:"notified_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OutboxEventQuery when eager-loading is set.
 	Edges        OutboxEventEdges `json:"edges"`
@@ -80,7 +82,7 @@ func (*OutboxEvent) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case outboxevent.FieldAggregateType, outboxevent.FieldEventType, outboxevent.FieldSubject, outboxevent.FieldResourceType:
 			values[i] = new(sql.NullString)
-		case outboxevent.FieldCreatedAt, outboxevent.FieldPublishedAt, outboxevent.FieldIndexedAt:
+		case outboxevent.FieldCreatedAt, outboxevent.FieldPublishedAt, outboxevent.FieldIndexedAt, outboxevent.FieldNotifiedAt:
 			values[i] = new(sql.NullTime)
 		case outboxevent.FieldID, outboxevent.FieldAggregateID, outboxevent.FieldResourceID:
 			values[i] = new(uuid.UUID)
@@ -181,6 +183,13 @@ func (_m *OutboxEvent) assignValues(columns []string, values []any) error {
 				_m.IndexedAt = new(time.Time)
 				*_m.IndexedAt = value.Time
 			}
+		case outboxevent.FieldNotifiedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field notified_at", values[i])
+			} else if value.Valid {
+				_m.NotifiedAt = new(time.Time)
+				*_m.NotifiedAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -263,6 +272,11 @@ func (_m *OutboxEvent) String() string {
 	builder.WriteString(", ")
 	if v := _m.IndexedAt; v != nil {
 		builder.WriteString("indexed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.NotifiedAt; v != nil {
+		builder.WriteString("notified_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

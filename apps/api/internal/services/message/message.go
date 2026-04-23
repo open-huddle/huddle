@@ -16,7 +16,11 @@ import (
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	entchannel "github.com/open-huddle/huddle/apps/api/ent/channel"
+	entmembership "github.com/open-huddle/huddle/apps/api/ent/membership"
 	entmessage "github.com/open-huddle/huddle/apps/api/ent/message"
+	entmessagemention "github.com/open-huddle/huddle/apps/api/ent/messagemention"
+	entorganization "github.com/open-huddle/huddle/apps/api/ent/organization"
+	entuser "github.com/open-huddle/huddle/apps/api/ent/user"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
@@ -89,6 +93,14 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.Messag
 		return nil, s.denyErr(err)
 	}
 
+	// Validate mentions before opening the tx so obviously-invalid
+	// requests never touch the DB. Returns a deduped set with the
+	// sender's own id filtered out.
+	mentionIDs, err := s.validateMentions(ctx, req.Msg.MentionUserIds, orgID, caller.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Persist the message and the outbox entry in one transaction so a broker
 	// outage cannot silently drop events anymore — the outbox publisher
 	// worker retries from the database (see ADR-0007). The old best-effort
@@ -109,7 +121,19 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.Messag
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("send message: %w", err))
 	}
 
-	out := toProto(m)
+	// Persist mentions in the same tx — the join table is the source of
+	// truth the notifications consumer + future "my mentions" UI read.
+	for _, uid := range mentionIDs {
+		if _, err := tx.MessageMention.Create().
+			SetMessageID(m.ID).
+			SetUserID(uid).
+			Save(ctx); err != nil {
+			_ = tx.Rollback()
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("insert mention: %w", err))
+		}
+	}
+
+	out := toProto(m, mentionIDs)
 	payload, err := proto.Marshal(out)
 	if err != nil {
 		_ = tx.Rollback()
@@ -138,6 +162,52 @@ func (s *Service) Send(ctx context.Context, req *connect.Request[huddlev1.Messag
 	return connect.NewResponse(&huddlev1.MessageServiceSendResponse{
 		Message: out,
 	}), nil
+}
+
+// validateMentions parses raw id strings, rejects malformed UUIDs with
+// InvalidArgument, de-dupes the set, drops the sender's own id (self-
+// mentions are silently no-ops), and verifies every remaining user is a
+// member of the channel's organization. A non-member id is
+// InvalidArgument — the sender should not be able to ping strangers.
+func (s *Service) validateMentions(ctx context.Context, raw []string, orgID, senderID uuid.UUID) ([]uuid.UUID, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	seen := make(map[uuid.UUID]struct{}, len(raw))
+	ids := make([]uuid.UUID, 0, len(raw))
+	for _, s := range raw {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid mention_user_id %q", s))
+		}
+		if id == senderID {
+			continue // self-mention is a no-op
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	// Bulk-check membership in one query: "do all mentioned user ids
+	// belong to a Membership in this org?". Count mismatch = at least
+	// one stranger.
+	got, err := s.client.Membership.Query().
+		Where(
+			entmembership.HasOrganizationWith(entorganization.IDEQ(orgID)),
+			entmembership.HasUserWith(entuser.IDIn(ids...)),
+		).
+		Count(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("validate mentions: %w", err))
+	}
+	if got != len(ids) {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("one or more mentioned users are not members of this organization"))
+	}
+	return ids, nil
 }
 
 func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.MessageServiceSubscribeRequest], stream *connect.ServerStream[huddlev1.MessageServiceSubscribeResponse]) error {
@@ -242,14 +312,44 @@ func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.Messag
 	if hasMore {
 		rows = rows[:limit]
 	}
+	mentionsByMsg, err := s.mentionsFor(ctx, rows)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("load mentions: %w", err))
+	}
 	for _, m := range rows {
-		resp.Messages = append(resp.Messages, toProto(m))
+		resp.Messages = append(resp.Messages, toProto(m, mentionsByMsg[m.ID]))
 	}
 	if hasMore && len(rows) > 0 {
 		last := rows[len(rows)-1]
 		resp.NextCursor = encodeCursor(last.CreatedAt, last.ID)
 	}
 	return connect.NewResponse(resp), nil
+}
+
+// mentionsFor loads MessageMention rows for the given messages in a
+// single query and groups them by message_id. The List handler uses
+// this to hydrate the mention_user_ids field on each returned Message
+// without an N+1 pattern. Returns an empty map when rows is empty so
+// callers can range over the result unconditionally.
+func (s *Service) mentionsFor(ctx context.Context, rows []*ent.Message) (map[uuid.UUID][]uuid.UUID, error) {
+	out := make(map[uuid.UUID][]uuid.UUID, len(rows))
+	if len(rows) == 0 {
+		return out, nil
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, m := range rows {
+		ids = append(ids, m.ID)
+	}
+	mentions, err := s.client.MessageMention.Query().
+		Where(entmessagemention.MessageIDIn(ids...)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, mm := range mentions {
+		out[mm.MessageID] = append(out[mm.MessageID], mm.UserID)
+	}
+	return out, nil
 }
 
 // channelOrg looks up a channel's organization for authz. Maps not-found to
@@ -321,12 +421,24 @@ func decodeCursor(s string) (time.Time, uuid.UUID, error) {
 	return time.Unix(0, nanos), id, nil
 }
 
-func toProto(m *ent.Message) *huddlev1.Message {
-	return &huddlev1.Message{
+// toProto renders a Message for the wire, including the mention set.
+// mentions may be nil (no @-mentions on this message); callers that
+// have a list of just-written ids (Send) pass them directly, callers
+// reading persisted messages (List / Subscribe) populate from the
+// MessageMention join table.
+func toProto(m *ent.Message, mentions []uuid.UUID) *huddlev1.Message {
+	out := &huddlev1.Message{
 		Id:        m.ID.String(),
 		ChannelId: m.ChannelID.String(),
 		AuthorId:  m.AuthorID.String(),
 		Body:      m.Body,
 		CreatedAt: timestamppb.New(m.CreatedAt),
 	}
+	if len(mentions) > 0 {
+		out.MentionUserIds = make([]string, 0, len(mentions))
+		for _, id := range mentions {
+			out.MentionUserIds = append(out.MentionUserIds, id.String())
+		}
+	}
+	return out
 }

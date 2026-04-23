@@ -24,6 +24,10 @@ type Tx struct {
 	Membership *MembershipClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// MessageMention is the client for interacting with the MessageMention builders.
+	MessageMention *MessageMentionClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// OutboxEvent is the client for interacting with the OutboxEvent builders.
@@ -167,6 +171,8 @@ func (tx *Tx) init() {
 	tx.Invitation = NewInvitationClient(tx.config)
 	tx.Membership = NewMembershipClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
+	tx.MessageMention = NewMessageMentionClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.OutboxEvent = NewOutboxEventClient(tx.config)
 	tx.User = NewUserClient(tx.config)

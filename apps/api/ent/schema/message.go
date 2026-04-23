@@ -49,6 +49,13 @@ func (Message) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Field("author_id"),
+		// Explicit @-mentions written at Send time. Read by Message.List /
+		// Subscribe to hydrate the proto's mention_user_ids; also read by
+		// the notifications consumer to fan out Notification rows.
+		edge.To("mentions", MessageMention.Type),
+		// Notifications triggered by this message. One per (recipient, kind)
+		// via the UNIQUE on Notification; see notifications.Consumer.
+		edge.To("notifications", Notification.Type),
 	}
 }
 

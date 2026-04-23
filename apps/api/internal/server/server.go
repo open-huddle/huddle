@@ -23,6 +23,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/services/health"
 	"github.com/open-huddle/huddle/apps/api/internal/services/identity"
 	"github.com/open-huddle/huddle/apps/api/internal/services/message"
+	notificationsvc "github.com/open-huddle/huddle/apps/api/internal/services/notifications"
 	"github.com/open-huddle/huddle/apps/api/internal/services/organization"
 	searchsvc "github.com/open-huddle/huddle/apps/api/internal/services/search"
 	"github.com/open-huddle/huddle/gen/go/huddle/v1/huddlev1connect"
@@ -102,6 +103,11 @@ func (s *Server) routes() {
 	{
 		svc := searchsvc.New(s.resolver, s.authz, s.search, s.logger)
 		path, handler := huddlev1connect.NewSearchServiceHandler(svc, authInt)
+		s.router.Mount(path, handler)
+	}
+	{
+		svc := notificationsvc.New(s.db.Ent, s.resolver, s.logger)
+		path, handler := huddlev1connect.NewNotificationServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}
 }

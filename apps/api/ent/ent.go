@@ -18,6 +18,8 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
+	"github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -81,15 +83,17 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			auditevent.Table:    auditevent.ValidColumn,
-			channel.Table:       channel.ValidColumn,
-			emaildelivery.Table: emaildelivery.ValidColumn,
-			invitation.Table:    invitation.ValidColumn,
-			membership.Table:    membership.ValidColumn,
-			message.Table:       message.ValidColumn,
-			organization.Table:  organization.ValidColumn,
-			outboxevent.Table:   outboxevent.ValidColumn,
-			user.Table:          user.ValidColumn,
+			auditevent.Table:     auditevent.ValidColumn,
+			channel.Table:        channel.ValidColumn,
+			emaildelivery.Table:  emaildelivery.ValidColumn,
+			invitation.Table:     invitation.ValidColumn,
+			membership.Table:     membership.ValidColumn,
+			message.Table:        message.ValidColumn,
+			messagemention.Table: messagemention.ValidColumn,
+			notification.Table:   notification.ValidColumn,
+			organization.Table:   organization.ValidColumn,
+			outboxevent.Table:    outboxevent.ValidColumn,
+			user.Table:           user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

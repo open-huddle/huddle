@@ -12,16 +12,18 @@ import (
 )
 
 // GC trims the outbox table. A row is eligible for deletion only when all
-// three downstream markers are set:
+// four downstream markers are set:
 //
 //   - published_at IS NOT NULL      (outbox.Publisher reached NATS)
-//   - indexed_at IS NOT NULL        (search.Indexer wrote the projection)
+//   - indexed_at IS NOT NULL        (search.Indexer evaluated the row)
+//   - notified_at IS NOT NULL       (notifications.Consumer evaluated the row)
 //   - HasAuditEvent                 (audit.Consumer mirrored the row)
 //
 // ...and the row is older than the retention window. The ordering between
 // GC and the new consumers is structural: a consumer that lands later must
 // also stamp its own column (or sibling row) before GC considers the event
-// done. See ADR-0011.
+// done. See ADR-0011 for the original design and ADR-0014 for the
+// notifications extension.
 //
 // Deletion triggers the ON DELETE SET NULL on audit_events.outbox_event_id
 // — the audit row survives with its denormalized fields intact, just
@@ -122,6 +124,7 @@ func (g *GC) DeleteBatch(ctx context.Context) (int, error) {
 		Where(
 			outboxevent.PublishedAtNotNil(),
 			outboxevent.IndexedAtNotNil(),
+			outboxevent.NotifiedAtNotNil(),
 			outboxevent.HasAuditEvent(),
 			outboxevent.CreatedAtLT(cutoff),
 		).

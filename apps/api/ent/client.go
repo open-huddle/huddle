@@ -22,6 +22,8 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
+	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
+	"github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -44,6 +46,10 @@ type Client struct {
 	Membership *MembershipClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// MessageMention is the client for interacting with the MessageMention builders.
+	MessageMention *MessageMentionClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// OutboxEvent is the client for interacting with the OutboxEvent builders.
@@ -67,6 +73,8 @@ func (c *Client) init() {
 	c.Invitation = NewInvitationClient(c.config)
 	c.Membership = NewMembershipClient(c.config)
 	c.Message = NewMessageClient(c.config)
+	c.MessageMention = NewMessageMentionClient(c.config)
+	c.Notification = NewNotificationClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
 	c.OutboxEvent = NewOutboxEventClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -160,17 +168,19 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		AuditEvent:    NewAuditEventClient(cfg),
-		Channel:       NewChannelClient(cfg),
-		EmailDelivery: NewEmailDeliveryClient(cfg),
-		Invitation:    NewInvitationClient(cfg),
-		Membership:    NewMembershipClient(cfg),
-		Message:       NewMessageClient(cfg),
-		Organization:  NewOrganizationClient(cfg),
-		OutboxEvent:   NewOutboxEventClient(cfg),
-		User:          NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		AuditEvent:     NewAuditEventClient(cfg),
+		Channel:        NewChannelClient(cfg),
+		EmailDelivery:  NewEmailDeliveryClient(cfg),
+		Invitation:     NewInvitationClient(cfg),
+		Membership:     NewMembershipClient(cfg),
+		Message:        NewMessageClient(cfg),
+		MessageMention: NewMessageMentionClient(cfg),
+		Notification:   NewNotificationClient(cfg),
+		Organization:   NewOrganizationClient(cfg),
+		OutboxEvent:    NewOutboxEventClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -188,17 +198,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		AuditEvent:    NewAuditEventClient(cfg),
-		Channel:       NewChannelClient(cfg),
-		EmailDelivery: NewEmailDeliveryClient(cfg),
-		Invitation:    NewInvitationClient(cfg),
-		Membership:    NewMembershipClient(cfg),
-		Message:       NewMessageClient(cfg),
-		Organization:  NewOrganizationClient(cfg),
-		OutboxEvent:   NewOutboxEventClient(cfg),
-		User:          NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		AuditEvent:     NewAuditEventClient(cfg),
+		Channel:        NewChannelClient(cfg),
+		EmailDelivery:  NewEmailDeliveryClient(cfg),
+		Invitation:     NewInvitationClient(cfg),
+		Membership:     NewMembershipClient(cfg),
+		Message:        NewMessageClient(cfg),
+		MessageMention: NewMessageMentionClient(cfg),
+		Notification:   NewNotificationClient(cfg),
+		Organization:   NewOrganizationClient(cfg),
+		OutboxEvent:    NewOutboxEventClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -229,7 +241,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
-		c.Organization, c.OutboxEvent, c.User,
+		c.MessageMention, c.Notification, c.Organization, c.OutboxEvent, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -240,7 +252,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
-		c.Organization, c.OutboxEvent, c.User,
+		c.MessageMention, c.Notification, c.Organization, c.OutboxEvent, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -261,6 +273,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Membership.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
+	case *MessageMentionMutation:
+		return c.MessageMention.mutate(ctx, m)
+	case *NotificationMutation:
+		return c.Notification.mutate(ctx, m)
 	case *OrganizationMutation:
 		return c.Organization.mutate(ctx, m)
 	case *OutboxEventMutation:
@@ -570,6 +586,22 @@ func (c *ChannelClient) QueryMessages(_m *Channel) *MessageQuery {
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(message.Table, message.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.MessagesTable, channel.MessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotifications queries the notifications edge of a Channel.
+func (c *ChannelClient) QueryNotifications(_m *Channel) *NotificationQuery {
+	query := (&NotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.NotificationsTable, channel.NotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1253,6 +1285,38 @@ func (c *MessageClient) QueryAuthor(_m *Message) *UserQuery {
 	return query
 }
 
+// QueryMentions queries the mentions edge of a Message.
+func (c *MessageClient) QueryMentions(_m *Message) *MessageMentionQuery {
+	query := (&MessageMentionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, id),
+			sqlgraph.To(messagemention.Table, messagemention.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, message.MentionsTable, message.MentionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotifications queries the notifications edge of a Message.
+func (c *MessageClient) QueryNotifications(_m *Message) *NotificationQuery {
+	query := (&NotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, id),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, message.NotificationsTable, message.NotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *MessageClient) Hooks() []Hook {
 	return c.hooks.Message
@@ -1275,6 +1339,368 @@ func (c *MessageClient) mutate(ctx context.Context, m *MessageMutation) (Value, 
 		return (&MessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Message mutation op: %q", m.Op())
+	}
+}
+
+// MessageMentionClient is a client for the MessageMention schema.
+type MessageMentionClient struct {
+	config
+}
+
+// NewMessageMentionClient returns a client for the MessageMention from the given config.
+func NewMessageMentionClient(c config) *MessageMentionClient {
+	return &MessageMentionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `messagemention.Hooks(f(g(h())))`.
+func (c *MessageMentionClient) Use(hooks ...Hook) {
+	c.hooks.MessageMention = append(c.hooks.MessageMention, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `messagemention.Intercept(f(g(h())))`.
+func (c *MessageMentionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MessageMention = append(c.inters.MessageMention, interceptors...)
+}
+
+// Create returns a builder for creating a MessageMention entity.
+func (c *MessageMentionClient) Create() *MessageMentionCreate {
+	mutation := newMessageMentionMutation(c.config, OpCreate)
+	return &MessageMentionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MessageMention entities.
+func (c *MessageMentionClient) CreateBulk(builders ...*MessageMentionCreate) *MessageMentionCreateBulk {
+	return &MessageMentionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MessageMentionClient) MapCreateBulk(slice any, setFunc func(*MessageMentionCreate, int)) *MessageMentionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MessageMentionCreateBulk{err: fmt.Errorf("calling to MessageMentionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MessageMentionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MessageMentionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MessageMention.
+func (c *MessageMentionClient) Update() *MessageMentionUpdate {
+	mutation := newMessageMentionMutation(c.config, OpUpdate)
+	return &MessageMentionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MessageMentionClient) UpdateOne(_m *MessageMention) *MessageMentionUpdateOne {
+	mutation := newMessageMentionMutation(c.config, OpUpdateOne, withMessageMention(_m))
+	return &MessageMentionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MessageMentionClient) UpdateOneID(id uuid.UUID) *MessageMentionUpdateOne {
+	mutation := newMessageMentionMutation(c.config, OpUpdateOne, withMessageMentionID(id))
+	return &MessageMentionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MessageMention.
+func (c *MessageMentionClient) Delete() *MessageMentionDelete {
+	mutation := newMessageMentionMutation(c.config, OpDelete)
+	return &MessageMentionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MessageMentionClient) DeleteOne(_m *MessageMention) *MessageMentionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MessageMentionClient) DeleteOneID(id uuid.UUID) *MessageMentionDeleteOne {
+	builder := c.Delete().Where(messagemention.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MessageMentionDeleteOne{builder}
+}
+
+// Query returns a query builder for MessageMention.
+func (c *MessageMentionClient) Query() *MessageMentionQuery {
+	return &MessageMentionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMessageMention},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MessageMention entity by its id.
+func (c *MessageMentionClient) Get(ctx context.Context, id uuid.UUID) (*MessageMention, error) {
+	return c.Query().Where(messagemention.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MessageMentionClient) GetX(ctx context.Context, id uuid.UUID) *MessageMention {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMessage queries the message edge of a MessageMention.
+func (c *MessageMentionClient) QueryMessage(_m *MessageMention) *MessageQuery {
+	query := (&MessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(messagemention.Table, messagemention.FieldID, id),
+			sqlgraph.To(message.Table, message.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, messagemention.MessageTable, messagemention.MessageColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a MessageMention.
+func (c *MessageMentionClient) QueryUser(_m *MessageMention) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(messagemention.Table, messagemention.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, messagemention.UserTable, messagemention.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MessageMentionClient) Hooks() []Hook {
+	return c.hooks.MessageMention
+}
+
+// Interceptors returns the client interceptors.
+func (c *MessageMentionClient) Interceptors() []Interceptor {
+	return c.inters.MessageMention
+}
+
+func (c *MessageMentionClient) mutate(ctx context.Context, m *MessageMentionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MessageMentionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MessageMentionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MessageMentionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MessageMentionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MessageMention mutation op: %q", m.Op())
+	}
+}
+
+// NotificationClient is a client for the Notification schema.
+type NotificationClient struct {
+	config
+}
+
+// NewNotificationClient returns a client for the Notification from the given config.
+func NewNotificationClient(c config) *NotificationClient {
+	return &NotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notification.Hooks(f(g(h())))`.
+func (c *NotificationClient) Use(hooks ...Hook) {
+	c.hooks.Notification = append(c.hooks.Notification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notification.Intercept(f(g(h())))`.
+func (c *NotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Notification = append(c.inters.Notification, interceptors...)
+}
+
+// Create returns a builder for creating a Notification entity.
+func (c *NotificationClient) Create() *NotificationCreate {
+	mutation := newNotificationMutation(c.config, OpCreate)
+	return &NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Notification entities.
+func (c *NotificationClient) CreateBulk(builders ...*NotificationCreate) *NotificationCreateBulk {
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationClient) MapCreateBulk(slice any, setFunc func(*NotificationCreate, int)) *NotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationCreateBulk{err: fmt.Errorf("calling to NotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Notification.
+func (c *NotificationClient) Update() *NotificationUpdate {
+	mutation := newNotificationMutation(c.config, OpUpdate)
+	return &NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationClient) UpdateOne(_m *Notification) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotification(_m))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationClient) UpdateOneID(id uuid.UUID) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotificationID(id))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Notification.
+func (c *NotificationClient) Delete() *NotificationDelete {
+	mutation := newNotificationMutation(c.config, OpDelete)
+	return &NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationClient) DeleteOne(_m *Notification) *NotificationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationClient) DeleteOneID(id uuid.UUID) *NotificationDeleteOne {
+	builder := c.Delete().Where(notification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for Notification.
+func (c *NotificationClient) Query() *NotificationQuery {
+	return &NotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Notification entity by its id.
+func (c *NotificationClient) Get(ctx context.Context, id uuid.UUID) (*Notification, error) {
+	return c.Query().Where(notification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationClient) GetX(ctx context.Context, id uuid.UUID) *Notification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRecipient queries the recipient edge of a Notification.
+func (c *NotificationClient) QueryRecipient(_m *Notification) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notification.Table, notification.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notification.RecipientTable, notification.RecipientColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMessage queries the message edge of a Notification.
+func (c *NotificationClient) QueryMessage(_m *Notification) *MessageQuery {
+	query := (&MessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notification.Table, notification.FieldID, id),
+			sqlgraph.To(message.Table, message.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notification.MessageTable, notification.MessageColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChannel queries the channel edge of a Notification.
+func (c *NotificationClient) QueryChannel(_m *Notification) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notification.Table, notification.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notification.ChannelTable, notification.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrganization queries the organization edge of a Notification.
+func (c *NotificationClient) QueryOrganization(_m *Notification) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notification.Table, notification.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notification.OrganizationTable, notification.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationClient) Hooks() []Hook {
+	return c.hooks.Notification
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationClient) Interceptors() []Interceptor {
+	return c.inters.Notification
+}
+
+func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Notification mutation op: %q", m.Op())
 	}
 }
 
@@ -1427,6 +1853,22 @@ func (c *OrganizationClient) QueryInvitations(_m *Organization) *InvitationQuery
 			sqlgraph.From(organization.Table, organization.FieldID, id),
 			sqlgraph.To(invitation.Table, invitation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.InvitationsTable, organization.InvitationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotifications queries the notifications edge of a Organization.
+func (c *OrganizationClient) QueryNotifications(_m *Organization) *NotificationQuery {
+	query := (&NotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.NotificationsTable, organization.NotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1796,6 +2238,38 @@ func (c *UserClient) QueryInvitationsAccepted(_m *User) *InvitationQuery {
 	return query
 }
 
+// QueryNotifications queries the notifications edge of a User.
+func (c *UserClient) QueryNotifications(_m *User) *NotificationQuery {
+	query := (&NotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.NotificationsTable, user.NotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMentionedIn queries the mentioned_in edge of a User.
+func (c *UserClient) QueryMentionedIn(_m *User) *MessageMentionQuery {
+	query := (&MessageMentionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(messagemention.Table, messagemention.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MentionedInTable, user.MentionedInColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -1825,10 +2299,10 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
-		Organization, OutboxEvent, User []ent.Hook
+		MessageMention, Notification, Organization, OutboxEvent, User []ent.Hook
 	}
 	inters struct {
 		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
-		Organization, OutboxEvent, User []ent.Interceptor
+		MessageMention, Notification, Organization, OutboxEvent, User []ent.Interceptor
 	}
 )

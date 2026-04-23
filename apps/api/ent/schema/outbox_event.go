@@ -76,6 +76,12 @@ func (OutboxEvent) Fields() []ent.Field {
 		// outbox GC: a row is only safe to trim once it is published,
 		// audited, AND indexed.
 		field.Time("indexed_at").Optional().Nillable(),
+
+		// Set when the notifications.Consumer has evaluated the row
+		// (fanned out Notification entries for message.created events;
+		// stamped-without-work for other types, same pattern as the
+		// indexer). Fourth and final marker gate on outbox.GC.
+		field.Time("notified_at").Optional().Nillable(),
 	}
 }
 
@@ -97,6 +103,8 @@ func (OutboxEvent) Indexes() []ent.Index {
 		// Same shape as published_at — lets search.Indexer scan only the
 		// un-indexed backlog on every tick as the table grows.
 		index.Fields("indexed_at", "created_at"),
+		// Same shape again for the notifications consumer's poll.
+		index.Fields("notified_at", "created_at"),
 		// Audit-consumer cursor + general chronological queries.
 		index.Fields("created_at", "id"),
 	}

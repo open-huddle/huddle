@@ -40,9 +40,11 @@ type OrganizationEdges struct {
 	Channels []*Channel `json:"channels,omitempty"`
 	// Invitations holds the value of the invitations edge.
 	Invitations []*Invitation `json:"invitations,omitempty"`
+	// Notifications holds the value of the notifications edge.
+	Notifications []*Notification `json:"notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -70,6 +72,15 @@ func (e OrganizationEdges) InvitationsOrErr() ([]*Invitation, error) {
 		return e.Invitations, nil
 	}
 	return nil, &NotLoadedError{edge: "invitations"}
+}
+
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) NotificationsOrErr() ([]*Notification, error) {
+	if e.loadedTypes[3] {
+		return e.Notifications, nil
+	}
+	return nil, &NotLoadedError{edge: "notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -154,6 +165,11 @@ func (_m *Organization) QueryChannels() *ChannelQuery {
 // QueryInvitations queries the "invitations" edge of the Organization entity.
 func (_m *Organization) QueryInvitations() *InvitationQuery {
 	return NewOrganizationClient(_m.config).QueryInvitations(_m)
+}
+
+// QueryNotifications queries the "notifications" edge of the Organization entity.
+func (_m *Organization) QueryNotifications() *NotificationQuery {
+	return NewOrganizationClient(_m.config).QueryNotifications(_m)
 }
 
 // Update returns a builder for updating this Organization.
