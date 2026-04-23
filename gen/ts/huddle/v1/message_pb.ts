@@ -12,7 +12,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/message.proto.
  */
 export const file_huddle_v1_message: GenFile = /*@__PURE__*/
-  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxIpQBCgdNZXNzYWdlEgoKAmlkGAEgASgJEhIKCmNoYW5uZWxfaWQYAiABKAkSEQoJYXV0aG9yX2lkGAMgASgJEgwKBGJvZHkYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQbWVudGlvbl91c2VyX2lkcxgGIAMoCSJXChlNZXNzYWdlU2VydmljZVNlbmRSZXF1ZXN0EhIKCmNoYW5uZWxfaWQYASABKAkSDAoEYm9keRgCIAEoCRIYChBtZW50aW9uX3VzZXJfaWRzGAMgAygJIkEKGk1lc3NhZ2VTZXJ2aWNlU2VuZFJlc3BvbnNlEiMKB21lc3NhZ2UYASABKAsyEi5odWRkbGUudjEuTWVzc2FnZSJOChlNZXNzYWdlU2VydmljZUxpc3RSZXF1ZXN0EhIKCmNoYW5uZWxfaWQYASABKAkSDgoGYmVmb3JlGAIgASgJEg0KBWxpbWl0GAMgASgFIlcKGk1lc3NhZ2VTZXJ2aWNlTGlzdFJlc3BvbnNlEiQKCG1lc3NhZ2VzGAEgAygLMhIuaHVkZGxlLnYxLk1lc3NhZ2USEwoLbmV4dF9jdXJzb3IYAiABKAkiNAoeTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXF1ZXN0EhIKCmNoYW5uZWxfaWQYASABKAkiRgofTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZRIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UypgIKDk1lc3NhZ2VTZXJ2aWNlElUKBFNlbmQSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTZW5kUmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVNlbmRSZXNwb25zZSIAElUKBExpc3QSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VMaXN0UmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUxpc3RSZXNwb25zZSIAEmYKCVN1YnNjcmliZRIpLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QaKi5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZSIAMAFCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxIsMBCgdNZXNzYWdlEgoKAmlkGAEgASgJEhIKCmNoYW5uZWxfaWQYAiABKAkSEQoJYXV0aG9yX2lkGAMgASgJEgwKBGJvZHkYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQbWVudGlvbl91c2VyX2lkcxgGIAMoCRItCgllZGl0ZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlcKGU1lc3NhZ2VTZXJ2aWNlU2VuZFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJEhgKEG1lbnRpb25fdXNlcl9pZHMYAyADKAkiQQoaTWVzc2FnZVNlcnZpY2VTZW5kUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIk4KGU1lc3NhZ2VTZXJ2aWNlTGlzdFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiVwoaTWVzc2FnZVNlcnZpY2VMaXN0UmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCSI0Ch5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCSJGCh9NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlc3BvbnNlEiMKB21lc3NhZ2UYASABKAsyEi5odWRkbGUudjEuTWVzc2FnZSJPChlNZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBGJvZHkYAiABKAkSGAoQbWVudGlvbl91c2VyX2lkcxgDIAMoCSJBChpNZXNzYWdlU2VydmljZUVkaXRSZXNwb25zZRIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UiKQobTWVzc2FnZVNlcnZpY2VEZWxldGVSZXF1ZXN0EgoKAmlkGAEgASgJIh4KHE1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVzcG9uc2Uy2gMKDk1lc3NhZ2VTZXJ2aWNlElUKBFNlbmQSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTZW5kUmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVNlbmRSZXNwb25zZSIAElUKBExpc3QSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VMaXN0UmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUxpc3RSZXNwb25zZSIAEmYKCVN1YnNjcmliZRIpLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QaKi5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZSIAMAESVQoERWRpdBIkLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0GiUuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRWRpdFJlc3BvbnNlIgASWwoGRGVsZXRlEiYuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVxdWVzdBonLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZURlbGV0ZVJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Message
@@ -58,6 +58,15 @@ export type Message = Message$1<"huddle.v1.Message"> & {
    * @generated from field: repeated string mention_user_ids = 6;
    */
   mentionUserIds: string[];
+
+  /**
+   * Set on each successful Edit. Empty for un-edited messages. Clients
+   * can show "edited" affordances when this is present and differs from
+   * created_at.
+   *
+   * @generated from field: google.protobuf.Timestamp edited_at = 7;
+   */
+  editedAt?: Timestamp | undefined;
 };
 
 /**
@@ -212,6 +221,83 @@ export const MessageServiceSubscribeResponseSchema: GenMessage<MessageServiceSub
   messageDesc(file_huddle_v1_message, 6);
 
 /**
+ * @generated from message huddle.v1.MessageServiceEditRequest
+ */
+export type MessageServiceEditRequest = Message$1<"huddle.v1.MessageServiceEditRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string body = 2;
+   */
+  body: string;
+
+  /**
+   * Full replacement set — not a diff. Validated + deduped on the
+   * server same as Send. Omitting the field clears all mentions.
+   *
+   * @generated from field: repeated string mention_user_ids = 3;
+   */
+  mentionUserIds: string[];
+};
+
+/**
+ * Describes the message huddle.v1.MessageServiceEditRequest.
+ * Use `create(MessageServiceEditRequestSchema)` to create a new message.
+ */
+export const MessageServiceEditRequestSchema: GenMessage<MessageServiceEditRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 7);
+
+/**
+ * @generated from message huddle.v1.MessageServiceEditResponse
+ */
+export type MessageServiceEditResponse = Message$1<"huddle.v1.MessageServiceEditResponse"> & {
+  /**
+   * @generated from field: huddle.v1.Message message = 1;
+   */
+  message?: Message | undefined;
+};
+
+/**
+ * Describes the message huddle.v1.MessageServiceEditResponse.
+ * Use `create(MessageServiceEditResponseSchema)` to create a new message.
+ */
+export const MessageServiceEditResponseSchema: GenMessage<MessageServiceEditResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 8);
+
+/**
+ * @generated from message huddle.v1.MessageServiceDeleteRequest
+ */
+export type MessageServiceDeleteRequest = Message$1<"huddle.v1.MessageServiceDeleteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message huddle.v1.MessageServiceDeleteRequest.
+ * Use `create(MessageServiceDeleteRequestSchema)` to create a new message.
+ */
+export const MessageServiceDeleteRequestSchema: GenMessage<MessageServiceDeleteRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 9);
+
+/**
+ * @generated from message huddle.v1.MessageServiceDeleteResponse
+ */
+export type MessageServiceDeleteResponse = Message$1<"huddle.v1.MessageServiceDeleteResponse"> & {
+};
+
+/**
+ * Describes the message huddle.v1.MessageServiceDeleteResponse.
+ * Use `create(MessageServiceDeleteResponseSchema)` to create a new message.
+ */
+export const MessageServiceDeleteResponseSchema: GenMessage<MessageServiceDeleteResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 10);
+
+/**
  * MessageService handles message send and read for chat channels. Realtime
  * delivery (WebSocket push) is intentionally out of scope here — clients
  * poll List for now; Phase 2c adds the streaming surface.
@@ -248,12 +334,44 @@ export const MessageService: GenService<{
    * server-side subscription. The token is verified once at stream open;
    * long-lived clients should reconnect periodically with a fresh token.
    *
+   * Subscribe pushes message.created events only in this revision. Edits
+   * and deletes land via List refetch today; a future "realtime v2" PR
+   * will extend the streaming shape.
+   *
    * @generated from rpc huddle.v1.MessageService.Subscribe
    */
   subscribe: {
     methodKind: "server_streaming";
     input: typeof MessageServiceSubscribeRequestSchema;
     output: typeof MessageServiceSubscribeResponseSchema;
+  },
+  /**
+   * Edit replaces the body and mention set of a message the caller
+   * authored. Non-authors cannot edit. edited_at on the returned Message
+   * stamps each successful edit. Fires a message.edited outbox event;
+   * notifications for newly-added mentions are in-app only (the mailer
+   * skips edit-sourced notifications).
+   *
+   * @generated from rpc huddle.v1.MessageService.Edit
+   */
+  edit: {
+    methodKind: "unary";
+    input: typeof MessageServiceEditRequestSchema;
+    output: typeof MessageServiceEditResponseSchema;
+  },
+  /**
+   * Delete soft-deletes a message. The author, an organization admin,
+   * or an owner may delete. Deleted messages disappear from List but
+   * the row stays in the DB for audit. Fires a message.deleted outbox
+   * event; the search indexer removes the doc; the notifications
+   * consumer stamps and moves on (existing notifications survive).
+   *
+   * @generated from rpc huddle.v1.MessageService.Delete
+   */
+  delete: {
+    methodKind: "unary";
+    input: typeof MessageServiceDeleteRequestSchema;
+    output: typeof MessageServiceDeleteResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_message, 0);

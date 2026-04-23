@@ -34,9 +34,10 @@ type fakeBackend struct {
 }
 
 func (f *fakeBackend) EnsureIndex(context.Context) error { return nil }
-func (f *fakeBackend) IndexMessage(context.Context, uuid.UUID, internalsearch.MessageDoc) error {
+func (f *fakeBackend) IndexMessage(context.Context, internalsearch.MessageDoc) error {
 	return nil
 }
+func (f *fakeBackend) DeleteMessage(context.Context, uuid.UUID) error { return nil }
 
 func (f *fakeBackend) SearchMessages(_ context.Context, q internalsearch.MessageQuery) (internalsearch.MessageResult, error) {
 	f.mu.Lock()

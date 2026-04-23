@@ -38,6 +38,8 @@ type Notification struct {
 	OrganizationID uuid.UUID `json:"organization_id,omitempty"`
 	// ReadAt holds the value of the "read_at" field.
 	ReadAt *time.Time `json:"read_at,omitempty"`
+	// Source holds the value of the "source" field.
+	Source notification.Source `json:"source,omitempty"`
 	// EmailedAt holds the value of the "emailed_at" field.
 	EmailedAt *time.Time `json:"emailed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -112,7 +114,7 @@ func (*Notification) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case notification.FieldMessageID, notification.FieldChannelID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case notification.FieldKind:
+		case notification.FieldKind, notification.FieldSource:
 			values[i] = new(sql.NullString)
 		case notification.FieldCreatedAt, notification.FieldUpdatedAt, notification.FieldReadAt, notification.FieldEmailedAt:
 			values[i] = new(sql.NullTime)
@@ -189,6 +191,12 @@ func (_m *Notification) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ReadAt = new(time.Time)
 				*_m.ReadAt = value.Time
+			}
+		case notification.FieldSource:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source", values[i])
+			} else if value.Valid {
+				_m.Source = notification.Source(value.String)
 			}
 		case notification.FieldEmailedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -282,6 +290,9 @@ func (_m *Notification) String() string {
 		builder.WriteString("read_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("source=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Source))
 	builder.WriteString(", ")
 	if v := _m.EmailedAt; v != nil {
 		builder.WriteString("emailed_at=")

@@ -131,12 +131,14 @@ func (m *Mailer) SendBatch(ctx context.Context) error {
 		}
 	}()
 
-	// "Un-emailed notifications whose recipient hasn't opted out of
-	// email for this kind." Expressed as: no matching preference row
-	// OR the matching preference row has email_enabled = true.
+	// "Un-emailed notifications, source=message_created (edits stay
+	// in-app only per ADR-0016), whose recipient hasn't opted out of
+	// email for this kind." Expressed as: source = message_created,
+	// no matching preference row with email_enabled = false.
 	q := tx.Notification.Query().
 		Where(
 			entnotification.EmailedAtIsNil(),
+			entnotification.SourceEQ(entnotification.SourceMessageCreated),
 			entnotification.Not(
 				entnotification.HasRecipientWith(
 					entuser.HasNotificationPreferencesWith(

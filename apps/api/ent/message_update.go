@@ -81,6 +81,46 @@ func (_u *MessageUpdate) SetNillableBody(v *string) *MessageUpdate {
 	return _u
 }
 
+// SetEditedAt sets the "edited_at" field.
+func (_u *MessageUpdate) SetEditedAt(v time.Time) *MessageUpdate {
+	_u.mutation.SetEditedAt(v)
+	return _u
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_u *MessageUpdate) SetNillableEditedAt(v *time.Time) *MessageUpdate {
+	if v != nil {
+		_u.SetEditedAt(*v)
+	}
+	return _u
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (_u *MessageUpdate) ClearEditedAt() *MessageUpdate {
+	_u.mutation.ClearEditedAt()
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *MessageUpdate) SetDeletedAt(v time.Time) *MessageUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *MessageUpdate) SetNillableDeletedAt(v *time.Time) *MessageUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *MessageUpdate) ClearDeletedAt() *MessageUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *MessageUpdate) SetChannel(v *Channel) *MessageUpdate {
 	return _u.SetChannelID(v.ID)
@@ -249,6 +289,18 @@ func (_u *MessageUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EditedAt(); ok {
+		_spec.SetField(message.FieldEditedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EditedAtCleared() {
+		_spec.ClearField(message.FieldEditedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(message.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(message.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -466,6 +518,46 @@ func (_u *MessageUpdateOne) SetNillableBody(v *string) *MessageUpdateOne {
 	return _u
 }
 
+// SetEditedAt sets the "edited_at" field.
+func (_u *MessageUpdateOne) SetEditedAt(v time.Time) *MessageUpdateOne {
+	_u.mutation.SetEditedAt(v)
+	return _u
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_u *MessageUpdateOne) SetNillableEditedAt(v *time.Time) *MessageUpdateOne {
+	if v != nil {
+		_u.SetEditedAt(*v)
+	}
+	return _u
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (_u *MessageUpdateOne) ClearEditedAt() *MessageUpdateOne {
+	_u.mutation.ClearEditedAt()
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *MessageUpdateOne) SetDeletedAt(v time.Time) *MessageUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *MessageUpdateOne) SetNillableDeletedAt(v *time.Time) *MessageUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *MessageUpdateOne) ClearDeletedAt() *MessageUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *MessageUpdateOne) SetChannel(v *Channel) *MessageUpdateOne {
 	return _u.SetChannelID(v.ID)
@@ -664,6 +756,18 @@ func (_u *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err er
 	}
 	if value, ok := _u.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EditedAt(); ok {
+		_spec.SetField(message.FieldEditedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EditedAtCleared() {
+		_spec.ClearField(message.FieldEditedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(message.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(message.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{

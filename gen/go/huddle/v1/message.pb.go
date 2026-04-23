@@ -39,8 +39,12 @@ type Message struct {
 	// self-mentions are silently dropped. See ADR-0005 for why mentions
 	// are a separate field rather than parsed out of `body`.
 	MentionUserIds []string `protobuf:"bytes,6,rep,name=mention_user_ids,json=mentionUserIds,proto3" json:"mention_user_ids,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Set on each successful Edit. Empty for un-edited messages. Clients
+	// can show "edited" affordances when this is present and differs from
+	// created_at.
+	EditedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=edited_at,json=editedAt,proto3" json:"edited_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Message) Reset() {
@@ -111,6 +115,13 @@ func (x *Message) GetCreatedAt() *timestamppb.Timestamp {
 func (x *Message) GetMentionUserIds() []string {
 	if x != nil {
 		return x.MentionUserIds
+	}
+	return nil
+}
+
+func (x *Message) GetEditedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EditedAt
 	}
 	return nil
 }
@@ -430,11 +441,197 @@ func (x *MessageServiceSubscribeResponse) GetMessage() *Message {
 	return nil
 }
 
+type MessageServiceEditRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Body  string                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
+	// Full replacement set — not a diff. Validated + deduped on the
+	// server same as Send. Omitting the field clears all mentions.
+	MentionUserIds []string `protobuf:"bytes,3,rep,name=mention_user_ids,json=mentionUserIds,proto3" json:"mention_user_ids,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *MessageServiceEditRequest) Reset() {
+	*x = MessageServiceEditRequest{}
+	mi := &file_huddle_v1_message_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageServiceEditRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageServiceEditRequest) ProtoMessage() {}
+
+func (x *MessageServiceEditRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageServiceEditRequest.ProtoReflect.Descriptor instead.
+func (*MessageServiceEditRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MessageServiceEditRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *MessageServiceEditRequest) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+func (x *MessageServiceEditRequest) GetMentionUserIds() []string {
+	if x != nil {
+		return x.MentionUserIds
+	}
+	return nil
+}
+
+type MessageServiceEditResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       *Message               `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageServiceEditResponse) Reset() {
+	*x = MessageServiceEditResponse{}
+	mi := &file_huddle_v1_message_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageServiceEditResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageServiceEditResponse) ProtoMessage() {}
+
+func (x *MessageServiceEditResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageServiceEditResponse.ProtoReflect.Descriptor instead.
+func (*MessageServiceEditResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MessageServiceEditResponse) GetMessage() *Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
+}
+
+type MessageServiceDeleteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageServiceDeleteRequest) Reset() {
+	*x = MessageServiceDeleteRequest{}
+	mi := &file_huddle_v1_message_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageServiceDeleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageServiceDeleteRequest) ProtoMessage() {}
+
+func (x *MessageServiceDeleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageServiceDeleteRequest.ProtoReflect.Descriptor instead.
+func (*MessageServiceDeleteRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MessageServiceDeleteRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type MessageServiceDeleteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageServiceDeleteResponse) Reset() {
+	*x = MessageServiceDeleteResponse{}
+	mi := &file_huddle_v1_message_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageServiceDeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageServiceDeleteResponse) ProtoMessage() {}
+
+func (x *MessageServiceDeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_message_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageServiceDeleteResponse.ProtoReflect.Descriptor instead.
+func (*MessageServiceDeleteResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_message_proto_rawDescGZIP(), []int{10}
+}
+
 var File_huddle_v1_message_proto protoreflect.FileDescriptor
 
 const file_huddle_v1_message_proto_rawDesc = "" +
 	"\n" +
-	"\x17huddle/v1/message.proto\x12\thuddle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
+	"\x17huddle/v1/message.proto\x12\thuddle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x87\x02\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -443,7 +640,8 @@ const file_huddle_v1_message_proto_rawDesc = "" +
 	"\x04body\x18\x04 \x01(\tR\x04body\x129\n" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12(\n" +
-	"\x10mention_user_ids\x18\x06 \x03(\tR\x0ementionUserIds\"x\n" +
+	"\x10mention_user_ids\x18\x06 \x03(\tR\x0ementionUserIds\x127\n" +
+	"\tedited_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\beditedAt\"x\n" +
 	"\x19MessageServiceSendRequest\x12\x1d\n" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x12\n" +
@@ -464,11 +662,22 @@ const file_huddle_v1_message_proto_rawDesc = "" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\"O\n" +
 	"\x1fMessageServiceSubscribeResponse\x12,\n" +
-	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage2\xa6\x02\n" +
+	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage\"i\n" +
+	"\x19MessageServiceEditRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\x12(\n" +
+	"\x10mention_user_ids\x18\x03 \x03(\tR\x0ementionUserIds\"J\n" +
+	"\x1aMessageServiceEditResponse\x12,\n" +
+	"\amessage\x18\x01 \x01(\v2\x12.huddle.v1.MessageR\amessage\"-\n" +
+	"\x1bMessageServiceDeleteRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x1e\n" +
+	"\x1cMessageServiceDeleteResponse2\xda\x03\n" +
 	"\x0eMessageService\x12U\n" +
 	"\x04Send\x12$.huddle.v1.MessageServiceSendRequest\x1a%.huddle.v1.MessageServiceSendResponse\"\x00\x12U\n" +
 	"\x04List\x12$.huddle.v1.MessageServiceListRequest\x1a%.huddle.v1.MessageServiceListResponse\"\x00\x12f\n" +
-	"\tSubscribe\x12).huddle.v1.MessageServiceSubscribeRequest\x1a*.huddle.v1.MessageServiceSubscribeResponse\"\x000\x01B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"\tSubscribe\x12).huddle.v1.MessageServiceSubscribeRequest\x1a*.huddle.v1.MessageServiceSubscribeResponse\"\x000\x01\x12U\n" +
+	"\x04Edit\x12$.huddle.v1.MessageServiceEditRequest\x1a%.huddle.v1.MessageServiceEditResponse\"\x00\x12[\n" +
+	"\x06Delete\x12&.huddle.v1.MessageServiceDeleteRequest\x1a'.huddle.v1.MessageServiceDeleteResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_message_proto_rawDescOnce sync.Once
@@ -482,7 +691,7 @@ func file_huddle_v1_message_proto_rawDescGZIP() []byte {
 	return file_huddle_v1_message_proto_rawDescData
 }
 
-var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_huddle_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_huddle_v1_message_proto_goTypes = []any{
 	(*Message)(nil),                         // 0: huddle.v1.Message
 	(*MessageServiceSendRequest)(nil),       // 1: huddle.v1.MessageServiceSendRequest
@@ -491,24 +700,34 @@ var file_huddle_v1_message_proto_goTypes = []any{
 	(*MessageServiceListResponse)(nil),      // 4: huddle.v1.MessageServiceListResponse
 	(*MessageServiceSubscribeRequest)(nil),  // 5: huddle.v1.MessageServiceSubscribeRequest
 	(*MessageServiceSubscribeResponse)(nil), // 6: huddle.v1.MessageServiceSubscribeResponse
-	(*timestamppb.Timestamp)(nil),           // 7: google.protobuf.Timestamp
+	(*MessageServiceEditRequest)(nil),       // 7: huddle.v1.MessageServiceEditRequest
+	(*MessageServiceEditResponse)(nil),      // 8: huddle.v1.MessageServiceEditResponse
+	(*MessageServiceDeleteRequest)(nil),     // 9: huddle.v1.MessageServiceDeleteRequest
+	(*MessageServiceDeleteResponse)(nil),    // 10: huddle.v1.MessageServiceDeleteResponse
+	(*timestamppb.Timestamp)(nil),           // 11: google.protobuf.Timestamp
 }
 var file_huddle_v1_message_proto_depIdxs = []int32{
-	7, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	0, // 1: huddle.v1.MessageServiceSendResponse.message:type_name -> huddle.v1.Message
-	0, // 2: huddle.v1.MessageServiceListResponse.messages:type_name -> huddle.v1.Message
-	0, // 3: huddle.v1.MessageServiceSubscribeResponse.message:type_name -> huddle.v1.Message
-	1, // 4: huddle.v1.MessageService.Send:input_type -> huddle.v1.MessageServiceSendRequest
-	3, // 5: huddle.v1.MessageService.List:input_type -> huddle.v1.MessageServiceListRequest
-	5, // 6: huddle.v1.MessageService.Subscribe:input_type -> huddle.v1.MessageServiceSubscribeRequest
-	2, // 7: huddle.v1.MessageService.Send:output_type -> huddle.v1.MessageServiceSendResponse
-	4, // 8: huddle.v1.MessageService.List:output_type -> huddle.v1.MessageServiceListResponse
-	6, // 9: huddle.v1.MessageService.Subscribe:output_type -> huddle.v1.MessageServiceSubscribeResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	11, // 0: huddle.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: huddle.v1.Message.edited_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: huddle.v1.MessageServiceSendResponse.message:type_name -> huddle.v1.Message
+	0,  // 3: huddle.v1.MessageServiceListResponse.messages:type_name -> huddle.v1.Message
+	0,  // 4: huddle.v1.MessageServiceSubscribeResponse.message:type_name -> huddle.v1.Message
+	0,  // 5: huddle.v1.MessageServiceEditResponse.message:type_name -> huddle.v1.Message
+	1,  // 6: huddle.v1.MessageService.Send:input_type -> huddle.v1.MessageServiceSendRequest
+	3,  // 7: huddle.v1.MessageService.List:input_type -> huddle.v1.MessageServiceListRequest
+	5,  // 8: huddle.v1.MessageService.Subscribe:input_type -> huddle.v1.MessageServiceSubscribeRequest
+	7,  // 9: huddle.v1.MessageService.Edit:input_type -> huddle.v1.MessageServiceEditRequest
+	9,  // 10: huddle.v1.MessageService.Delete:input_type -> huddle.v1.MessageServiceDeleteRequest
+	2,  // 11: huddle.v1.MessageService.Send:output_type -> huddle.v1.MessageServiceSendResponse
+	4,  // 12: huddle.v1.MessageService.List:output_type -> huddle.v1.MessageServiceListResponse
+	6,  // 13: huddle.v1.MessageService.Subscribe:output_type -> huddle.v1.MessageServiceSubscribeResponse
+	8,  // 14: huddle.v1.MessageService.Edit:output_type -> huddle.v1.MessageServiceEditResponse
+	10, // 15: huddle.v1.MessageService.Delete:output_type -> huddle.v1.MessageServiceDeleteResponse
+	11, // [11:16] is the sub-list for method output_type
+	6,  // [6:11] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_huddle_v1_message_proto_init() }
@@ -522,7 +741,7 @@ func file_huddle_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_huddle_v1_message_proto_rawDesc), len(file_huddle_v1_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -206,6 +206,8 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "body", Type: field.TypeString, Size: 8192},
+		{Name: "edited_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "channel_id", Type: field.TypeUUID},
 		{Name: "author_id", Type: field.TypeUUID},
 	}
@@ -217,13 +219,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "messages_channels_messages",
-				Columns:    []*schema.Column{MessagesColumns[4]},
+				Columns:    []*schema.Column{MessagesColumns[6]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "messages_users_messages",
-				Columns:    []*schema.Column{MessagesColumns[5]},
+				Columns:    []*schema.Column{MessagesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -232,7 +234,7 @@ var (
 			{
 				Name:    "message_channel_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{MessagesColumns[4], MessagesColumns[1]},
+				Columns: []*schema.Column{MessagesColumns[6], MessagesColumns[1]},
 			},
 		},
 	}
@@ -281,6 +283,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"mention"}},
 		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"message_created", "message_edited"}, Default: "message_created"},
 		{Name: "emailed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "message_id", Type: field.TypeUUID, Nullable: true},
@@ -295,25 +298,25 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "notifications_channels_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[6]},
+				Columns:    []*schema.Column{NotificationsColumns[7]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "notifications_messages_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[7]},
+				Columns:    []*schema.Column{NotificationsColumns[8]},
 				RefColumns: []*schema.Column{MessagesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "notifications_organizations_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[8]},
+				Columns:    []*schema.Column{NotificationsColumns[9]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "notifications_users_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[9]},
+				Columns:    []*schema.Column{NotificationsColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -322,17 +325,17 @@ var (
 			{
 				Name:    "notification_recipient_user_id_read_at_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[9], NotificationsColumns[4], NotificationsColumns[1]},
+				Columns: []*schema.Column{NotificationsColumns[10], NotificationsColumns[4], NotificationsColumns[1]},
 			},
 			{
 				Name:    "notification_recipient_user_id_message_id_kind",
 				Unique:  true,
-				Columns: []*schema.Column{NotificationsColumns[9], NotificationsColumns[7], NotificationsColumns[3]},
+				Columns: []*schema.Column{NotificationsColumns[10], NotificationsColumns[8], NotificationsColumns[3]},
 			},
 			{
 				Name:    "notification_organization_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[1]},
+				Columns: []*schema.Column{NotificationsColumns[9], NotificationsColumns[1]},
 			},
 		},
 	}

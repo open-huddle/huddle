@@ -22,6 +22,20 @@ func SubjectMessageCreated(channelID uuid.UUID) string {
 	return "huddle.messages.created." + channelID.String()
 }
 
+// SubjectMessageEdited returns the NATS subject for a "message edited"
+// event on the given channel. Parallel shape to Created so future
+// subscribers can fan in on the same channel prefix.
+func SubjectMessageEdited(channelID uuid.UUID) string {
+	return "huddle.messages.edited." + channelID.String()
+}
+
+// SubjectMessageDeleted returns the NATS subject for a "message deleted"
+// event. The payload carries only the message id + channel id — there is
+// no body to ship.
+func SubjectMessageDeleted(channelID uuid.UUID) string {
+	return "huddle.messages.deleted." + channelID.String()
+}
+
 // Publisher fans out domain events. Implementations should be safe for
 // concurrent use.
 //

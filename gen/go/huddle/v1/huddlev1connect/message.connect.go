@@ -40,6 +40,10 @@ const (
 	// MessageServiceSubscribeProcedure is the fully-qualified name of the MessageService's Subscribe
 	// RPC.
 	MessageServiceSubscribeProcedure = "/huddle.v1.MessageService/Subscribe"
+	// MessageServiceEditProcedure is the fully-qualified name of the MessageService's Edit RPC.
+	MessageServiceEditProcedure = "/huddle.v1.MessageService/Edit"
+	// MessageServiceDeleteProcedure is the fully-qualified name of the MessageService's Delete RPC.
+	MessageServiceDeleteProcedure = "/huddle.v1.MessageService/Delete"
 )
 
 // MessageServiceClient is a client for the huddle.v1.MessageService service.
@@ -55,7 +59,23 @@ type MessageServiceClient interface {
 	// Closing the call (client disconnect or context cancel) cleans up the
 	// server-side subscription. The token is verified once at stream open;
 	// long-lived clients should reconnect periodically with a fresh token.
+	//
+	// Subscribe pushes message.created events only in this revision. Edits
+	// and deletes land via List refetch today; a future "realtime v2" PR
+	// will extend the streaming shape.
 	Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest]) (*connect.ServerStreamForClient[v1.MessageServiceSubscribeResponse], error)
+	// Edit replaces the body and mention set of a message the caller
+	// authored. Non-authors cannot edit. edited_at on the returned Message
+	// stamps each successful edit. Fires a message.edited outbox event;
+	// notifications for newly-added mentions are in-app only (the mailer
+	// skips edit-sourced notifications).
+	Edit(context.Context, *connect.Request[v1.MessageServiceEditRequest]) (*connect.Response[v1.MessageServiceEditResponse], error)
+	// Delete soft-deletes a message. The author, an organization admin,
+	// or an owner may delete. Deleted messages disappear from List but
+	// the row stays in the DB for audit. Fires a message.deleted outbox
+	// event; the search indexer removes the doc; the notifications
+	// consumer stamps and moves on (existing notifications survive).
+	Delete(context.Context, *connect.Request[v1.MessageServiceDeleteRequest]) (*connect.Response[v1.MessageServiceDeleteResponse], error)
 }
 
 // NewMessageServiceClient constructs a client for the huddle.v1.MessageService service. By default,
@@ -87,6 +107,18 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("Subscribe")),
 			connect.WithClientOptions(opts...),
 		),
+		edit: connect.NewClient[v1.MessageServiceEditRequest, v1.MessageServiceEditResponse](
+			httpClient,
+			baseURL+MessageServiceEditProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("Edit")),
+			connect.WithClientOptions(opts...),
+		),
+		delete: connect.NewClient[v1.MessageServiceDeleteRequest, v1.MessageServiceDeleteResponse](
+			httpClient,
+			baseURL+MessageServiceDeleteProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("Delete")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -95,6 +127,8 @@ type messageServiceClient struct {
 	send      *connect.Client[v1.MessageServiceSendRequest, v1.MessageServiceSendResponse]
 	list      *connect.Client[v1.MessageServiceListRequest, v1.MessageServiceListResponse]
 	subscribe *connect.Client[v1.MessageServiceSubscribeRequest, v1.MessageServiceSubscribeResponse]
+	edit      *connect.Client[v1.MessageServiceEditRequest, v1.MessageServiceEditResponse]
+	delete    *connect.Client[v1.MessageServiceDeleteRequest, v1.MessageServiceDeleteResponse]
 }
 
 // Send calls huddle.v1.MessageService.Send.
@@ -112,6 +146,16 @@ func (c *messageServiceClient) Subscribe(ctx context.Context, req *connect.Reque
 	return c.subscribe.CallServerStream(ctx, req)
 }
 
+// Edit calls huddle.v1.MessageService.Edit.
+func (c *messageServiceClient) Edit(ctx context.Context, req *connect.Request[v1.MessageServiceEditRequest]) (*connect.Response[v1.MessageServiceEditResponse], error) {
+	return c.edit.CallUnary(ctx, req)
+}
+
+// Delete calls huddle.v1.MessageService.Delete.
+func (c *messageServiceClient) Delete(ctx context.Context, req *connect.Request[v1.MessageServiceDeleteRequest]) (*connect.Response[v1.MessageServiceDeleteResponse], error) {
+	return c.delete.CallUnary(ctx, req)
+}
+
 // MessageServiceHandler is an implementation of the huddle.v1.MessageService service.
 type MessageServiceHandler interface {
 	// Send a message to a channel. Caller must be a member of the channel's
@@ -125,7 +169,23 @@ type MessageServiceHandler interface {
 	// Closing the call (client disconnect or context cancel) cleans up the
 	// server-side subscription. The token is verified once at stream open;
 	// long-lived clients should reconnect periodically with a fresh token.
+	//
+	// Subscribe pushes message.created events only in this revision. Edits
+	// and deletes land via List refetch today; a future "realtime v2" PR
+	// will extend the streaming shape.
 	Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest], *connect.ServerStream[v1.MessageServiceSubscribeResponse]) error
+	// Edit replaces the body and mention set of a message the caller
+	// authored. Non-authors cannot edit. edited_at on the returned Message
+	// stamps each successful edit. Fires a message.edited outbox event;
+	// notifications for newly-added mentions are in-app only (the mailer
+	// skips edit-sourced notifications).
+	Edit(context.Context, *connect.Request[v1.MessageServiceEditRequest]) (*connect.Response[v1.MessageServiceEditResponse], error)
+	// Delete soft-deletes a message. The author, an organization admin,
+	// or an owner may delete. Deleted messages disappear from List but
+	// the row stays in the DB for audit. Fires a message.deleted outbox
+	// event; the search indexer removes the doc; the notifications
+	// consumer stamps and moves on (existing notifications survive).
+	Delete(context.Context, *connect.Request[v1.MessageServiceDeleteRequest]) (*connect.Response[v1.MessageServiceDeleteResponse], error)
 }
 
 // NewMessageServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -153,6 +213,18 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("Subscribe")),
 		connect.WithHandlerOptions(opts...),
 	)
+	messageServiceEditHandler := connect.NewUnaryHandler(
+		MessageServiceEditProcedure,
+		svc.Edit,
+		connect.WithSchema(messageServiceMethods.ByName("Edit")),
+		connect.WithHandlerOptions(opts...),
+	)
+	messageServiceDeleteHandler := connect.NewUnaryHandler(
+		MessageServiceDeleteProcedure,
+		svc.Delete,
+		connect.WithSchema(messageServiceMethods.ByName("Delete")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/huddle.v1.MessageService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MessageServiceSendProcedure:
@@ -161,6 +233,10 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 			messageServiceListHandler.ServeHTTP(w, r)
 		case MessageServiceSubscribeProcedure:
 			messageServiceSubscribeHandler.ServeHTTP(w, r)
+		case MessageServiceEditProcedure:
+			messageServiceEditHandler.ServeHTTP(w, r)
+		case MessageServiceDeleteProcedure:
+			messageServiceDeleteHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -180,4 +256,12 @@ func (UnimplementedMessageServiceHandler) List(context.Context, *connect.Request
 
 func (UnimplementedMessageServiceHandler) Subscribe(context.Context, *connect.Request[v1.MessageServiceSubscribeRequest], *connect.ServerStream[v1.MessageServiceSubscribeResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.Subscribe is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) Edit(context.Context, *connect.Request[v1.MessageServiceEditRequest]) (*connect.Response[v1.MessageServiceEditResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.Edit is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) Delete(context.Context, *connect.Request[v1.MessageServiceDeleteRequest]) (*connect.Response[v1.MessageServiceDeleteResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.MessageService.Delete is not implemented"))
 }

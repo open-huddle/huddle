@@ -39,7 +39,7 @@ import (
 // the first N parks signal, subsequent parks drop the signal silently.
 type slowFakeSearch struct {
 	mu       sync.Mutex
-	calls    []uuid.UUID // outbox event IDs, in index order
+	calls    []uuid.UUID // message IDs (docs written), in index order
 	release  chan struct{}
 	arrivals chan struct{}
 }
@@ -48,17 +48,19 @@ func (f *slowFakeSearch) EnsureIndex(context.Context) error { return nil }
 func (f *slowFakeSearch) SearchMessages(context.Context, search.MessageQuery) (search.MessageResult, error) {
 	return search.MessageResult{}, nil
 }
-func (f *slowFakeSearch) IndexMessage(_ context.Context, outboxID uuid.UUID, _ search.MessageDoc) error {
+
+func (f *slowFakeSearch) IndexMessage(_ context.Context, doc search.MessageDoc) error {
 	select {
 	case f.arrivals <- struct{}{}:
 	default:
 	}
 	<-f.release
 	f.mu.Lock()
-	f.calls = append(f.calls, outboxID)
+	f.calls = append(f.calls, doc.ID)
 	f.mu.Unlock()
 	return nil
 }
+func (f *slowFakeSearch) DeleteMessage(context.Context, uuid.UUID) error { return nil }
 func (f *slowFakeSearch) seen() []uuid.UUID {
 	f.mu.Lock()
 	defer f.mu.Unlock()

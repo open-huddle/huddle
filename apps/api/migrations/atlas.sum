@@ -1,4 +1,4 @@
-h1:LiVKhdIh9BP2CiYclEeoIRd4UbMtCWZ+7Z0ZouLjWco=
+h1:rKq2AdLdsKuzb/F4StjGHN5M43/uTuVfVQScpVmqv4U=
 20260420154905_initial.sql h1:sogXEEQpozH1bu8KRf3KCziirkJ4IptGi5y6U7aiCfE=
 20260420194933_add_channels.sql h1:+4upbtLDdAuIZ/y61Jdblgx+3GHg2u/20JRy7pFMX/s=
 20260420203608_add_messages.sql h1:g1hGBuFSVFLuWckEBY97QctTsVxBFG3wnD+8Db74n/E=
@@ -8,3 +8,4 @@ h1:LiVKhdIh9BP2CiYclEeoIRd4UbMtCWZ+7Z0ZouLjWco=
 20260422224921_add_invitations_and_email_delivery.sql h1:b9TdMbyUJVGk8jD4lPe7VkTw//iCS/adABkVhbG3G9I=
 20260423203842_add_notifications_and_mentions.sql h1:r/2MMb9y5WJJNiGQ9fbBe1TURCuOSV5ThL7e7g8S6LU=
 20260423213233_add_notification_preferences_and_emailed_at.sql h1:g8HkjuVnhb54O5zFIPdFRSmjZaH0AX3Ua/ifrv5kXQU=
+20260423220712_add_message_edit_delete_and_notification_source.sql h1:HkzD9vQQk7+9gc++tVXViGfMIa/T3PP8C2/y6USSjl4=

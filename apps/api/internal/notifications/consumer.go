@@ -33,6 +33,8 @@ const (
 	defaultConsumerBatchSize = 200
 
 	eventTypeMessageCreated = "message.created"
+	eventTypeMessageEdited  = "message.edited"
+	eventTypeMessageDeleted = "message.deleted"
 )
 
 // Consumer materializes Notification rows from outbox events. One Consumer
@@ -136,44 +138,27 @@ func (c *Consumer) ConsumeBatch(ctx context.Context) error {
 	}
 
 	for _, row := range rows {
-		if row.EventType != eventTypeMessageCreated {
-			// No work for this consumer — just stamp so GC can proceed.
+		switch row.EventType {
+		case eventTypeMessageCreated:
+			c.fanOut(ctx, tx, row, entnotification.SourceMessageCreated)
+		case eventTypeMessageEdited:
+			// Edits fire notifications for newly-added mentions only.
+			// The UNIQUE(recipient, message, kind) constraint on
+			// Notification means re-fanning for already-mentioned users
+			// is a benign no-op at insert time — so we fan out the
+			// Message's full mention set and let the DB do the diff.
+			// Source=message_edited signals the mailer to skip email.
+			c.fanOut(ctx, tx, row, entnotification.SourceMessageEdited)
+		default:
+			// Other event types (message.deleted, future types) get
+			// stamped without work so outbox.GC can proceed. Deletes
+			// don't currently produce a notification; a "your message
+			// was deleted by a moderator" notification kind is a
+			// future PR.
 			if err := stampInTx(ctx, tx, row.ID); err != nil {
-				c.logger.Warn("notifications: stamp non-message",
+				c.logger.Warn("notifications: stamp non-mention",
 					"err", err, "outbox_id", row.ID, "event_type", row.EventType)
 			}
-			continue
-		}
-
-		mentions, msgID, channelID, orgID, err := decodeMessageCreated(row)
-		if err != nil {
-			// Structural: bad payload. Stamp anyway so we don't hot-loop;
-			// the bad row is a bug to investigate out-of-band.
-			c.logger.Warn("notifications: decode payload",
-				"err", err, "outbox_id", row.ID)
-			if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
-				c.logger.Warn("notifications: stamp after decode error",
-					"err", stampErr, "outbox_id", row.ID)
-			}
-			continue
-		}
-
-		for _, recipient := range mentions {
-			if err := createNotification(ctx, tx, recipient, msgID, channelID, orgID); err != nil {
-				// UNIQUE violation (retry after a crash, concurrent
-				// replica that squeaked through before SKIP LOCKED) is
-				// benign — the row we tried to insert already exists.
-				// Any other error is logged; we keep going with the
-				// batch so one bad (recipient, message) pair doesn't
-				// starve the rest.
-				c.logger.Warn("notifications: create",
-					"err", err, "outbox_id", row.ID, "recipient", recipient)
-			}
-		}
-
-		if err := stampInTx(ctx, tx, row.ID); err != nil {
-			c.logger.Warn("notifications: stamp after fan-out",
-				"err", err, "outbox_id", row.ID)
 		}
 	}
 
@@ -184,10 +169,44 @@ func (c *Consumer) ConsumeBatch(ctx context.Context) error {
 	return nil
 }
 
+// fanOut decodes a message.created / message.edited row and inserts one
+// Notification per mentioned user, stamping notified_at when done. The
+// source argument determines whether the mailer will eventually send an
+// email (message_created) or leave it in-app-only (message_edited).
+func (c *Consumer) fanOut(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent, source entnotification.Source) {
+	mentions, msgID, channelID, orgID, err := decodeMessageCreated(row)
+	if err != nil {
+		// Structural: bad payload. Stamp anyway so we don't hot-loop;
+		// the bad row is a bug to investigate out-of-band.
+		c.logger.Warn("notifications: decode payload",
+			"err", err, "outbox_id", row.ID)
+		if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
+			c.logger.Warn("notifications: stamp after decode error",
+				"err", stampErr, "outbox_id", row.ID)
+		}
+		return
+	}
+
+	for _, recipient := range mentions {
+		if err := createNotification(ctx, tx, recipient, msgID, channelID, orgID, source); err != nil {
+			// UNIQUE violation (retry after a crash, edit re-notifying
+			// an already-notified user, concurrent replica that
+			// squeaked through before SKIP LOCKED) is benign.
+			c.logger.Warn("notifications: create",
+				"err", err, "outbox_id", row.ID, "recipient", recipient)
+		}
+	}
+
+	if err := stampInTx(ctx, tx, row.ID); err != nil {
+		c.logger.Warn("notifications: stamp after fan-out",
+			"err", err, "outbox_id", row.ID)
+	}
+}
+
 // decodeMessageCreated extracts the fan-out inputs from a message.created
-// outbox row: the mention set (recipients), the source message id, the
-// channel id, and the organization id (from the denormalized outbox
-// column, since the Message proto doesn't carry org).
+// or message.edited outbox row: the mention set (recipients), the source
+// message id, the channel id, and the organization id (from the
+// denormalized outbox column, since the Message proto doesn't carry org).
 func decodeMessageCreated(row *ent.OutboxEvent) ([]uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, error) {
 	var m huddlev1.Message
 	if err := proto.Unmarshal(row.Payload, &m); err != nil {
@@ -215,13 +234,14 @@ func decodeMessageCreated(row *ent.OutboxEvent) ([]uuid.UUID, uuid.UUID, uuid.UU
 	return mentions, msgID, channelID, *row.OrganizationID, nil
 }
 
-func createNotification(ctx context.Context, tx *ent.Tx, recipient, msgID, channelID, orgID uuid.UUID) error {
+func createNotification(ctx context.Context, tx *ent.Tx, recipient, msgID, channelID, orgID uuid.UUID, source entnotification.Source) error {
 	return tx.Notification.Create().
 		SetRecipientUserID(recipient).
 		SetKind(entnotification.KindMention).
 		SetMessageID(msgID).
 		SetChannelID(channelID).
 		SetOrganizationID(orgID).
+		SetSource(source).
 		Exec(ctx)
 }
 

@@ -23,7 +23,25 @@ service MessageService {
   // Closing the call (client disconnect or context cancel) cleans up the
   // server-side subscription. The token is verified once at stream open;
   // long-lived clients should reconnect periodically with a fresh token.
+  //
+  // Subscribe pushes message.created events only in this revision. Edits
+  // and deletes land via List refetch today; a future "realtime v2" PR
+  // will extend the streaming shape.
   rpc Subscribe(MessageServiceSubscribeRequest) returns (stream MessageServiceSubscribeResponse) {}
+
+  // Edit replaces the body and mention set of a message the caller
+  // authored. Non-authors cannot edit. edited_at on the returned Message
+  // stamps each successful edit. Fires a message.edited outbox event;
+  // notifications for newly-added mentions are in-app only (the mailer
+  // skips edit-sourced notifications).
+  rpc Edit(MessageServiceEditRequest) returns (MessageServiceEditResponse) {}
+
+  // Delete soft-deletes a message. The author, an organization admin,
+  // or an owner may delete. Deleted messages disappear from List but
+  // the row stays in the DB for audit. Fires a message.deleted outbox
+  // event; the search indexer removes the doc; the notifications
+  // consumer stamps and moves on (existing notifications survive).
+  rpc Delete(MessageServiceDeleteRequest) returns (MessageServiceDeleteResponse) {}
 }
 
 message Message {
@@ -42,6 +60,10 @@ message Message {
   // self-mentions are silently dropped. See ADR-0005 for why mentions
   // are a separate field rather than parsed out of `body`.
   repeated string mention_user_ids = 6;
+  // Set on each successful Edit. Empty for un-edited messages. Clients
+  // can show "edited" affordances when this is present and differs from
+  // created_at.
+  google.protobuf.Timestamp edited_at = 7;
 }
 
 message MessageServiceSendRequest {
@@ -80,3 +102,19 @@ message MessageServiceSubscribeRequest {
 message MessageServiceSubscribeResponse {
   Message message = 1;
 }
+
+message MessageServiceEditRequest {
+  string id = 1;
+  string body = 2;
+  // Full replacement set — not a diff. Validated + deduped on the
+  // server same as Send. Omitting the field clears all mentions.
+  repeated string mention_user_ids = 3;
+}
+message MessageServiceEditResponse {
+  Message message = 1;
+}
+
+message MessageServiceDeleteRequest {
+  string id = 1;
+}
+message MessageServiceDeleteResponse {}

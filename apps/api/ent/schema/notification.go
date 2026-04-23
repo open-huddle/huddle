@@ -62,6 +62,15 @@ func (Notification) Fields() []ent.Field {
 		// filter for List.
 		field.Time("read_at").Optional().Nillable(),
 
+		// What event produced this notification. message_created
+		// triggers email delivery; message_edited is in-app-only
+		// (notifications.Mailer filters on this). Immutable because a
+		// notification's provenance is fixed at creation.
+		field.Enum("source").
+			Values("message_created", "message_edited").
+			Default("message_created").
+			Immutable(),
+
 		// Set when notifications.Mailer has dispatched the email. NULL
 		// means "still pending send" — the mailer's polling filter.
 		// Same pattern as Invitation.email_sent_at.
