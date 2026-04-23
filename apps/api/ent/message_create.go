@@ -74,6 +74,34 @@ func (_c *MessageCreate) SetBody(v string) *MessageCreate {
 	return _c
 }
 
+// SetEditedAt sets the "edited_at" field.
+func (_c *MessageCreate) SetEditedAt(v time.Time) *MessageCreate {
+	_c.mutation.SetEditedAt(v)
+	return _c
+}
+
+// SetNillableEditedAt sets the "edited_at" field if the given value is not nil.
+func (_c *MessageCreate) SetNillableEditedAt(v *time.Time) *MessageCreate {
+	if v != nil {
+		_c.SetEditedAt(*v)
+	}
+	return _c
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *MessageCreate) SetDeletedAt(v time.Time) *MessageCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *MessageCreate) SetNillableDeletedAt(v *time.Time) *MessageCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *MessageCreate) SetID(v uuid.UUID) *MessageCreate {
 	_c.mutation.SetID(v)
@@ -253,6 +281,14 @@ func (_c *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
 		_node.Body = value
 	}
+	if value, ok := _c.mutation.EditedAt(); ok {
+		_spec.SetField(message.FieldEditedAt, field.TypeTime, value)
+		_node.EditedAt = &value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(message.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
+	}
 	if nodes := _c.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -419,6 +455,42 @@ func (u *MessageUpsert) UpdateBody() *MessageUpsert {
 	return u
 }
 
+// SetEditedAt sets the "edited_at" field.
+func (u *MessageUpsert) SetEditedAt(v time.Time) *MessageUpsert {
+	u.Set(message.FieldEditedAt, v)
+	return u
+}
+
+// UpdateEditedAt sets the "edited_at" field to the value that was provided on create.
+func (u *MessageUpsert) UpdateEditedAt() *MessageUpsert {
+	u.SetExcluded(message.FieldEditedAt)
+	return u
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (u *MessageUpsert) ClearEditedAt() *MessageUpsert {
+	u.SetNull(message.FieldEditedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MessageUpsert) SetDeletedAt(v time.Time) *MessageUpsert {
+	u.Set(message.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MessageUpsert) UpdateDeletedAt() *MessageUpsert {
+	u.SetExcluded(message.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MessageUpsert) ClearDeletedAt() *MessageUpsert {
+	u.SetNull(message.FieldDeletedAt)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -523,6 +595,48 @@ func (u *MessageUpsertOne) SetBody(v string) *MessageUpsertOne {
 func (u *MessageUpsertOne) UpdateBody() *MessageUpsertOne {
 	return u.Update(func(s *MessageUpsert) {
 		s.UpdateBody()
+	})
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (u *MessageUpsertOne) SetEditedAt(v time.Time) *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetEditedAt(v)
+	})
+}
+
+// UpdateEditedAt sets the "edited_at" field to the value that was provided on create.
+func (u *MessageUpsertOne) UpdateEditedAt() *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateEditedAt()
+	})
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (u *MessageUpsertOne) ClearEditedAt() *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.ClearEditedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MessageUpsertOne) SetDeletedAt(v time.Time) *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MessageUpsertOne) UpdateDeletedAt() *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MessageUpsertOne) ClearDeletedAt() *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -797,6 +911,48 @@ func (u *MessageUpsertBulk) SetBody(v string) *MessageUpsertBulk {
 func (u *MessageUpsertBulk) UpdateBody() *MessageUpsertBulk {
 	return u.Update(func(s *MessageUpsert) {
 		s.UpdateBody()
+	})
+}
+
+// SetEditedAt sets the "edited_at" field.
+func (u *MessageUpsertBulk) SetEditedAt(v time.Time) *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetEditedAt(v)
+	})
+}
+
+// UpdateEditedAt sets the "edited_at" field to the value that was provided on create.
+func (u *MessageUpsertBulk) UpdateEditedAt() *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateEditedAt()
+	})
+}
+
+// ClearEditedAt clears the value of the "edited_at" field.
+func (u *MessageUpsertBulk) ClearEditedAt() *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.ClearEditedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MessageUpsertBulk) SetDeletedAt(v time.Time) *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MessageUpsertBulk) UpdateDeletedAt() *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MessageUpsertBulk) ClearDeletedAt() *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

@@ -77,9 +77,15 @@ type Client interface {
 	// Idempotent — safe to call at every API startup.
 	EnsureIndex(ctx context.Context) error
 	// IndexMessage upserts a single message projection. The OpenSearch
-	// document _id is the outbox event UUID, which gives us natural
-	// idempotency: the indexer retrying a row writes the same _id.
-	IndexMessage(ctx context.Context, outboxEventID uuid.UUID, doc MessageDoc) error
+	// document _id is the message UUID — message.created writes a fresh
+	// doc, message.edited upserts the same _id with the new body, and
+	// DeleteMessage removes it. Re-keying from outbox_event_id to
+	// message_id (ADR-0016) is what makes edits searchable correctly.
+	IndexMessage(ctx context.Context, doc MessageDoc) error
+	// DeleteMessage removes a message's document from the index. Called
+	// on message.deleted events. A missing doc is not an error — the
+	// delete is idempotent.
+	DeleteMessage(ctx context.Context, messageID uuid.UUID) error
 	// SearchMessages runs a query and returns at most q.Limit hits. The
 	// client owns translating MessageQuery to OpenSearch DSL.
 	SearchMessages(ctx context.Context, q MessageQuery) (MessageResult, error)

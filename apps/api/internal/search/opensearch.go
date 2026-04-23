@@ -88,9 +88,11 @@ func (o *OpenSearch) EnsureIndex(ctx context.Context) error {
 	return nil
 }
 
-// IndexMessage writes one projection. _id is the outbox event UUID so
-// retries are natural upserts.
-func (o *OpenSearch) IndexMessage(ctx context.Context, outboxEventID uuid.UUID, doc MessageDoc) error {
+// IndexMessage writes one projection. _id is the message UUID so
+// message.created creates a fresh doc, message.edited upserts the
+// same _id with the updated body. See ADR-0016 for the re-keying
+// rationale (was outbox_event_id in ADR-0010).
+func (o *OpenSearch) IndexMessage(ctx context.Context, doc MessageDoc) error {
 	body, err := json.Marshal(map[string]any{
 		"id":              doc.ID.String(),
 		"channel_id":      doc.ChannelID.String(),
@@ -104,10 +106,25 @@ func (o *OpenSearch) IndexMessage(ctx context.Context, outboxEventID uuid.UUID, 
 	}
 	if _, err := o.api.Index(ctx, opensearchapi.IndexReq{
 		Index:      o.messagesAlias,
-		DocumentID: outboxEventID.String(),
+		DocumentID: doc.ID.String(),
 		Body:       bytes.NewReader(body),
 	}); err != nil {
-		return fmt.Errorf("opensearch: index %s: %w", outboxEventID, err)
+		return fmt.Errorf("opensearch: index %s: %w", doc.ID, err)
+	}
+	return nil
+}
+
+// DeleteMessage removes a message's document from the index. Called on
+// message.deleted events. A missing doc is not an error — DELETE on an
+// unknown _id returns 404, which we normalize to nil so the indexer
+// doesn't retry indefinitely.
+func (o *OpenSearch) DeleteMessage(ctx context.Context, messageID uuid.UUID) error {
+	resp, err := o.api.Document.Delete(ctx, opensearchapi.DocumentDeleteReq{
+		Index:      o.messagesAlias,
+		DocumentID: messageID.String(),
+	})
+	if err != nil && !isNotFound(resp.Inspect().Response) {
+		return fmt.Errorf("opensearch: delete %s: %w", messageID, err)
 	}
 	return nil
 }

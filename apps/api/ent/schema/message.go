@@ -29,6 +29,15 @@ func (Message) Fields() []ent.Field {
 		// not parse, format, or strip syntax. Length capped at 8 KiB to prevent
 		// abuse of the row, the audit trail, and downstream search indexers.
 		field.Text("body").NotEmpty().MaxLen(8192),
+
+		// Set when the author edits the message. NULL means "original";
+		// non-NULL times are monotonically updated on each edit.
+		field.Time("edited_at").Optional().Nillable(),
+
+		// Soft-delete marker. List/Subscribe filter deleted_at IS NOT
+		// NULL out; rows stay in the DB for audit. Moderators with DB
+		// access can still see the original body; clients cannot.
+		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 

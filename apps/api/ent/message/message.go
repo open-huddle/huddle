@@ -25,6 +25,10 @@ const (
 	FieldAuthorID = "author_id"
 	// FieldBody holds the string denoting the body field in the database.
 	FieldBody = "body"
+	// FieldEditedAt holds the string denoting the edited_at field in the database.
+	FieldEditedAt = "edited_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
 	// EdgeAuthor holds the string denoting the author edge name in mutations.
@@ -73,6 +77,8 @@ var Columns = []string{
 	FieldChannelID,
 	FieldAuthorID,
 	FieldBody,
+	FieldEditedAt,
+	FieldDeletedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -129,6 +135,16 @@ func ByAuthorID(opts ...sql.OrderTermOption) OrderOption {
 // ByBody orders the results by the body field.
 func ByBody(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBody, opts...).ToFunc()
+}
+
+// ByEditedAt orders the results by the edited_at field.
+func ByEditedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEditedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByChannelField orders the results by channel field.

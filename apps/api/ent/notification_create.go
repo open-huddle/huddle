@@ -116,6 +116,20 @@ func (_c *NotificationCreate) SetNillableReadAt(v *time.Time) *NotificationCreat
 	return _c
 }
 
+// SetSource sets the "source" field.
+func (_c *NotificationCreate) SetSource(v notification.Source) *NotificationCreate {
+	_c.mutation.SetSource(v)
+	return _c
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (_c *NotificationCreate) SetNillableSource(v *notification.Source) *NotificationCreate {
+	if v != nil {
+		_c.SetSource(*v)
+	}
+	return _c
+}
+
 // SetEmailedAt sets the "emailed_at" field.
 func (_c *NotificationCreate) SetEmailedAt(v time.Time) *NotificationCreate {
 	_c.mutation.SetEmailedAt(v)
@@ -213,6 +227,10 @@ func (_c *NotificationCreate) defaults() {
 		v := notification.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Source(); !ok {
+		v := notification.DefaultSource
+		_c.mutation.SetSource(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := notification.DefaultID()
 		_c.mutation.SetID(v)
@@ -240,6 +258,14 @@ func (_c *NotificationCreate) check() error {
 	}
 	if _, ok := _c.mutation.OrganizationID(); !ok {
 		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "Notification.organization_id"`)}
+	}
+	if _, ok := _c.mutation.Source(); !ok {
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Notification.source"`)}
+	}
+	if v, ok := _c.mutation.Source(); ok {
+		if err := notification.SourceValidator(v); err != nil {
+			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Notification.source": %w`, err)}
+		}
 	}
 	if len(_c.mutation.RecipientIDs()) == 0 {
 		return &ValidationError{Name: "recipient", err: errors.New(`ent: missing required edge "Notification.recipient"`)}
@@ -298,6 +324,10 @@ func (_c *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.ReadAt(); ok {
 		_spec.SetField(notification.FieldReadAt, field.TypeTime, value)
 		_node.ReadAt = &value
+	}
+	if value, ok := _c.mutation.Source(); ok {
+		_spec.SetField(notification.FieldSource, field.TypeEnum, value)
+		_node.Source = value
 	}
 	if value, ok := _c.mutation.EmailedAt(); ok {
 		_spec.SetField(notification.FieldEmailedAt, field.TypeTime, value)
@@ -505,6 +535,9 @@ func (u *NotificationUpsertOne) UpdateNewValues() *NotificationUpsertOne {
 		}
 		if _, exists := u.create.mutation.OrganizationID(); exists {
 			s.SetIgnore(notification.FieldOrganizationID)
+		}
+		if _, exists := u.create.mutation.Source(); exists {
+			s.SetIgnore(notification.FieldSource)
 		}
 	}))
 	return u
@@ -793,6 +826,9 @@ func (u *NotificationUpsertBulk) UpdateNewValues() *NotificationUpsertBulk {
 			}
 			if _, exists := b.mutation.OrganizationID(); exists {
 				s.SetIgnore(notification.FieldOrganizationID)
+			}
+			if _, exists := b.mutation.Source(); exists {
+				s.SetIgnore(notification.FieldSource)
 			}
 		}
 	}))

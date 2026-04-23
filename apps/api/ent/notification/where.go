@@ -346,6 +346,26 @@ func ReadAtNotNil() predicate.Notification {
 	return predicate.Notification(sql.FieldNotNull(FieldReadAt))
 }
 
+// SourceEQ applies the EQ predicate on the "source" field.
+func SourceEQ(v Source) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldSource, v))
+}
+
+// SourceNEQ applies the NEQ predicate on the "source" field.
+func SourceNEQ(v Source) predicate.Notification {
+	return predicate.Notification(sql.FieldNEQ(FieldSource, v))
+}
+
+// SourceIn applies the In predicate on the "source" field.
+func SourceIn(vs ...Source) predicate.Notification {
+	return predicate.Notification(sql.FieldIn(FieldSource, vs...))
+}
+
+// SourceNotIn applies the NotIn predicate on the "source" field.
+func SourceNotIn(vs ...Source) predicate.Notification {
+	return predicate.Notification(sql.FieldNotIn(FieldSource, vs...))
+}
+
 // EmailedAtEQ applies the EQ predicate on the "emailed_at" field.
 func EmailedAtEQ(v time.Time) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldEmailedAt, v))

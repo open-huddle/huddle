@@ -21,11 +21,14 @@ const (
 	defaultIndexerInterval  = 2 * time.Second
 	defaultIndexerBatchSize = 200
 
-	// eventTypeMessageCreated is the one event shape the indexer acts on
-	// today. Other event types (channel.created, message.edited later) are
-	// skipped, not errored, so new event types can land without touching the
-	// indexer until they need a projection.
+	// Event types the indexer acts on. message.created writes a fresh
+	// doc, message.edited upserts over the same _id (message UUID,
+	// per ADR-0016), message.deleted removes the doc. Other event
+	// types (channel.created, invitation.created) are stamp-only —
+	// they go through the default case below.
 	eventTypeMessageCreated = "message.created"
+	eventTypeMessageEdited  = "message.edited"
+	eventTypeMessageDeleted = "message.deleted"
 )
 
 // Indexer mirrors OutboxEvent rows of type message.created into OpenSearch.
@@ -142,7 +145,40 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 	}
 
 	for _, row := range rows {
-		if row.EventType != eventTypeMessageCreated {
+		switch row.EventType {
+		case eventTypeMessageCreated, eventTypeMessageEdited:
+			// Both create and edit upsert by message_id (ADR-0016).
+			// Create writes a fresh doc; edit overwrites the body and
+			// mentions. Same code path — differences are in the outbox
+			// payload, and the indexer doesn't care which.
+			doc, err := docFromOutbox(row)
+			if err != nil {
+				i.logger.Warn("search-indexer: decode", "err", err, "outbox_id", row.ID)
+				if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
+					i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
+				}
+				continue
+			}
+			if err := i.search.IndexMessage(ctx, doc); err != nil {
+				i.logger.Warn("search-indexer: index", "err", err, "outbox_id", row.ID)
+				continue
+			}
+		case eventTypeMessageDeleted:
+			// Pull the message id out of the payload (delete events ship
+			// just the id + channel id) and remove the doc.
+			msgID, err := messageIDFromOutbox(row)
+			if err != nil {
+				i.logger.Warn("search-indexer: decode delete", "err", err, "outbox_id", row.ID)
+				if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
+					i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
+				}
+				continue
+			}
+			if err := i.search.DeleteMessage(ctx, msgID); err != nil {
+				i.logger.Warn("search-indexer: delete", "err", err, "outbox_id", row.ID)
+				continue
+			}
+		default:
 			// Other consumers handle these events. The indexer's job is
 			// just to mark them "evaluated" so outbox.GC can proceed.
 			if err := stampInTx(ctx, tx, row.ID); err != nil {
@@ -151,27 +187,10 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 			}
 			continue
 		}
-
-		doc, err := docFromOutbox(row)
-		if err != nil {
-			// Malformed payload is a bug, not a transient failure — stamp
-			// indexed_at anyway so the worker doesn't hot-loop on a bad row.
-			i.logger.Warn("search-indexer: decode", "err", err, "outbox_id", row.ID)
-			if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
-				i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
-			}
-			continue
-		}
-
-		if err := i.search.IndexMessage(ctx, row.ID, doc); err != nil {
-			// Transient OpenSearch failure: leave indexed_at nil so we try
-			// again next tick. Do not abort the batch.
-			i.logger.Warn("search-indexer: index", "err", err, "outbox_id", row.ID)
-			continue
-		}
 		if err := stampInTx(ctx, tx, row.ID); err != nil {
-			// Failure to stamp means we'll re-index next tick — safe because
-			// _id is the outbox event UUID (upsert).
+			// Failure to stamp means we'll re-process next tick — safe
+			// because _id is the message UUID (upsert) and delete is
+			// idempotent.
 			i.logger.Warn("search-indexer: stamp", "err", err, "outbox_id", row.ID)
 		}
 	}
@@ -189,9 +208,26 @@ func stampInTx(ctx context.Context, tx *ent.Tx, id uuid.UUID) error {
 		Exec(ctx)
 }
 
-// docFromOutbox decodes the message.created payload into a MessageDoc,
-// combining protobuf fields (id/channel_id/author_id/body/created_at) with
-// the denormalized organization_id stamped on the outbox row.
+// messageIDFromOutbox pulls the message id out of a message.deleted
+// outbox payload. Delete events don't carry full doc context — only the
+// id and channel — so this helper short-circuits the richer docFromOutbox
+// decode.
+func messageIDFromOutbox(row *ent.OutboxEvent) (uuid.UUID, error) {
+	var m huddlev1.Message
+	if err := proto.Unmarshal(row.Payload, &m); err != nil {
+		return uuid.Nil, fmt.Errorf("unmarshal message payload: %w", err)
+	}
+	id, err := uuid.Parse(m.Id)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("message.id: %w", err)
+	}
+	return id, nil
+}
+
+// docFromOutbox decodes the message.created or message.edited payload
+// into a MessageDoc, combining protobuf fields
+// (id/channel_id/author_id/body/created_at) with the denormalized
+// organization_id stamped on the outbox row.
 func docFromOutbox(row *ent.OutboxEvent) (MessageDoc, error) {
 	if row.OrganizationID == nil {
 		return MessageDoc{}, errors.New("outbox row has no organization_id")

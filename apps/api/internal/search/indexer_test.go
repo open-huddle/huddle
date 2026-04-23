@@ -19,18 +19,19 @@ import (
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
-// fakeClient records IndexMessage calls so tests can assert the doc shape
-// and drive failure modes. Search and EnsureIndex are no-ops here — the
-// indexer only calls IndexMessage.
+// fakeClient records IndexMessage + DeleteMessage calls so tests can
+// assert on both the doc shape and the delete id. EnsureIndex /
+// SearchMessages are no-ops — the indexer doesn't call them.
 type fakeClient struct {
-	mu      sync.Mutex
-	calls   []fakeCall
-	indexFn func(outboxID uuid.UUID, doc search.MessageDoc) error
+	mu        sync.Mutex
+	calls     []fakeCall
+	deletes   []uuid.UUID
+	indexFn   func(doc search.MessageDoc) error
+	deleteErr error
 }
 
 type fakeCall struct {
-	outboxID uuid.UUID
-	doc      search.MessageDoc
+	doc search.MessageDoc
 }
 
 func (f *fakeClient) EnsureIndex(context.Context) error { return nil }
@@ -38,14 +39,21 @@ func (f *fakeClient) SearchMessages(context.Context, search.MessageQuery) (searc
 	return search.MessageResult{}, nil
 }
 
-func (f *fakeClient) IndexMessage(_ context.Context, outboxID uuid.UUID, doc search.MessageDoc) error {
+func (f *fakeClient) IndexMessage(_ context.Context, doc search.MessageDoc) error {
 	f.mu.Lock()
-	f.calls = append(f.calls, fakeCall{outboxID: outboxID, doc: doc})
+	f.calls = append(f.calls, fakeCall{doc: doc})
 	f.mu.Unlock()
 	if f.indexFn != nil {
-		return f.indexFn(outboxID, doc)
+		return f.indexFn(doc)
 	}
 	return nil
+}
+
+func (f *fakeClient) DeleteMessage(_ context.Context, id uuid.UUID) error {
+	f.mu.Lock()
+	f.deletes = append(f.deletes, id)
+	f.mu.Unlock()
+	return f.deleteErr
 }
 
 func (f *fakeClient) snapshot() []fakeCall {
@@ -116,8 +124,11 @@ func TestIndexBatch_IndexesAndStampsIndexedAt(t *testing.T) {
 	if len(calls) != 1 {
 		t.Fatalf("want 1 IndexMessage call, got %d", len(calls))
 	}
-	if calls[0].outboxID != row.ID {
-		t.Errorf("outbox id: want %s got %s", row.ID, calls[0].outboxID)
+	// Doc is keyed by the Message UUID (ADR-0016 re-keying), which
+	// the seed wrote to both outbox_event.aggregate_id and the
+	// protobuf Message.id on the payload.
+	if calls[0].doc.ID != row.AggregateID {
+		t.Errorf("doc id: want message %s got %s", row.AggregateID, calls[0].doc.ID)
 	}
 	if calls[0].doc.Body != "hello **world**" {
 		t.Errorf("body: want %q got %q", "hello **world**", calls[0].doc.Body)
@@ -195,8 +206,8 @@ func TestIndexBatch_StampsNonMessageEventsWithoutIndexing(t *testing.T) {
 	if len(calls) != 1 {
 		t.Fatalf("want 1 IndexMessage call, got %d", len(calls))
 	}
-	if calls[0].outboxID != msgRow.ID {
-		t.Errorf("indexed the wrong row: want %s got %s", msgRow.ID, calls[0].outboxID)
+	if calls[0].doc.ID != msgRow.AggregateID {
+		t.Errorf("indexed the wrong message: want %s got %s", msgRow.AggregateID, calls[0].doc.ID)
 	}
 
 	// Both rows get their indexed_at stamped — the channel.created row
@@ -223,7 +234,7 @@ func TestIndexBatch_TransientBackendErrorLeavesRowUnindexed(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	client, fc, idx := newIndexer(t)
-	fc.indexFn = func(uuid.UUID, search.MessageDoc) error {
+	fc.indexFn = func(search.MessageDoc) error {
 		return errors.New("opensearch down")
 	}
 

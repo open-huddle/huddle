@@ -284,7 +284,13 @@ func (s *Service) List(ctx context.Context, req *connect.Request[huddlev1.Messag
 	}
 
 	q := s.client.Message.Query().
-		Where(entmessage.ChannelIDEQ(channelID)).
+		Where(
+			entmessage.ChannelIDEQ(channelID),
+			// Soft-deleted rows stay in the DB for audit but are hidden
+			// from client-facing reads. Edit/Delete handlers own the
+			// stamp; anything with deleted_at set is invisible here.
+			entmessage.DeletedAtIsNil(),
+		).
 		Order(ent.Desc(entmessage.FieldCreatedAt), ent.Desc(entmessage.FieldID))
 
 	if req.Msg.Before != "" {
@@ -433,6 +439,9 @@ func toProto(m *ent.Message, mentions []uuid.UUID) *huddlev1.Message {
 		AuthorId:  m.AuthorID.String(),
 		Body:      m.Body,
 		CreatedAt: timestamppb.New(m.CreatedAt),
+	}
+	if m.EditedAt != nil {
+		out.EditedAt = timestamppb.New(*m.EditedAt)
 	}
 	if len(mentions) > 0 {
 		out.MentionUserIds = make([]string, 0, len(mentions))

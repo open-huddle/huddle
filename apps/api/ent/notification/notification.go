@@ -32,6 +32,8 @@ const (
 	FieldOrganizationID = "organization_id"
 	// FieldReadAt holds the string denoting the read_at field in the database.
 	FieldReadAt = "read_at"
+	// FieldSource holds the string denoting the source field in the database.
+	FieldSource = "source"
 	// FieldEmailedAt holds the string denoting the emailed_at field in the database.
 	FieldEmailedAt = "emailed_at"
 	// EdgeRecipient holds the string denoting the recipient edge name in mutations.
@@ -85,6 +87,7 @@ var Columns = []string{
 	FieldChannelID,
 	FieldOrganizationID,
 	FieldReadAt,
+	FieldSource,
 	FieldEmailedAt,
 }
 
@@ -128,6 +131,32 @@ func KindValidator(k Kind) error {
 		return nil
 	default:
 		return fmt.Errorf("notification: invalid enum value for kind field: %q", k)
+	}
+}
+
+// Source defines the type for the "source" enum field.
+type Source string
+
+// SourceMessageCreated is the default value of the Source enum.
+const DefaultSource = SourceMessageCreated
+
+// Source values.
+const (
+	SourceMessageCreated Source = "message_created"
+	SourceMessageEdited  Source = "message_edited"
+)
+
+func (s Source) String() string {
+	return string(s)
+}
+
+// SourceValidator is a validator for the "source" field enum values. It is called by the builders before save.
+func SourceValidator(s Source) error {
+	switch s {
+	case SourceMessageCreated, SourceMessageEdited:
+		return nil
+	default:
+		return fmt.Errorf("notification: invalid enum value for source field: %q", s)
 	}
 }
 
@@ -177,6 +206,11 @@ func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
 // ByReadAt orders the results by the read_at field.
 func ByReadAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReadAt, opts...).ToFunc()
+}
+
+// BySource orders the results by the source field.
+func BySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSource, opts...).ToFunc()
 }
 
 // ByEmailedAt orders the results by the emailed_at field.
