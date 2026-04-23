@@ -435,6 +435,52 @@ func HasMessagesWith(preds ...predicate.Message) predicate.User {
 	})
 }
 
+// HasInvitationsSent applies the HasEdge predicate on the "invitations_sent" edge.
+func HasInvitationsSent() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, InvitationsSentTable, InvitationsSentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasInvitationsSentWith applies the HasEdge predicate on the "invitations_sent" edge with a given conditions (other predicates).
+func HasInvitationsSentWith(preds ...predicate.Invitation) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newInvitationsSentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasInvitationsAccepted applies the HasEdge predicate on the "invitations_accepted" edge.
+func HasInvitationsAccepted() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, InvitationsAcceptedTable, InvitationsAcceptedColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasInvitationsAcceptedWith applies the HasEdge predicate on the "invitations_accepted" edge with a given conditions (other predicates).
+func HasInvitationsAcceptedWith(preds ...predicate.Invitation) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newInvitationsAcceptedStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

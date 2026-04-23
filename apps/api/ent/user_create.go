@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -138,6 +139,36 @@ func (_c *UserCreate) AddMessages(v ...*Message) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMessageIDs(ids...)
+}
+
+// AddInvitationsSentIDs adds the "invitations_sent" edge to the Invitation entity by IDs.
+func (_c *UserCreate) AddInvitationsSentIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddInvitationsSentIDs(ids...)
+	return _c
+}
+
+// AddInvitationsSent adds the "invitations_sent" edges to the Invitation entity.
+func (_c *UserCreate) AddInvitationsSent(v ...*Invitation) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddInvitationsSentIDs(ids...)
+}
+
+// AddInvitationsAcceptedIDs adds the "invitations_accepted" edge to the Invitation entity by IDs.
+func (_c *UserCreate) AddInvitationsAcceptedIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddInvitationsAcceptedIDs(ids...)
+	return _c
+}
+
+// AddInvitationsAccepted adds the "invitations_accepted" edges to the Invitation entity.
+func (_c *UserCreate) AddInvitationsAccepted(v ...*Invitation) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddInvitationsAcceptedIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -310,6 +341,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.InvitationsSentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.InvitationsSentTable,
+			Columns: []string{user.InvitationsSentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(invitation.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.InvitationsAcceptedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.InvitationsAcceptedTable,
+			Columns: []string{user.InvitationsAcceptedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(invitation.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

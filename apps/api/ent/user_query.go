@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
@@ -24,14 +25,16 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []user.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.User
-	withMemberships     *MembershipQuery
-	withCreatedChannels *ChannelQuery
-	withMessages        *MessageQuery
-	modifiers           []func(*sql.Selector)
+	ctx                     *QueryContext
+	order                   []user.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.User
+	withMemberships         *MembershipQuery
+	withCreatedChannels     *ChannelQuery
+	withMessages            *MessageQuery
+	withInvitationsSent     *InvitationQuery
+	withInvitationsAccepted *InvitationQuery
+	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -127,6 +130,50 @@ func (_q *UserQuery) QueryMessages() *MessageQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(message.Table, message.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.MessagesTable, user.MessagesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInvitationsSent chains the current query on the "invitations_sent" edge.
+func (_q *UserQuery) QueryInvitationsSent() *InvitationQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.InvitationsSentTable, user.InvitationsSentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInvitationsAccepted chains the current query on the "invitations_accepted" edge.
+func (_q *UserQuery) QueryInvitationsAccepted() *InvitationQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.InvitationsAcceptedTable, user.InvitationsAcceptedColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -321,14 +368,16 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:              _q.config,
-		ctx:                 _q.ctx.Clone(),
-		order:               append([]user.OrderOption{}, _q.order...),
-		inters:              append([]Interceptor{}, _q.inters...),
-		predicates:          append([]predicate.User{}, _q.predicates...),
-		withMemberships:     _q.withMemberships.Clone(),
-		withCreatedChannels: _q.withCreatedChannels.Clone(),
-		withMessages:        _q.withMessages.Clone(),
+		config:                  _q.config,
+		ctx:                     _q.ctx.Clone(),
+		order:                   append([]user.OrderOption{}, _q.order...),
+		inters:                  append([]Interceptor{}, _q.inters...),
+		predicates:              append([]predicate.User{}, _q.predicates...),
+		withMemberships:         _q.withMemberships.Clone(),
+		withCreatedChannels:     _q.withCreatedChannels.Clone(),
+		withMessages:            _q.withMessages.Clone(),
+		withInvitationsSent:     _q.withInvitationsSent.Clone(),
+		withInvitationsAccepted: _q.withInvitationsAccepted.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -365,6 +414,28 @@ func (_q *UserQuery) WithMessages(opts ...func(*MessageQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withMessages = query
+	return _q
+}
+
+// WithInvitationsSent tells the query-builder to eager-load the nodes that are connected to
+// the "invitations_sent" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithInvitationsSent(opts ...func(*InvitationQuery)) *UserQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withInvitationsSent = query
+	return _q
+}
+
+// WithInvitationsAccepted tells the query-builder to eager-load the nodes that are connected to
+// the "invitations_accepted" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithInvitationsAccepted(opts ...func(*InvitationQuery)) *UserQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withInvitationsAccepted = query
 	return _q
 }
 
@@ -446,10 +517,12 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			_q.withMemberships != nil,
 			_q.withCreatedChannels != nil,
 			_q.withMessages != nil,
+			_q.withInvitationsSent != nil,
+			_q.withInvitationsAccepted != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -491,6 +564,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadMessages(ctx, query, nodes,
 			func(n *User) { n.Edges.Messages = []*Message{} },
 			func(n *User, e *Message) { n.Edges.Messages = append(n.Edges.Messages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withInvitationsSent; query != nil {
+		if err := _q.loadInvitationsSent(ctx, query, nodes,
+			func(n *User) { n.Edges.InvitationsSent = []*Invitation{} },
+			func(n *User, e *Invitation) { n.Edges.InvitationsSent = append(n.Edges.InvitationsSent, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withInvitationsAccepted; query != nil {
+		if err := _q.loadInvitationsAccepted(ctx, query, nodes,
+			func(n *User) { n.Edges.InvitationsAccepted = []*Invitation{} },
+			func(n *User, e *Invitation) { n.Edges.InvitationsAccepted = append(n.Edges.InvitationsAccepted, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -584,6 +671,68 @@ func (_q *UserQuery) loadMessages(ctx context.Context, query *MessageQuery, node
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "author_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadInvitationsSent(ctx context.Context, query *InvitationQuery, nodes []*User, init func(*User), assign func(*User, *Invitation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Invitation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.InvitationsSentColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_invitations_sent
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_invitations_sent" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_invitations_sent" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadInvitationsAccepted(ctx context.Context, query *InvitationQuery, nodes []*User, init func(*User), assign func(*User, *Invitation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Invitation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.InvitationsAcceptedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_invitations_accepted
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_invitations_accepted" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_invitations_accepted" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

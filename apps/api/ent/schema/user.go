@@ -39,5 +39,10 @@ func (User) Edges() []ent.Edge {
 		// Messages authored by this user. Required-from-Message side, so a
 		// User with messages cannot be deleted without first scrubbing them.
 		edge.To("messages", Message.Type),
+		// Invitations this user issued as an admin/owner.
+		edge.To("invitations_sent", Invitation.Type),
+		// Invitations this user consumed on signup. Optional on the
+		// Invitation side — rows remain with NULL until accept.
+		edge.To("invitations_accepted", Invitation.Type),
 	}
 }

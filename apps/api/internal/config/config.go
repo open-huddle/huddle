@@ -17,6 +17,49 @@ type Config struct {
 	Nats       Nats       `mapstructure:"nats"`
 	OpenSearch OpenSearch `mapstructure:"opensearch"`
 	Outbox     Outbox     `mapstructure:"outbox"`
+	Invites    Invites    `mapstructure:"invites"`
+	Email      Email      `mapstructure:"email"`
+}
+
+// Invites configures the email-invitation subsystem. Secret is the HMAC
+// key the handler uses to hash the random token before storing it;
+// operators MUST override the default in any deployment beyond local dev.
+type Invites struct {
+	// Secret is the HMAC-SHA256 key used to hash invite tokens at rest.
+	// Set per-deployment. Rotating this value invalidates every
+	// outstanding pending invitation — by design: a rotation is a
+	// response to suspected token leakage.
+	Secret string `mapstructure:"secret"`
+	// LinkBaseURL is the public-facing URL the invite email points at.
+	// The mailer appends `?token=<token>` before sending.
+	LinkBaseURL string `mapstructure:"link_base_url"`
+	// TTL is how long an invitation stays acceptable after creation.
+	// Re-inviting resets the TTL.
+	TTL time.Duration `mapstructure:"ttl"`
+}
+
+// Email configures the outbound email pipeline. Driver picks the concrete
+// Sender implementation: "log" prints the rendered email to the API log
+// (dev default — no SMTP needed to exercise the invite flow) or "smtp"
+// dials an SMTP relay. FromAddress / FromName apply to both drivers.
+type Email struct {
+	// Driver is "log" or "smtp". Empty / unknown values fall back to "log".
+	Driver      string `mapstructure:"driver"`
+	FromAddress string `mapstructure:"from_address"`
+	FromName    string `mapstructure:"from_name"`
+	SMTP        SMTP   `mapstructure:"smtp"`
+}
+
+// SMTP is the knobs for the "smtp" driver. All fields are ignored when
+// Driver is "log". Host+Port are required; Username+Password are required
+// when the relay demands auth (most do). StartTLS enables opportunistic
+// STARTTLS — prefer true on anything that isn't on-box.
+type SMTP struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	StartTLS bool   `mapstructure:"start_tls"`
 }
 
 // Outbox configures the transactional-outbox workers. The publisher and
@@ -93,6 +136,19 @@ func Load() (*Config, error) {
 	v.SetDefault("opensearch.url", "http://localhost:9200")
 	v.SetDefault("opensearch.messages_index", "huddle-messages")
 	v.SetDefault("outbox.retention", 24*time.Hour)
+	// Dev-only default for invites.secret. Operators MUST override
+	// HUDDLE_INVITES_SECRET in any non-dev deployment — running with this
+	// literal value would let anyone with the source tree forge invite
+	// tokens. The handler logs a warning at startup if the default is in
+	// use (see cmd/api/main.go).
+	v.SetDefault("invites.secret", "dev-only-invites-secret-change-in-prod")
+	v.SetDefault("invites.link_base_url", "http://localhost:5173/accept-invite")
+	v.SetDefault("invites.ttl", 7*24*time.Hour)
+	v.SetDefault("email.driver", "log")
+	v.SetDefault("email.from_address", "noreply@open-huddle.local")
+	v.SetDefault("email.from_name", "Open Huddle")
+	v.SetDefault("email.smtp.port", 587)
+	v.SetDefault("email.smtp.start_tls", true)
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

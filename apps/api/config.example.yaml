@@ -45,3 +45,31 @@ outbox:
   # Longer values give more room to diagnose a bad publish; shorter
   # values keep the outbox table small.
   retention: 24h
+
+invites:
+  # HMAC-SHA256 key used to hash invite tokens at rest. MUST be changed
+  # per-deployment; running with the literal default lets anyone with
+  # the source tree forge tokens. Generate with e.g. `openssl rand -hex 32`.
+  # Rotating this invalidates every outstanding pending invitation.
+  secret: "dev-only-invites-secret-change-in-prod"
+  # Public URL the invite email points at. The mailer appends
+  # ?token=<token>. Typically ends in /accept-invite.
+  link_base_url: "http://localhost:5173/accept-invite"
+  # How long an invite stays acceptable. Re-inviting resets the clock.
+  ttl: 168h  # 7 days
+
+email:
+  # "log" prints the rendered email to the API log — dev default, no
+  # SMTP needed. "smtp" dials the relay below.
+  driver: "log"
+  from_address: "noreply@open-huddle.local"
+  from_name: "Open Huddle"
+  smtp:
+    # When driver=smtp, set these per-deployment — prefer env vars over
+    # committing values here:
+    #   HUDDLE_EMAIL_SMTP_HOST      (e.g. smtp.example.com)
+    #   HUDDLE_EMAIL_SMTP_USERNAME  (relay auth user)
+    #   HUDDLE_EMAIL_SMTP_PASSWORD  (relay auth password — NEVER commit)
+    # Non-sensitive defaults stay in this file:
+    port: 587
+    start_tls: true # keep on for anything beyond a dev relay

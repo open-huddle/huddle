@@ -25,5 +25,6 @@ func (Organization) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("memberships", Membership.Type),
 		edge.To("channels", Channel.Type),
+		edge.To("invitations", Invitation.Type),
 	}
 }

@@ -42,9 +42,13 @@ type UserEdges struct {
 	CreatedChannels []*Channel `json:"created_channels,omitempty"`
 	// Messages holds the value of the messages edge.
 	Messages []*Message `json:"messages,omitempty"`
+	// InvitationsSent holds the value of the invitations_sent edge.
+	InvitationsSent []*Invitation `json:"invitations_sent,omitempty"`
+	// InvitationsAccepted holds the value of the invitations_accepted edge.
+	InvitationsAccepted []*Invitation `json:"invitations_accepted,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -72,6 +76,24 @@ func (e UserEdges) MessagesOrErr() ([]*Message, error) {
 		return e.Messages, nil
 	}
 	return nil, &NotLoadedError{edge: "messages"}
+}
+
+// InvitationsSentOrErr returns the InvitationsSent value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) InvitationsSentOrErr() ([]*Invitation, error) {
+	if e.loadedTypes[3] {
+		return e.InvitationsSent, nil
+	}
+	return nil, &NotLoadedError{edge: "invitations_sent"}
+}
+
+// InvitationsAcceptedOrErr returns the InvitationsAccepted value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) InvitationsAcceptedOrErr() ([]*Invitation, error) {
+	if e.loadedTypes[4] {
+		return e.InvitationsAccepted, nil
+	}
+	return nil, &NotLoadedError{edge: "invitations_accepted"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -162,6 +184,16 @@ func (_m *User) QueryCreatedChannels() *ChannelQuery {
 // QueryMessages queries the "messages" edge of the User entity.
 func (_m *User) QueryMessages() *MessageQuery {
 	return NewUserClient(_m.config).QueryMessages(_m)
+}
+
+// QueryInvitationsSent queries the "invitations_sent" edge of the User entity.
+func (_m *User) QueryInvitationsSent() *InvitationQuery {
+	return NewUserClient(_m.config).QueryInvitationsSent(_m)
+}
+
+// QueryInvitationsAccepted queries the "invitations_accepted" edge of the User entity.
+func (_m *User) QueryInvitationsAccepted() *InvitationQuery {
+	return NewUserClient(_m.config).QueryInvitationsAccepted(_m)
 }
 
 // Update returns a builder for updating this User.

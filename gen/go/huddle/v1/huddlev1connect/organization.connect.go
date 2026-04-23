@@ -42,6 +42,12 @@ const (
 	// OrganizationServiceAddMemberProcedure is the fully-qualified name of the OrganizationService's
 	// AddMember RPC.
 	OrganizationServiceAddMemberProcedure = "/huddle.v1.OrganizationService/AddMember"
+	// OrganizationServiceInviteMemberProcedure is the fully-qualified name of the OrganizationService's
+	// InviteMember RPC.
+	OrganizationServiceInviteMemberProcedure = "/huddle.v1.OrganizationService/InviteMember"
+	// OrganizationServiceAcceptInvitationProcedure is the fully-qualified name of the
+	// OrganizationService's AcceptInvitation RPC.
+	OrganizationServiceAcceptInvitationProcedure = "/huddle.v1.OrganizationService/AcceptInvitation"
 )
 
 // OrganizationServiceClient is a client for the huddle.v1.OrganizationService service.
@@ -54,10 +60,29 @@ type OrganizationServiceClient interface {
 	// Only owners and admins may call this. Owner role can only be granted by
 	// an existing owner — admins are limited to admin / member.
 	//
-	// This is a low-level primitive that takes a known user_id; the
-	// human-facing email-invite flow is intentionally not part of this RPC and
-	// will land separately when the invite subsystem is built.
+	// This is a low-level primitive that takes a known user_id. For the
+	// human-facing email-invite flow, use InviteMember + AcceptInvitation
+	// below.
 	AddMember(context.Context, *connect.Request[v1.AddMemberRequest]) (*connect.Response[v1.AddMemberResponse], error)
+	// InviteMember offers a user (identified by email) the chance to join an
+	// organization. The server mints a single-use token, stores its hash, and
+	// hands the plaintext to the in-process mailer. The invitee completes OIDC
+	// signup (Keycloak) and then calls AcceptInvitation with the token from
+	// their email.
+	//
+	// Authz is the same as AddMember — only owners and admins may invite, and
+	// admins cannot invite at owner role.
+	//
+	// Re-inviting the same email within the same organization replaces the
+	// pending invitation (new token, new expiry) rather than creating a
+	// second row. Once accepted, an invitation is terminal — re-inviting a
+	// member who already joined returns AlreadyExists.
+	InviteMember(context.Context, *connect.Request[v1.InviteMemberRequest]) (*connect.Response[v1.InviteMemberResponse], error)
+	// AcceptInvitation consumes a token from an invite email and creates the
+	// corresponding Membership. The caller must be authenticated (their
+	// Keycloak signup must have completed) and the email on their claims
+	// must match the email the invitation was sent to.
+	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
 }
 
 // NewOrganizationServiceClient constructs a client for the huddle.v1.OrganizationService service.
@@ -89,14 +114,28 @@ func NewOrganizationServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(organizationServiceMethods.ByName("AddMember")),
 			connect.WithClientOptions(opts...),
 		),
+		inviteMember: connect.NewClient[v1.InviteMemberRequest, v1.InviteMemberResponse](
+			httpClient,
+			baseURL+OrganizationServiceInviteMemberProcedure,
+			connect.WithSchema(organizationServiceMethods.ByName("InviteMember")),
+			connect.WithClientOptions(opts...),
+		),
+		acceptInvitation: connect.NewClient[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse](
+			httpClient,
+			baseURL+OrganizationServiceAcceptInvitationProcedure,
+			connect.WithSchema(organizationServiceMethods.ByName("AcceptInvitation")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // organizationServiceClient implements OrganizationServiceClient.
 type organizationServiceClient struct {
-	create    *connect.Client[v1.CreateRequest, v1.CreateResponse]
-	list      *connect.Client[v1.ListRequest, v1.ListResponse]
-	addMember *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
+	create           *connect.Client[v1.CreateRequest, v1.CreateResponse]
+	list             *connect.Client[v1.ListRequest, v1.ListResponse]
+	addMember        *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
+	inviteMember     *connect.Client[v1.InviteMemberRequest, v1.InviteMemberResponse]
+	acceptInvitation *connect.Client[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse]
 }
 
 // Create calls huddle.v1.OrganizationService.Create.
@@ -114,6 +153,16 @@ func (c *organizationServiceClient) AddMember(ctx context.Context, req *connect.
 	return c.addMember.CallUnary(ctx, req)
 }
 
+// InviteMember calls huddle.v1.OrganizationService.InviteMember.
+func (c *organizationServiceClient) InviteMember(ctx context.Context, req *connect.Request[v1.InviteMemberRequest]) (*connect.Response[v1.InviteMemberResponse], error) {
+	return c.inviteMember.CallUnary(ctx, req)
+}
+
+// AcceptInvitation calls huddle.v1.OrganizationService.AcceptInvitation.
+func (c *organizationServiceClient) AcceptInvitation(ctx context.Context, req *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error) {
+	return c.acceptInvitation.CallUnary(ctx, req)
+}
+
 // OrganizationServiceHandler is an implementation of the huddle.v1.OrganizationService service.
 type OrganizationServiceHandler interface {
 	// Create a new organization. The caller becomes its owner.
@@ -124,10 +173,29 @@ type OrganizationServiceHandler interface {
 	// Only owners and admins may call this. Owner role can only be granted by
 	// an existing owner — admins are limited to admin / member.
 	//
-	// This is a low-level primitive that takes a known user_id; the
-	// human-facing email-invite flow is intentionally not part of this RPC and
-	// will land separately when the invite subsystem is built.
+	// This is a low-level primitive that takes a known user_id. For the
+	// human-facing email-invite flow, use InviteMember + AcceptInvitation
+	// below.
 	AddMember(context.Context, *connect.Request[v1.AddMemberRequest]) (*connect.Response[v1.AddMemberResponse], error)
+	// InviteMember offers a user (identified by email) the chance to join an
+	// organization. The server mints a single-use token, stores its hash, and
+	// hands the plaintext to the in-process mailer. The invitee completes OIDC
+	// signup (Keycloak) and then calls AcceptInvitation with the token from
+	// their email.
+	//
+	// Authz is the same as AddMember — only owners and admins may invite, and
+	// admins cannot invite at owner role.
+	//
+	// Re-inviting the same email within the same organization replaces the
+	// pending invitation (new token, new expiry) rather than creating a
+	// second row. Once accepted, an invitation is terminal — re-inviting a
+	// member who already joined returns AlreadyExists.
+	InviteMember(context.Context, *connect.Request[v1.InviteMemberRequest]) (*connect.Response[v1.InviteMemberResponse], error)
+	// AcceptInvitation consumes a token from an invite email and creates the
+	// corresponding Membership. The caller must be authenticated (their
+	// Keycloak signup must have completed) and the email on their claims
+	// must match the email the invitation was sent to.
+	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
 }
 
 // NewOrganizationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -155,6 +223,18 @@ func NewOrganizationServiceHandler(svc OrganizationServiceHandler, opts ...conne
 		connect.WithSchema(organizationServiceMethods.ByName("AddMember")),
 		connect.WithHandlerOptions(opts...),
 	)
+	organizationServiceInviteMemberHandler := connect.NewUnaryHandler(
+		OrganizationServiceInviteMemberProcedure,
+		svc.InviteMember,
+		connect.WithSchema(organizationServiceMethods.ByName("InviteMember")),
+		connect.WithHandlerOptions(opts...),
+	)
+	organizationServiceAcceptInvitationHandler := connect.NewUnaryHandler(
+		OrganizationServiceAcceptInvitationProcedure,
+		svc.AcceptInvitation,
+		connect.WithSchema(organizationServiceMethods.ByName("AcceptInvitation")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/huddle.v1.OrganizationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case OrganizationServiceCreateProcedure:
@@ -163,6 +243,10 @@ func NewOrganizationServiceHandler(svc OrganizationServiceHandler, opts ...conne
 			organizationServiceListHandler.ServeHTTP(w, r)
 		case OrganizationServiceAddMemberProcedure:
 			organizationServiceAddMemberHandler.ServeHTTP(w, r)
+		case OrganizationServiceInviteMemberProcedure:
+			organizationServiceInviteMemberHandler.ServeHTTP(w, r)
+		case OrganizationServiceAcceptInvitationProcedure:
+			organizationServiceAcceptInvitationHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -182,4 +266,12 @@ func (UnimplementedOrganizationServiceHandler) List(context.Context, *connect.Re
 
 func (UnimplementedOrganizationServiceHandler) AddMember(context.Context, *connect.Request[v1.AddMemberRequest]) (*connect.Response[v1.AddMemberResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.OrganizationService.AddMember is not implemented"))
+}
+
+func (UnimplementedOrganizationServiceHandler) InviteMember(context.Context, *connect.Request[v1.InviteMemberRequest]) (*connect.Response[v1.InviteMemberResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.OrganizationService.InviteMember is not implemented"))
+}
+
+func (UnimplementedOrganizationServiceHandler) AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.OrganizationService.AcceptInvitation is not implemented"))
 }

@@ -81,7 +81,11 @@ func (s *Server) routes() {
 		s.router.Mount(path, handler)
 	}
 	{
-		svc := organization.New(s.db.Ent, s.resolver, s.authz, s.logger)
+		svc := organization.New(s.db.Ent, s.resolver, s.authz, organization.InviteConfig{
+			HMACSecret:  []byte(s.cfg.Invites.Secret),
+			LinkBaseURL: s.cfg.Invites.LinkBaseURL,
+			TTL:         s.cfg.Invites.TTL,
+		}, s.logger)
 		path, handler := huddlev1connect.NewOrganizationServiceHandler(svc, authInt)
 		s.router.Mount(path, handler)
 	}

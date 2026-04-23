@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -22,18 +23,42 @@ import (
 
 var _ huddlev1connect.OrganizationServiceHandler = (*Service)(nil)
 
-// Service handles organization CRUD and membership management. Authorization
-// happens inside each handler via the policy.Engine — the auth interceptor
-// only attaches claims; it does not know what action is being performed.
+// InviteConfig carries the knobs InviteMember and AcceptInvitation need.
+// Kept as a struct rather than scattered arguments so New stays readable
+// as the invite surface grows.
+type InviteConfig struct {
+	// HMACSecret is the key used to hash tokens at rest. Must be non-empty.
+	// Rotation invalidates every outstanding pending invitation.
+	HMACSecret []byte
+	// LinkBaseURL is the public URL the invite email points at. The
+	// mailer appends `?token=<token>`.
+	LinkBaseURL string
+	// TTL is the lifetime of a freshly-created invitation. Re-inviting an
+	// existing pending row extends the clock by TTL from the moment of
+	// re-invite.
+	TTL time.Duration
+}
+
+// Service handles organization CRUD, membership management, and the email
+// invite flow. Authorization happens inside each handler via the
+// policy.Engine — the auth interceptor only attaches claims; it does not
+// know what action is being performed.
 type Service struct {
 	client   *ent.Client
 	resolver *principal.Resolver
 	authz    policy.Engine
+	invites  InviteConfig
 	logger   *slog.Logger
 }
 
-func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, logger *slog.Logger) *Service {
-	return &Service{client: client, resolver: resolver, authz: authz, logger: logger}
+func New(client *ent.Client, resolver *principal.Resolver, authz policy.Engine, invites InviteConfig, logger *slog.Logger) *Service {
+	return &Service{
+		client:   client,
+		resolver: resolver,
+		authz:    authz,
+		invites:  invites,
+		logger:   logger,
+	}
 }
 
 func (s *Service) Create(ctx context.Context, req *connect.Request[huddlev1.CreateRequest]) (*connect.Response[huddlev1.CreateResponse], error) {

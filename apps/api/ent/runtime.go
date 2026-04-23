@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/auditevent"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/emaildelivery"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
@@ -70,6 +72,52 @@ func init() {
 	channelDescID := channelMixinFields0[0].Descriptor()
 	// channel.DefaultID holds the default value on creation for the id field.
 	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
+	emaildeliveryMixin := schema.EmailDelivery{}.Mixin()
+	emaildeliveryMixinFields0 := emaildeliveryMixin[0].Fields()
+	_ = emaildeliveryMixinFields0
+	emaildeliveryFields := schema.EmailDelivery{}.Fields()
+	_ = emaildeliveryFields
+	// emaildeliveryDescCreatedAt is the schema descriptor for created_at field.
+	emaildeliveryDescCreatedAt := emaildeliveryFields[0].Descriptor()
+	// emaildelivery.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emaildelivery.DefaultCreatedAt = emaildeliveryDescCreatedAt.Default.(func() time.Time)
+	// emaildeliveryDescRecipient is the schema descriptor for recipient field.
+	emaildeliveryDescRecipient := emaildeliveryFields[3].Descriptor()
+	// emaildelivery.RecipientValidator is a validator for the "recipient" field. It is called by the builders before save.
+	emaildelivery.RecipientValidator = emaildeliveryDescRecipient.Validators[0].(func(string) error)
+	// emaildeliveryDescID is the schema descriptor for id field.
+	emaildeliveryDescID := emaildeliveryMixinFields0[0].Descriptor()
+	// emaildelivery.DefaultID holds the default value on creation for the id field.
+	emaildelivery.DefaultID = emaildeliveryDescID.Default.(func() uuid.UUID)
+	invitationMixin := schema.Invitation{}.Mixin()
+	invitationMixinFields0 := invitationMixin[0].Fields()
+	_ = invitationMixinFields0
+	invitationMixinFields1 := invitationMixin[1].Fields()
+	_ = invitationMixinFields1
+	invitationFields := schema.Invitation{}.Fields()
+	_ = invitationFields
+	// invitationDescCreatedAt is the schema descriptor for created_at field.
+	invitationDescCreatedAt := invitationMixinFields1[0].Descriptor()
+	// invitation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	invitation.DefaultCreatedAt = invitationDescCreatedAt.Default.(func() time.Time)
+	// invitationDescUpdatedAt is the schema descriptor for updated_at field.
+	invitationDescUpdatedAt := invitationMixinFields1[1].Descriptor()
+	// invitation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	invitation.DefaultUpdatedAt = invitationDescUpdatedAt.Default.(func() time.Time)
+	// invitation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	invitation.UpdateDefaultUpdatedAt = invitationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// invitationDescEmail is the schema descriptor for email field.
+	invitationDescEmail := invitationFields[0].Descriptor()
+	// invitation.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	invitation.EmailValidator = invitationDescEmail.Validators[0].(func(string) error)
+	// invitationDescTokenHash is the schema descriptor for token_hash field.
+	invitationDescTokenHash := invitationFields[2].Descriptor()
+	// invitation.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	invitation.TokenHashValidator = invitationDescTokenHash.Validators[0].(func([]byte) error)
+	// invitationDescID is the schema descriptor for id field.
+	invitationDescID := invitationMixinFields0[0].Descriptor()
+	// invitation.DefaultID holds the default value on creation for the id field.
+	invitation.DefaultID = invitationDescID.Default.(func() uuid.UUID)
 	membershipMixin := schema.Membership{}.Mixin()
 	membershipMixinFields0 := membershipMixin[0].Fields()
 	_ = membershipMixinFields0
