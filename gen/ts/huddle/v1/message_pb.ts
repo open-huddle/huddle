@@ -12,7 +12,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/message.proto.
  */
 export const file_huddle_v1_message: GenFile = /*@__PURE__*/
-  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxIsMBCgdNZXNzYWdlEgoKAmlkGAEgASgJEhIKCmNoYW5uZWxfaWQYAiABKAkSEQoJYXV0aG9yX2lkGAMgASgJEgwKBGJvZHkYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQbWVudGlvbl91c2VyX2lkcxgGIAMoCRItCgllZGl0ZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlcKGU1lc3NhZ2VTZXJ2aWNlU2VuZFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJEhgKEG1lbnRpb25fdXNlcl9pZHMYAyADKAkiQQoaTWVzc2FnZVNlcnZpY2VTZW5kUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIk4KGU1lc3NhZ2VTZXJ2aWNlTGlzdFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiVwoaTWVzc2FnZVNlcnZpY2VMaXN0UmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCSI0Ch5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCSJGCh9NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlc3BvbnNlEiMKB21lc3NhZ2UYASABKAsyEi5odWRkbGUudjEuTWVzc2FnZSJPChlNZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBGJvZHkYAiABKAkSGAoQbWVudGlvbl91c2VyX2lkcxgDIAMoCSJBChpNZXNzYWdlU2VydmljZUVkaXRSZXNwb25zZRIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UiKQobTWVzc2FnZVNlcnZpY2VEZWxldGVSZXF1ZXN0EgoKAmlkGAEgASgJIh4KHE1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVzcG9uc2Uy2gMKDk1lc3NhZ2VTZXJ2aWNlElUKBFNlbmQSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTZW5kUmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVNlbmRSZXNwb25zZSIAElUKBExpc3QSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VMaXN0UmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUxpc3RSZXNwb25zZSIAEmYKCVN1YnNjcmliZRIpLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QaKi5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZSIAMAESVQoERWRpdBIkLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0GiUuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRWRpdFJlc3BvbnNlIgASWwoGRGVsZXRlEiYuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVxdWVzdBonLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZURlbGV0ZVJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChdodWRkbGUvdjEvbWVzc2FnZS5wcm90bxIJaHVkZGxlLnYxIsMBCgdNZXNzYWdlEgoKAmlkGAEgASgJEhIKCmNoYW5uZWxfaWQYAiABKAkSEQoJYXV0aG9yX2lkGAMgASgJEgwKBGJvZHkYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQbWVudGlvbl91c2VyX2lkcxgGIAMoCRItCgllZGl0ZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlcKGU1lc3NhZ2VTZXJ2aWNlU2VuZFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIMCgRib2R5GAIgASgJEhgKEG1lbnRpb25fdXNlcl9pZHMYAyADKAkiQQoaTWVzc2FnZVNlcnZpY2VTZW5kUmVzcG9uc2USIwoHbWVzc2FnZRgBIAEoCzISLmh1ZGRsZS52MS5NZXNzYWdlIk4KGU1lc3NhZ2VTZXJ2aWNlTGlzdFJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCRIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiVwoaTWVzc2FnZVNlcnZpY2VMaXN0UmVzcG9uc2USJAoIbWVzc2FnZXMYASADKAsyEi5odWRkbGUudjEuTWVzc2FnZRITCgtuZXh0X2N1cnNvchgCIAEoCSI0Ch5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QSEgoKY2hhbm5lbF9pZBgBIAEoCSLBAQofTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZRIxCgdjcmVhdGVkGAEgASgLMh4uaHVkZGxlLnYxLk1lc3NhZ2VDcmVhdGVkRXZlbnRIABIvCgZlZGl0ZWQYAiABKAsyHS5odWRkbGUudjEuTWVzc2FnZUVkaXRlZEV2ZW50SAASMQoHZGVsZXRlZBgDIAEoCzIeLmh1ZGRsZS52MS5NZXNzYWdlRGVsZXRlZEV2ZW50SABCBwoFZXZlbnQiOgoTTWVzc2FnZUNyZWF0ZWRFdmVudBIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UiOQoSTWVzc2FnZUVkaXRlZEV2ZW50EiMKB21lc3NhZ2UYASABKAsyEi5odWRkbGUudjEuTWVzc2FnZSI9ChNNZXNzYWdlRGVsZXRlZEV2ZW50EhIKCm1lc3NhZ2VfaWQYASABKAkSEgoKY2hhbm5lbF9pZBgCIAEoCSJPChlNZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBGJvZHkYAiABKAkSGAoQbWVudGlvbl91c2VyX2lkcxgDIAMoCSJBChpNZXNzYWdlU2VydmljZUVkaXRSZXNwb25zZRIjCgdtZXNzYWdlGAEgASgLMhIuaHVkZGxlLnYxLk1lc3NhZ2UiKQobTWVzc2FnZVNlcnZpY2VEZWxldGVSZXF1ZXN0EgoKAmlkGAEgASgJIh4KHE1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVzcG9uc2Uy2gMKDk1lc3NhZ2VTZXJ2aWNlElUKBFNlbmQSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTZW5kUmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVNlbmRSZXNwb25zZSIAElUKBExpc3QSJC5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VMaXN0UmVxdWVzdBolLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUxpc3RSZXNwb25zZSIAEmYKCVN1YnNjcmliZRIpLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZVN1YnNjcmliZVJlcXVlc3QaKi5odWRkbGUudjEuTWVzc2FnZVNlcnZpY2VTdWJzY3JpYmVSZXNwb25zZSIAMAESVQoERWRpdBIkLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZUVkaXRSZXF1ZXN0GiUuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRWRpdFJlc3BvbnNlIgASWwoGRGVsZXRlEiYuaHVkZGxlLnYxLk1lc3NhZ2VTZXJ2aWNlRGVsZXRlUmVxdWVzdBonLmh1ZGRsZS52MS5NZXNzYWdlU2VydmljZURlbGV0ZVJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Message
@@ -201,16 +201,47 @@ export const MessageServiceSubscribeRequestSchema: GenMessage<MessageServiceSubs
   messageDesc(file_huddle_v1_message, 5);
 
 /**
- * Wrapping the streamed Message lets us add future fields (event type,
- * heartbeat, tombstone) without a breaking wire change.
+ * Subscribe streams every mutation to the channel: creates, edits, and
+ * deletes. Clients dispatch on the oneof variant. Heartbeats and other
+ * non-message control frames will join this oneof as new variants as
+ * they land.
+ *
+ * v1 carried only `Message message = 1` — this is a deliberate wire
+ * break (ADR-0017). The project is pre-alpha and the web client does
+ * not consume Subscribe yet, so the blast radius was zero at the
+ * time of the redesign.
  *
  * @generated from message huddle.v1.MessageServiceSubscribeResponse
  */
 export type MessageServiceSubscribeResponse = Message$1<"huddle.v1.MessageServiceSubscribeResponse"> & {
   /**
-   * @generated from field: huddle.v1.Message message = 1;
+   * @generated from oneof huddle.v1.MessageServiceSubscribeResponse.event
    */
-  message?: Message | undefined;
+  event: {
+    /**
+     * A new message was sent in the channel.
+     *
+     * @generated from field: huddle.v1.MessageCreatedEvent created = 1;
+     */
+    value: MessageCreatedEvent;
+    case: "created";
+  } | {
+    /**
+     * An existing message was edited by its author.
+     *
+     * @generated from field: huddle.v1.MessageEditedEvent edited = 2;
+     */
+    value: MessageEditedEvent;
+    case: "edited";
+  } | {
+    /**
+     * A message was soft-deleted by its author or a moderator.
+     *
+     * @generated from field: huddle.v1.MessageDeletedEvent deleted = 3;
+     */
+    value: MessageDeletedEvent;
+    case: "deleted";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
@@ -219,6 +250,72 @@ export type MessageServiceSubscribeResponse = Message$1<"huddle.v1.MessageServic
  */
 export const MessageServiceSubscribeResponseSchema: GenMessage<MessageServiceSubscribeResponse> = /*@__PURE__*/
   messageDesc(file_huddle_v1_message, 6);
+
+/**
+ * Send-side fan-out. Carries the full Message proto including any
+ * mention_user_ids populated at Send time.
+ *
+ * @generated from message huddle.v1.MessageCreatedEvent
+ */
+export type MessageCreatedEvent = Message$1<"huddle.v1.MessageCreatedEvent"> & {
+  /**
+   * @generated from field: huddle.v1.Message message = 1;
+   */
+  message?: Message | undefined;
+};
+
+/**
+ * Describes the message huddle.v1.MessageCreatedEvent.
+ * Use `create(MessageCreatedEventSchema)` to create a new message.
+ */
+export const MessageCreatedEventSchema: GenMessage<MessageCreatedEvent> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 7);
+
+/**
+ * Edit-side fan-out. Carries the Message as of the edit — same shape
+ * as MessageCreatedEvent, separated so clients can branch on kind
+ * without introspecting Message.edited_at.
+ *
+ * @generated from message huddle.v1.MessageEditedEvent
+ */
+export type MessageEditedEvent = Message$1<"huddle.v1.MessageEditedEvent"> & {
+  /**
+   * @generated from field: huddle.v1.Message message = 1;
+   */
+  message?: Message | undefined;
+};
+
+/**
+ * Describes the message huddle.v1.MessageEditedEvent.
+ * Use `create(MessageEditedEventSchema)` to create a new message.
+ */
+export const MessageEditedEventSchema: GenMessage<MessageEditedEvent> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 8);
+
+/**
+ * Delete-side fan-out. Carries only the ids — there's no body to ship
+ * after a soft-delete. Clients remove the message locally.
+ *
+ * @generated from message huddle.v1.MessageDeletedEvent
+ */
+export type MessageDeletedEvent = Message$1<"huddle.v1.MessageDeletedEvent"> & {
+  /**
+   * @generated from field: string message_id = 1;
+   */
+  messageId: string;
+
+  /**
+   * @generated from field: string channel_id = 2;
+   */
+  channelId: string;
+};
+
+/**
+ * Describes the message huddle.v1.MessageDeletedEvent.
+ * Use `create(MessageDeletedEventSchema)` to create a new message.
+ */
+export const MessageDeletedEventSchema: GenMessage<MessageDeletedEvent> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_message, 9);
 
 /**
  * @generated from message huddle.v1.MessageServiceEditRequest
@@ -248,7 +345,7 @@ export type MessageServiceEditRequest = Message$1<"huddle.v1.MessageServiceEditR
  * Use `create(MessageServiceEditRequestSchema)` to create a new message.
  */
 export const MessageServiceEditRequestSchema: GenMessage<MessageServiceEditRequest> = /*@__PURE__*/
-  messageDesc(file_huddle_v1_message, 7);
+  messageDesc(file_huddle_v1_message, 10);
 
 /**
  * @generated from message huddle.v1.MessageServiceEditResponse
@@ -265,7 +362,7 @@ export type MessageServiceEditResponse = Message$1<"huddle.v1.MessageServiceEdit
  * Use `create(MessageServiceEditResponseSchema)` to create a new message.
  */
 export const MessageServiceEditResponseSchema: GenMessage<MessageServiceEditResponse> = /*@__PURE__*/
-  messageDesc(file_huddle_v1_message, 8);
+  messageDesc(file_huddle_v1_message, 11);
 
 /**
  * @generated from message huddle.v1.MessageServiceDeleteRequest
@@ -282,7 +379,7 @@ export type MessageServiceDeleteRequest = Message$1<"huddle.v1.MessageServiceDel
  * Use `create(MessageServiceDeleteRequestSchema)` to create a new message.
  */
 export const MessageServiceDeleteRequestSchema: GenMessage<MessageServiceDeleteRequest> = /*@__PURE__*/
-  messageDesc(file_huddle_v1_message, 9);
+  messageDesc(file_huddle_v1_message, 12);
 
 /**
  * @generated from message huddle.v1.MessageServiceDeleteResponse
@@ -295,7 +392,7 @@ export type MessageServiceDeleteResponse = Message$1<"huddle.v1.MessageServiceDe
  * Use `create(MessageServiceDeleteResponseSchema)` to create a new message.
  */
 export const MessageServiceDeleteResponseSchema: GenMessage<MessageServiceDeleteResponse> = /*@__PURE__*/
-  messageDesc(file_huddle_v1_message, 10);
+  messageDesc(file_huddle_v1_message, 13);
 
 /**
  * MessageService handles message send and read for chat channels. Realtime

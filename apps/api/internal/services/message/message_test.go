@@ -15,6 +15,7 @@ import (
 	entmembership "github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
+	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
 	"github.com/open-huddle/huddle/apps/api/internal/services/message"
@@ -27,8 +28,8 @@ import (
 // fails fast rather than blocks.
 type nopSubscriber struct{}
 
-func (nopSubscriber) SubscribeMessages(_ context.Context, _ uuid.UUID) (<-chan *huddlev1.Message, error) {
-	ch := make(chan *huddlev1.Message)
+func (nopSubscriber) SubscribeMessages(_ context.Context, _ uuid.UUID) (<-chan *events.MessageEvent, error) {
+	ch := make(chan *events.MessageEvent)
 	close(ch)
 	return ch, nil
 }

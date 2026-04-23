@@ -233,7 +233,7 @@ func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.M
 		return s.denyErr(err)
 	}
 
-	msgs, err := s.subs.SubscribeMessages(ctx, channelID)
+	events, err := s.subs.SubscribeMessages(ctx, channelID)
 	if err != nil {
 		s.logger.Error("subscribe", "err", err, "channel_id", channelID)
 		return connect.NewError(connect.CodeInternal, errors.New("subscribe failed"))
@@ -243,19 +243,60 @@ func (s *Service) Subscribe(ctx context.Context, req *connect.Request[huddlev1.M
 		select {
 		case <-ctx.Done():
 			return nil
-		case m, ok := <-msgs:
+		case evt, ok := <-events:
 			if !ok {
 				// Subscriber tore down (server shutdown or broker disconnect).
 				// Returning nil ends the stream cleanly; clients will
 				// reconnect.
 				return nil
 			}
-			if err := stream.Send(&huddlev1.MessageServiceSubscribeResponse{Message: m}); err != nil {
+			resp, err := buildSubscribeResponse(evt)
+			if err != nil {
+				s.logger.Warn("subscribe: drop malformed event",
+					"err", err, "channel_id", channelID)
+				continue
+			}
+			if err := stream.Send(resp); err != nil {
 				// Most often a broken pipe — client went away. Returning the
 				// error lets Connect map it to the right transport state.
 				return err
 			}
 		}
+	}
+}
+
+// buildSubscribeResponse maps a bus event to the oneof-carrying wire
+// response. Unknown kinds are skipped (logged at the call site) rather
+// than sent as empty — clients should never receive a response with no
+// variant set.
+func buildSubscribeResponse(evt *events.MessageEvent) (*huddlev1.MessageServiceSubscribeResponse, error) {
+	if evt == nil || evt.Message == nil {
+		return nil, errors.New("subscriber emitted nil message event")
+	}
+	switch evt.Kind {
+	case events.MessageEventCreated:
+		return &huddlev1.MessageServiceSubscribeResponse{
+			Event: &huddlev1.MessageServiceSubscribeResponse_Created{
+				Created: &huddlev1.MessageCreatedEvent{Message: evt.Message},
+			},
+		}, nil
+	case events.MessageEventEdited:
+		return &huddlev1.MessageServiceSubscribeResponse{
+			Event: &huddlev1.MessageServiceSubscribeResponse_Edited{
+				Edited: &huddlev1.MessageEditedEvent{Message: evt.Message},
+			},
+		}, nil
+	case events.MessageEventDeleted:
+		return &huddlev1.MessageServiceSubscribeResponse{
+			Event: &huddlev1.MessageServiceSubscribeResponse_Deleted{
+				Deleted: &huddlev1.MessageDeletedEvent{
+					MessageId: evt.Message.Id,
+					ChannelId: evt.Message.ChannelId,
+				},
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown event kind: %v", evt.Kind)
 	}
 }
 
