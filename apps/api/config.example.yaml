@@ -65,8 +65,11 @@ email:
   from_address: "noreply@open-huddle.local"
   from_name: "Open Huddle"
   smtp:
-    host: ""        # required when driver=smtp
+    # When driver=smtp, set these per-deployment — prefer env vars over
+    # committing values here:
+    #   HUDDLE_EMAIL_SMTP_HOST      (e.g. smtp.example.com)
+    #   HUDDLE_EMAIL_SMTP_USERNAME  (relay auth user)
+    #   HUDDLE_EMAIL_SMTP_PASSWORD  (relay auth password — NEVER commit)
+    # Non-sensitive defaults stay in this file:
     port: 587
-    username: ""
-    password: ""
     start_tls: true # keep on for anything beyond a dev relay
