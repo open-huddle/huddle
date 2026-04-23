@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/predicate"
@@ -29,6 +30,7 @@ type OrganizationQuery struct {
 	predicates      []predicate.Organization
 	withMemberships *MembershipQuery
 	withChannels    *ChannelQuery
+	withInvitations *InvitationQuery
 	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -103,6 +105,28 @@ func (_q *OrganizationQuery) QueryChannels() *ChannelQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.ChannelsTable, organization.ChannelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInvitations chains the current query on the "invitations" edge.
+func (_q *OrganizationQuery) QueryInvitations() *InvitationQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.InvitationsTable, organization.InvitationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -304,6 +328,7 @@ func (_q *OrganizationQuery) Clone() *OrganizationQuery {
 		predicates:      append([]predicate.Organization{}, _q.predicates...),
 		withMemberships: _q.withMemberships.Clone(),
 		withChannels:    _q.withChannels.Clone(),
+		withInvitations: _q.withInvitations.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -329,6 +354,17 @@ func (_q *OrganizationQuery) WithChannels(opts ...func(*ChannelQuery)) *Organiza
 		opt(query)
 	}
 	_q.withChannels = query
+	return _q
+}
+
+// WithInvitations tells the query-builder to eager-load the nodes that are connected to
+// the "invitations" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *OrganizationQuery) WithInvitations(opts ...func(*InvitationQuery)) *OrganizationQuery {
+	query := (&InvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withInvitations = query
 	return _q
 }
 
@@ -410,9 +446,10 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*Organization{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withMemberships != nil,
 			_q.withChannels != nil,
+			_q.withInvitations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -447,6 +484,13 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := _q.loadChannels(ctx, query, nodes,
 			func(n *Organization) { n.Edges.Channels = []*Channel{} },
 			func(n *Organization, e *Channel) { n.Edges.Channels = append(n.Edges.Channels, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withInvitations; query != nil {
+		if err := _q.loadInvitations(ctx, query, nodes,
+			func(n *Organization) { n.Edges.Invitations = []*Invitation{} },
+			func(n *Organization, e *Invitation) { n.Edges.Invitations = append(n.Edges.Invitations, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -510,6 +554,37 @@ func (_q *OrganizationQuery) loadChannels(ctx context.Context, query *ChannelQue
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "organization_channels" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *OrganizationQuery) loadInvitations(ctx context.Context, query *InvitationQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *Invitation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Invitation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.InvitationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.organization_invitations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "organization_invitations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "organization_invitations" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

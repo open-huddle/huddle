@@ -18,6 +18,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/open-huddle/huddle/apps/api/ent/auditevent"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/emaildelivery"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
@@ -34,6 +36,10 @@ type Client struct {
 	AuditEvent *AuditEventClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// EmailDelivery is the client for interacting with the EmailDelivery builders.
+	EmailDelivery *EmailDeliveryClient
+	// Invitation is the client for interacting with the Invitation builders.
+	Invitation *InvitationClient
 	// Membership is the client for interacting with the Membership builders.
 	Membership *MembershipClient
 	// Message is the client for interacting with the Message builders.
@@ -57,6 +63,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AuditEvent = NewAuditEventClient(c.config)
 	c.Channel = NewChannelClient(c.config)
+	c.EmailDelivery = NewEmailDeliveryClient(c.config)
+	c.Invitation = NewInvitationClient(c.config)
 	c.Membership = NewMembershipClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
@@ -152,15 +160,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		AuditEvent:   NewAuditEventClient(cfg),
-		Channel:      NewChannelClient(cfg),
-		Membership:   NewMembershipClient(cfg),
-		Message:      NewMessageClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		OutboxEvent:  NewOutboxEventClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		AuditEvent:    NewAuditEventClient(cfg),
+		Channel:       NewChannelClient(cfg),
+		EmailDelivery: NewEmailDeliveryClient(cfg),
+		Invitation:    NewInvitationClient(cfg),
+		Membership:    NewMembershipClient(cfg),
+		Message:       NewMessageClient(cfg),
+		Organization:  NewOrganizationClient(cfg),
+		OutboxEvent:   NewOutboxEventClient(cfg),
+		User:          NewUserClient(cfg),
 	}, nil
 }
 
@@ -178,15 +188,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		AuditEvent:   NewAuditEventClient(cfg),
-		Channel:      NewChannelClient(cfg),
-		Membership:   NewMembershipClient(cfg),
-		Message:      NewMessageClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		OutboxEvent:  NewOutboxEventClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		AuditEvent:    NewAuditEventClient(cfg),
+		Channel:       NewChannelClient(cfg),
+		EmailDelivery: NewEmailDeliveryClient(cfg),
+		Invitation:    NewInvitationClient(cfg),
+		Membership:    NewMembershipClient(cfg),
+		Message:       NewMessageClient(cfg),
+		Organization:  NewOrganizationClient(cfg),
+		OutboxEvent:   NewOutboxEventClient(cfg),
+		User:          NewUserClient(cfg),
 	}, nil
 }
 
@@ -216,8 +228,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AuditEvent, c.Channel, c.Membership, c.Message, c.Organization, c.OutboxEvent,
-		c.User,
+		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
+		c.Organization, c.OutboxEvent, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -227,8 +239,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AuditEvent, c.Channel, c.Membership, c.Message, c.Organization, c.OutboxEvent,
-		c.User,
+		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
+		c.Organization, c.OutboxEvent, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -241,6 +253,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AuditEvent.mutate(ctx, m)
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
+	case *EmailDeliveryMutation:
+		return c.EmailDelivery.mutate(ctx, m)
+	case *InvitationMutation:
+		return c.Invitation.mutate(ctx, m)
 	case *MembershipMutation:
 		return c.Membership.mutate(ctx, m)
 	case *MessageMutation:
@@ -583,6 +599,352 @@ func (c *ChannelClient) mutate(ctx context.Context, m *ChannelMutation) (Value, 
 		return (&ChannelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Channel mutation op: %q", m.Op())
+	}
+}
+
+// EmailDeliveryClient is a client for the EmailDelivery schema.
+type EmailDeliveryClient struct {
+	config
+}
+
+// NewEmailDeliveryClient returns a client for the EmailDelivery from the given config.
+func NewEmailDeliveryClient(c config) *EmailDeliveryClient {
+	return &EmailDeliveryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emaildelivery.Hooks(f(g(h())))`.
+func (c *EmailDeliveryClient) Use(hooks ...Hook) {
+	c.hooks.EmailDelivery = append(c.hooks.EmailDelivery, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emaildelivery.Intercept(f(g(h())))`.
+func (c *EmailDeliveryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailDelivery = append(c.inters.EmailDelivery, interceptors...)
+}
+
+// Create returns a builder for creating a EmailDelivery entity.
+func (c *EmailDeliveryClient) Create() *EmailDeliveryCreate {
+	mutation := newEmailDeliveryMutation(c.config, OpCreate)
+	return &EmailDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailDelivery entities.
+func (c *EmailDeliveryClient) CreateBulk(builders ...*EmailDeliveryCreate) *EmailDeliveryCreateBulk {
+	return &EmailDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailDeliveryClient) MapCreateBulk(slice any, setFunc func(*EmailDeliveryCreate, int)) *EmailDeliveryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailDeliveryCreateBulk{err: fmt.Errorf("calling to EmailDeliveryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailDeliveryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailDelivery.
+func (c *EmailDeliveryClient) Update() *EmailDeliveryUpdate {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdate)
+	return &EmailDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailDeliveryClient) UpdateOne(_m *EmailDelivery) *EmailDeliveryUpdateOne {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdateOne, withEmailDelivery(_m))
+	return &EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailDeliveryClient) UpdateOneID(id uuid.UUID) *EmailDeliveryUpdateOne {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdateOne, withEmailDeliveryID(id))
+	return &EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailDelivery.
+func (c *EmailDeliveryClient) Delete() *EmailDeliveryDelete {
+	mutation := newEmailDeliveryMutation(c.config, OpDelete)
+	return &EmailDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailDeliveryClient) DeleteOne(_m *EmailDelivery) *EmailDeliveryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailDeliveryClient) DeleteOneID(id uuid.UUID) *EmailDeliveryDeleteOne {
+	builder := c.Delete().Where(emaildelivery.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailDeliveryDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailDelivery.
+func (c *EmailDeliveryClient) Query() *EmailDeliveryQuery {
+	return &EmailDeliveryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailDelivery},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailDelivery entity by its id.
+func (c *EmailDeliveryClient) Get(ctx context.Context, id uuid.UUID) (*EmailDelivery, error) {
+	return c.Query().Where(emaildelivery.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailDeliveryClient) GetX(ctx context.Context, id uuid.UUID) *EmailDelivery {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInvitation queries the invitation edge of a EmailDelivery.
+func (c *EmailDeliveryClient) QueryInvitation(_m *EmailDelivery) *InvitationQuery {
+	query := (&InvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emaildelivery.Table, emaildelivery.FieldID, id),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emaildelivery.InvitationTable, emaildelivery.InvitationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmailDeliveryClient) Hooks() []Hook {
+	return c.hooks.EmailDelivery
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailDeliveryClient) Interceptors() []Interceptor {
+	return c.inters.EmailDelivery
+}
+
+func (c *EmailDeliveryClient) mutate(ctx context.Context, m *EmailDeliveryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailDelivery mutation op: %q", m.Op())
+	}
+}
+
+// InvitationClient is a client for the Invitation schema.
+type InvitationClient struct {
+	config
+}
+
+// NewInvitationClient returns a client for the Invitation from the given config.
+func NewInvitationClient(c config) *InvitationClient {
+	return &InvitationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `invitation.Hooks(f(g(h())))`.
+func (c *InvitationClient) Use(hooks ...Hook) {
+	c.hooks.Invitation = append(c.hooks.Invitation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `invitation.Intercept(f(g(h())))`.
+func (c *InvitationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Invitation = append(c.inters.Invitation, interceptors...)
+}
+
+// Create returns a builder for creating a Invitation entity.
+func (c *InvitationClient) Create() *InvitationCreate {
+	mutation := newInvitationMutation(c.config, OpCreate)
+	return &InvitationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Invitation entities.
+func (c *InvitationClient) CreateBulk(builders ...*InvitationCreate) *InvitationCreateBulk {
+	return &InvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InvitationClient) MapCreateBulk(slice any, setFunc func(*InvitationCreate, int)) *InvitationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InvitationCreateBulk{err: fmt.Errorf("calling to InvitationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InvitationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Invitation.
+func (c *InvitationClient) Update() *InvitationUpdate {
+	mutation := newInvitationMutation(c.config, OpUpdate)
+	return &InvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InvitationClient) UpdateOne(_m *Invitation) *InvitationUpdateOne {
+	mutation := newInvitationMutation(c.config, OpUpdateOne, withInvitation(_m))
+	return &InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InvitationClient) UpdateOneID(id uuid.UUID) *InvitationUpdateOne {
+	mutation := newInvitationMutation(c.config, OpUpdateOne, withInvitationID(id))
+	return &InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Invitation.
+func (c *InvitationClient) Delete() *InvitationDelete {
+	mutation := newInvitationMutation(c.config, OpDelete)
+	return &InvitationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InvitationClient) DeleteOne(_m *Invitation) *InvitationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InvitationClient) DeleteOneID(id uuid.UUID) *InvitationDeleteOne {
+	builder := c.Delete().Where(invitation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InvitationDeleteOne{builder}
+}
+
+// Query returns a query builder for Invitation.
+func (c *InvitationClient) Query() *InvitationQuery {
+	return &InvitationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInvitation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Invitation entity by its id.
+func (c *InvitationClient) Get(ctx context.Context, id uuid.UUID) (*Invitation, error) {
+	return c.Query().Where(invitation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InvitationClient) GetX(ctx context.Context, id uuid.UUID) *Invitation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a Invitation.
+func (c *InvitationClient) QueryOrganization(_m *Invitation) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.OrganizationTable, invitation.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitedBy queries the invited_by edge of a Invitation.
+func (c *InvitationClient) QueryInvitedBy(_m *Invitation) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.InvitedByTable, invitation.InvitedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAcceptedBy queries the accepted_by edge of a Invitation.
+func (c *InvitationClient) QueryAcceptedBy(_m *Invitation) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.AcceptedByTable, invitation.AcceptedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDeliveries queries the deliveries edge of a Invitation.
+func (c *InvitationClient) QueryDeliveries(_m *Invitation) *EmailDeliveryQuery {
+	query := (&EmailDeliveryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(emaildelivery.Table, emaildelivery.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, invitation.DeliveriesTable, invitation.DeliveriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *InvitationClient) Hooks() []Hook {
+	return c.hooks.Invitation
+}
+
+// Interceptors returns the client interceptors.
+func (c *InvitationClient) Interceptors() []Interceptor {
+	return c.inters.Invitation
+}
+
+func (c *InvitationClient) mutate(ctx context.Context, m *InvitationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InvitationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InvitationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Invitation mutation op: %q", m.Op())
 	}
 }
 
@@ -1056,6 +1418,22 @@ func (c *OrganizationClient) QueryChannels(_m *Organization) *ChannelQuery {
 	return query
 }
 
+// QueryInvitations queries the invitations edge of a Organization.
+func (c *OrganizationClient) QueryInvitations(_m *Organization) *InvitationQuery {
+	query := (&InvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.InvitationsTable, organization.InvitationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *OrganizationClient) Hooks() []Hook {
 	return c.hooks.Organization
@@ -1386,6 +1764,38 @@ func (c *UserClient) QueryMessages(_m *User) *MessageQuery {
 	return query
 }
 
+// QueryInvitationsSent queries the invitations_sent edge of a User.
+func (c *UserClient) QueryInvitationsSent(_m *User) *InvitationQuery {
+	query := (&InvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.InvitationsSentTable, user.InvitationsSentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitationsAccepted queries the invitations_accepted edge of a User.
+func (c *UserClient) QueryInvitationsAccepted(_m *User) *InvitationQuery {
+	query := (&InvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.InvitationsAcceptedTable, user.InvitationsAcceptedColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -1414,11 +1824,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AuditEvent, Channel, Membership, Message, Organization, OutboxEvent,
-		User []ent.Hook
+		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
+		Organization, OutboxEvent, User []ent.Hook
 	}
 	inters struct {
-		AuditEvent, Channel, Membership, Message, Organization, OutboxEvent,
-		User []ent.Interceptor
+		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
+		Organization, OutboxEvent, User []ent.Interceptor
 	}
 )

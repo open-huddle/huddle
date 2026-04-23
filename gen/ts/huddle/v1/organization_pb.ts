@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/organization.proto.
  */
 export const file_huddle_v1_organization: GenFile = /*@__PURE__*/
-  fileDesc("ChxodWRkbGUvdjEvb3JnYW5pemF0aW9uLnByb3RvEglodWRkbGUudjEiZgoMT3JnYW5pemF0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEc2x1ZxgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKAAQoKTWVtYmVyc2hpcBIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgDIAEoCRIMCgRyb2xlGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIisKDUNyZWF0ZVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIMCgRzbHVnGAIgASgJIj8KDkNyZWF0ZVJlc3BvbnNlEi0KDG9yZ2FuaXphdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Pcmdhbml6YXRpb24iDQoLTGlzdFJlcXVlc3QiPgoMTGlzdFJlc3BvbnNlEi4KDW9yZ2FuaXphdGlvbnMYASADKAsyFy5odWRkbGUudjEuT3JnYW5pemF0aW9uIkoKEEFkZE1lbWJlclJlcXVlc3QSFwoPb3JnYW5pemF0aW9uX2lkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDAoEcm9sZRgDIAEoCSI+ChFBZGRNZW1iZXJSZXNwb25zZRIpCgptZW1iZXJzaGlwGAEgASgLMhUuaHVkZGxlLnYxLk1lbWJlcnNoaXAy2wEKE09yZ2FuaXphdGlvblNlcnZpY2USPwoGQ3JlYXRlEhguaHVkZGxlLnYxLkNyZWF0ZVJlcXVlc3QaGS5odWRkbGUudjEuQ3JlYXRlUmVzcG9uc2UiABI5CgRMaXN0EhYuaHVkZGxlLnYxLkxpc3RSZXF1ZXN0GhcuaHVkZGxlLnYxLkxpc3RSZXNwb25zZSIAEkgKCUFkZE1lbWJlchIbLmh1ZGRsZS52MS5BZGRNZW1iZXJSZXF1ZXN0GhwuaHVkZGxlLnYxLkFkZE1lbWJlclJlc3BvbnNlIgBCOVo3Z2l0aHViLmNvbS9vcGVuLWh1ZGRsZS9odWRkbGUvZ2VuL2dvL2h1ZGRsZS92MTtodWRkbGV2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChxodWRkbGUvdjEvb3JnYW5pemF0aW9uLnByb3RvEglodWRkbGUudjEiZgoMT3JnYW5pemF0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEc2x1ZxgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKAAQoKTWVtYmVyc2hpcBIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgDIAEoCRIMCgRyb2xlGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIisKDUNyZWF0ZVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIMCgRzbHVnGAIgASgJIj8KDkNyZWF0ZVJlc3BvbnNlEi0KDG9yZ2FuaXphdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Pcmdhbml6YXRpb24iDQoLTGlzdFJlcXVlc3QiPgoMTGlzdFJlc3BvbnNlEi4KDW9yZ2FuaXphdGlvbnMYASADKAsyFy5odWRkbGUudjEuT3JnYW5pemF0aW9uIkoKEEFkZE1lbWJlclJlcXVlc3QSFwoPb3JnYW5pemF0aW9uX2lkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDAoEcm9sZRgDIAEoCSI+ChFBZGRNZW1iZXJSZXNwb25zZRIpCgptZW1iZXJzaGlwGAEgASgLMhUuaHVkZGxlLnYxLk1lbWJlcnNoaXAiygEKCkludml0YXRpb24SCgoCaWQYASABKAkSFwoPb3JnYW5pemF0aW9uX2lkGAIgASgJEg0KBWVtYWlsGAMgASgJEgwKBHJvbGUYBCABKAkSGgoSaW52aXRlZF9ieV91c2VyX2lkGAUgASgJEi4KCmV4cGlyZXNfYXQYBiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCmNyZWF0ZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIksKE0ludml0ZU1lbWJlclJlcXVlc3QSFwoPb3JnYW5pemF0aW9uX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEgwKBHJvbGUYAyABKAkiQQoUSW52aXRlTWVtYmVyUmVzcG9uc2USKQoKaW52aXRhdGlvbhgBIAEoCzIVLmh1ZGRsZS52MS5JbnZpdGF0aW9uIigKF0FjY2VwdEludml0YXRpb25SZXF1ZXN0Eg0KBXRva2VuGAEgASgJIkUKGEFjY2VwdEludml0YXRpb25SZXNwb25zZRIpCgptZW1iZXJzaGlwGAEgASgLMhUuaHVkZGxlLnYxLk1lbWJlcnNoaXAyjQMKE09yZ2FuaXphdGlvblNlcnZpY2USPwoGQ3JlYXRlEhguaHVkZGxlLnYxLkNyZWF0ZVJlcXVlc3QaGS5odWRkbGUudjEuQ3JlYXRlUmVzcG9uc2UiABI5CgRMaXN0EhYuaHVkZGxlLnYxLkxpc3RSZXF1ZXN0GhcuaHVkZGxlLnYxLkxpc3RSZXNwb25zZSIAEkgKCUFkZE1lbWJlchIbLmh1ZGRsZS52MS5BZGRNZW1iZXJSZXF1ZXN0GhwuaHVkZGxlLnYxLkFkZE1lbWJlclJlc3BvbnNlIgASUQoMSW52aXRlTWVtYmVyEh4uaHVkZGxlLnYxLkludml0ZU1lbWJlclJlcXVlc3QaHy5odWRkbGUudjEuSW52aXRlTWVtYmVyUmVzcG9uc2UiABJdChBBY2NlcHRJbnZpdGF0aW9uEiIuaHVkZGxlLnYxLkFjY2VwdEludml0YXRpb25SZXF1ZXN0GiMuaHVkZGxlLnYxLkFjY2VwdEludml0YXRpb25SZXNwb25zZSIAQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Organization
@@ -201,6 +201,148 @@ export const AddMemberResponseSchema: GenMessage<AddMemberResponse> = /*@__PURE_
   messageDesc(file_huddle_v1_organization, 7);
 
 /**
+ * Invitation represents a pending email invite. The raw token is NEVER
+ * returned on the wire — it only appears in the email the mailer sends.
+ * Response objects on the API surface carry the invitation metadata so
+ * admins can confirm who was invited and when, not the secret itself.
+ *
+ * @generated from message huddle.v1.Invitation
+ */
+export type Invitation = Message<"huddle.v1.Invitation"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string organization_id = 2;
+   */
+  organizationId: string;
+
+  /**
+   * @generated from field: string email = 3;
+   */
+  email: string;
+
+  /**
+   * "owner" | "admin" | "member"
+   *
+   * @generated from field: string role = 4;
+   */
+  role: string;
+
+  /**
+   * @generated from field: string invited_by_user_id = 5;
+   */
+  invitedByUserId: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp expires_at = 6;
+   */
+  expiresAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 7;
+   */
+  createdAt?: Timestamp;
+};
+
+/**
+ * Describes the message huddle.v1.Invitation.
+ * Use `create(InvitationSchema)` to create a new message.
+ */
+export const InvitationSchema: GenMessage<Invitation> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_organization, 8);
+
+/**
+ * @generated from message huddle.v1.InviteMemberRequest
+ */
+export type InviteMemberRequest = Message<"huddle.v1.InviteMemberRequest"> & {
+  /**
+   * @generated from field: string organization_id = 1;
+   */
+  organizationId: string;
+
+  /**
+   * lowercased server-side; bounded to <= 320 chars (RFC 5321)
+   *
+   * @generated from field: string email = 2;
+   */
+  email: string;
+
+  /**
+   * same semantics as AddMember.role
+   *
+   * @generated from field: string role = 3;
+   */
+  role: string;
+};
+
+/**
+ * Describes the message huddle.v1.InviteMemberRequest.
+ * Use `create(InviteMemberRequestSchema)` to create a new message.
+ */
+export const InviteMemberRequestSchema: GenMessage<InviteMemberRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_organization, 9);
+
+/**
+ * @generated from message huddle.v1.InviteMemberResponse
+ */
+export type InviteMemberResponse = Message<"huddle.v1.InviteMemberResponse"> & {
+  /**
+   * @generated from field: huddle.v1.Invitation invitation = 1;
+   */
+  invitation?: Invitation;
+};
+
+/**
+ * Describes the message huddle.v1.InviteMemberResponse.
+ * Use `create(InviteMemberResponseSchema)` to create a new message.
+ */
+export const InviteMemberResponseSchema: GenMessage<InviteMemberResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_organization, 10);
+
+/**
+ * @generated from message huddle.v1.AcceptInvitationRequest
+ */
+export type AcceptInvitationRequest = Message<"huddle.v1.AcceptInvitationRequest"> & {
+  /**
+   * The token from the invite email. Base64url-encoded 32 random bytes.
+   * Opaque to clients — the server HMACs to look the row up.
+   *
+   * @generated from field: string token = 1;
+   */
+  token: string;
+};
+
+/**
+ * Describes the message huddle.v1.AcceptInvitationRequest.
+ * Use `create(AcceptInvitationRequestSchema)` to create a new message.
+ */
+export const AcceptInvitationRequestSchema: GenMessage<AcceptInvitationRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_organization, 11);
+
+/**
+ * @generated from message huddle.v1.AcceptInvitationResponse
+ */
+export type AcceptInvitationResponse = Message<"huddle.v1.AcceptInvitationResponse"> & {
+  /**
+   * The Membership row the acceptance created. Clients can use this to
+   * short-circuit to the new organization's dashboard.
+   *
+   * @generated from field: huddle.v1.Membership membership = 1;
+   */
+  membership?: Membership;
+};
+
+/**
+ * Describes the message huddle.v1.AcceptInvitationResponse.
+ * Use `create(AcceptInvitationResponseSchema)` to create a new message.
+ */
+export const AcceptInvitationResponseSchema: GenMessage<AcceptInvitationResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_organization, 12);
+
+/**
  * OrganizationService manages tenants and their memberships. Every RPC
  * requires authentication; resource-level authorization (RBAC over
  * Membership.role) is enforced inside each handler.
@@ -233,9 +375,9 @@ export const OrganizationService: GenService<{
    * Only owners and admins may call this. Owner role can only be granted by
    * an existing owner — admins are limited to admin / member.
    *
-   * This is a low-level primitive that takes a known user_id; the
-   * human-facing email-invite flow is intentionally not part of this RPC and
-   * will land separately when the invite subsystem is built.
+   * This is a low-level primitive that takes a known user_id. For the
+   * human-facing email-invite flow, use InviteMember + AcceptInvitation
+   * below.
    *
    * @generated from rpc huddle.v1.OrganizationService.AddMember
    */
@@ -243,6 +385,41 @@ export const OrganizationService: GenService<{
     methodKind: "unary";
     input: typeof AddMemberRequestSchema;
     output: typeof AddMemberResponseSchema;
+  },
+  /**
+   * InviteMember offers a user (identified by email) the chance to join an
+   * organization. The server mints a single-use token, stores its hash, and
+   * hands the plaintext to the in-process mailer. The invitee completes OIDC
+   * signup (Keycloak) and then calls AcceptInvitation with the token from
+   * their email.
+   *
+   * Authz is the same as AddMember — only owners and admins may invite, and
+   * admins cannot invite at owner role.
+   *
+   * Re-inviting the same email within the same organization replaces the
+   * pending invitation (new token, new expiry) rather than creating a
+   * second row. Once accepted, an invitation is terminal — re-inviting a
+   * member who already joined returns AlreadyExists.
+   *
+   * @generated from rpc huddle.v1.OrganizationService.InviteMember
+   */
+  inviteMember: {
+    methodKind: "unary";
+    input: typeof InviteMemberRequestSchema;
+    output: typeof InviteMemberResponseSchema;
+  },
+  /**
+   * AcceptInvitation consumes a token from an invite email and creates the
+   * corresponding Membership. The caller must be authenticated (their
+   * Keycloak signup must have completed) and the email on their claims
+   * must match the email the invitation was sent to.
+   *
+   * @generated from rpc huddle.v1.OrganizationService.AcceptInvitation
+   */
+  acceptInvitation: {
+    methodKind: "unary";
+    input: typeof AcceptInvitationRequestSchema;
+    output: typeof AcceptInvitationResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_organization, 0);

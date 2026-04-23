@@ -20,10 +20,31 @@ service OrganizationService {
   // Only owners and admins may call this. Owner role can only be granted by
   // an existing owner — admins are limited to admin / member.
   //
-  // This is a low-level primitive that takes a known user_id; the
-  // human-facing email-invite flow is intentionally not part of this RPC and
-  // will land separately when the invite subsystem is built.
+  // This is a low-level primitive that takes a known user_id. For the
+  // human-facing email-invite flow, use InviteMember + AcceptInvitation
+  // below.
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {}
+
+  // InviteMember offers a user (identified by email) the chance to join an
+  // organization. The server mints a single-use token, stores its hash, and
+  // hands the plaintext to the in-process mailer. The invitee completes OIDC
+  // signup (Keycloak) and then calls AcceptInvitation with the token from
+  // their email.
+  //
+  // Authz is the same as AddMember — only owners and admins may invite, and
+  // admins cannot invite at owner role.
+  //
+  // Re-inviting the same email within the same organization replaces the
+  // pending invitation (new token, new expiry) rather than creating a
+  // second row. Once accepted, an invitation is terminal — re-inviting a
+  // member who already joined returns AlreadyExists.
+  rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse) {}
+
+  // AcceptInvitation consumes a token from an invite email and creates the
+  // corresponding Membership. The caller must be authenticated (their
+  // Keycloak signup must have completed) and the email on their claims
+  // must match the email the invitation was sent to.
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (AcceptInvitationResponse) {}
 }
 
 message Organization {
@@ -60,5 +81,39 @@ message AddMemberRequest {
   string role = 3; // "admin" | "member" (admin callers); "owner" allowed only when caller is owner
 }
 message AddMemberResponse {
+  Membership membership = 1;
+}
+
+// Invitation represents a pending email invite. The raw token is NEVER
+// returned on the wire — it only appears in the email the mailer sends.
+// Response objects on the API surface carry the invitation metadata so
+// admins can confirm who was invited and when, not the secret itself.
+message Invitation {
+  string id = 1;
+  string organization_id = 2;
+  string email = 3;
+  string role = 4; // "owner" | "admin" | "member"
+  string invited_by_user_id = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message InviteMemberRequest {
+  string organization_id = 1;
+  string email = 2; // lowercased server-side; bounded to <= 320 chars (RFC 5321)
+  string role = 3;  // same semantics as AddMember.role
+}
+message InviteMemberResponse {
+  Invitation invitation = 1;
+}
+
+message AcceptInvitationRequest {
+  // The token from the invite email. Base64url-encoded 32 random bytes.
+  // Opaque to clients — the server HMACs to look the row up.
+  string token = 1;
+}
+message AcceptInvitationResponse {
+  // The Membership row the acceptance created. Clients can use this to
+  // short-circuit to the new organization's dashboard.
   Membership membership = 1;
 }

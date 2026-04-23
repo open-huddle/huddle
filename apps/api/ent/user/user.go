@@ -31,6 +31,10 @@ const (
 	EdgeCreatedChannels = "created_channels"
 	// EdgeMessages holds the string denoting the messages edge name in mutations.
 	EdgeMessages = "messages"
+	// EdgeInvitationsSent holds the string denoting the invitations_sent edge name in mutations.
+	EdgeInvitationsSent = "invitations_sent"
+	// EdgeInvitationsAccepted holds the string denoting the invitations_accepted edge name in mutations.
+	EdgeInvitationsAccepted = "invitations_accepted"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// MembershipsTable is the table that holds the memberships relation/edge.
@@ -54,6 +58,20 @@ const (
 	MessagesInverseTable = "messages"
 	// MessagesColumn is the table column denoting the messages relation/edge.
 	MessagesColumn = "author_id"
+	// InvitationsSentTable is the table that holds the invitations_sent relation/edge.
+	InvitationsSentTable = "invitations"
+	// InvitationsSentInverseTable is the table name for the Invitation entity.
+	// It exists in this package in order to avoid circular dependency with the "invitation" package.
+	InvitationsSentInverseTable = "invitations"
+	// InvitationsSentColumn is the table column denoting the invitations_sent relation/edge.
+	InvitationsSentColumn = "user_invitations_sent"
+	// InvitationsAcceptedTable is the table that holds the invitations_accepted relation/edge.
+	InvitationsAcceptedTable = "invitations"
+	// InvitationsAcceptedInverseTable is the table name for the Invitation entity.
+	// It exists in this package in order to avoid circular dependency with the "invitation" package.
+	InvitationsAcceptedInverseTable = "invitations"
+	// InvitationsAcceptedColumn is the table column denoting the invitations_accepted relation/edge.
+	InvitationsAcceptedColumn = "user_invitations_accepted"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -165,6 +183,34 @@ func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByInvitationsSentCount orders the results by invitations_sent count.
+func ByInvitationsSentCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newInvitationsSentStep(), opts...)
+	}
+}
+
+// ByInvitationsSent orders the results by invitations_sent terms.
+func ByInvitationsSent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newInvitationsSentStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByInvitationsAcceptedCount orders the results by invitations_accepted count.
+func ByInvitationsAcceptedCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newInvitationsAcceptedStep(), opts...)
+	}
+}
+
+// ByInvitationsAccepted orders the results by invitations_accepted terms.
+func ByInvitationsAccepted(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newInvitationsAcceptedStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -184,5 +230,19 @@ func newMessagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MessagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
+	)
+}
+func newInvitationsSentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InvitationsSentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, InvitationsSentTable, InvitationsSentColumn),
+	)
+}
+func newInvitationsAcceptedStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InvitationsAcceptedInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, InvitationsAcceptedTable, InvitationsAcceptedColumn),
 	)
 }

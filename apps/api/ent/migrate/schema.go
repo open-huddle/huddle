@@ -85,6 +85,85 @@ var (
 			},
 		},
 	}
+	// EmailDeliveriesColumns holds the columns for the "email_deliveries" table.
+	EmailDeliveriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"sent", "failed"}},
+		{Name: "failure_reason", Type: field.TypeString, Nullable: true},
+		{Name: "recipient", Type: field.TypeString},
+		{Name: "invitation_deliveries", Type: field.TypeUUID},
+	}
+	// EmailDeliveriesTable holds the schema information for the "email_deliveries" table.
+	EmailDeliveriesTable = &schema.Table{
+		Name:       "email_deliveries",
+		Columns:    EmailDeliveriesColumns,
+		PrimaryKey: []*schema.Column{EmailDeliveriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_deliveries_invitations_deliveries",
+				Columns:    []*schema.Column{EmailDeliveriesColumns[5]},
+				RefColumns: []*schema.Column{InvitationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "emaildelivery_created_at_invitation_deliveries",
+				Unique:  false,
+				Columns: []*schema.Column{EmailDeliveriesColumns[1], EmailDeliveriesColumns[5]},
+			},
+		},
+	}
+	// InvitationsColumns holds the columns for the "invitations" table.
+	InvitationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "email", Type: field.TypeString},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "admin", "member"}, Default: "member"},
+		{Name: "token_hash", Type: field.TypeBytes, Unique: true},
+		{Name: "token_plaintext", Type: field.TypeBytes, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "email_sent_at", Type: field.TypeTime, Nullable: true},
+		{Name: "accepted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "organization_invitations", Type: field.TypeUUID},
+		{Name: "user_invitations_sent", Type: field.TypeUUID},
+		{Name: "user_invitations_accepted", Type: field.TypeUUID, Nullable: true},
+	}
+	// InvitationsTable holds the schema information for the "invitations" table.
+	InvitationsTable = &schema.Table{
+		Name:       "invitations",
+		Columns:    InvitationsColumns,
+		PrimaryKey: []*schema.Column{InvitationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "invitations_organizations_invitations",
+				Columns:    []*schema.Column{InvitationsColumns[10]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "invitations_users_invitations_sent",
+				Columns:    []*schema.Column{InvitationsColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "invitations_users_invitations_accepted",
+				Columns:    []*schema.Column{InvitationsColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "invitation_email_organization_invitations",
+				Unique:  false,
+				Columns: []*schema.Column{InvitationsColumns[3], InvitationsColumns[10]},
+			},
+		},
+	}
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -236,6 +315,8 @@ var (
 	Tables = []*schema.Table{
 		AuditEventsTable,
 		ChannelsTable,
+		EmailDeliveriesTable,
+		InvitationsTable,
 		MembershipsTable,
 		MessagesTable,
 		OrganizationsTable,
@@ -248,6 +329,10 @@ func init() {
 	AuditEventsTable.ForeignKeys[0].RefTable = OutboxEventsTable
 	ChannelsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	ChannelsTable.ForeignKeys[1].RefTable = UsersTable
+	EmailDeliveriesTable.ForeignKeys[0].RefTable = InvitationsTable
+	InvitationsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	InvitationsTable.ForeignKeys[1].RefTable = UsersTable
+	InvitationsTable.ForeignKeys[2].RefTable = UsersTable
 	MembershipsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	MembershipsTable.ForeignKeys[1].RefTable = UsersTable
 	MessagesTable.ForeignKeys[0].RefTable = ChannelsTable

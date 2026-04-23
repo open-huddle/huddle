@@ -32,7 +32,7 @@ func newPostgresFixture(t *testing.T) *fixture {
 	client := testutil.NewPostgresClient(t)
 	resolver := principal.NewResolver(client)
 	engine := policy.NewRBAC(client)
-	svc := organization.New(client, resolver, engine, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	svc := organization.New(client, resolver, engine, testInviteConfig(), slog.New(slog.NewTextHandler(io.Discard, nil)))
 	return &fixture{ctx: context.Background(), client: client, svc: svc}
 }
 

@@ -17,7 +17,9 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/auth"
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
+	"github.com/open-huddle/huddle/apps/api/internal/email"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
+	"github.com/open-huddle/huddle/apps/api/internal/invitations"
 	"github.com/open-huddle/huddle/apps/api/internal/outbox"
 	"github.com/open-huddle/huddle/apps/api/internal/search"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
@@ -107,14 +109,35 @@ func run(logger *slog.Logger) error {
 	// option enables FOR UPDATE SKIP LOCKED so multiple API replicas drain
 	// disjoint rows from the outbox. SQLite-backed unit tests omit this
 	// option and exercise the unlocked path.
+	// Email sender: "log" prints to the API log (dev default), "smtp"
+	// dials the relay. SMTP construction fails fast on obvious misconfig
+	// so a bad relay URL surfaces at startup.
+	sender, err := buildEmailSender(cfg, logger)
+	if err != nil {
+		return fmt.Errorf("init email sender: %w", err)
+	}
+
 	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger, outbox.WithDialect(dialect.Postgres))
 	auditConsumer := audit.NewConsumer(db.Ent, logger)
 	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger, search.WithIndexerDialect(dialect.Postgres))
 	outboxGC := outbox.NewGC(db.Ent, logger, outbox.WithGCRetention(cfg.Outbox.Retention))
+	mailer := invitations.NewMailer(db.Ent, sender, logger,
+		cfg.Email.FromAddress, cfg.Email.FromName, cfg.Invites.LinkBaseURL,
+		invitations.WithDialect(dialect.Postgres),
+	)
 	go outboxPublisher.Run(ctx)
 	go auditConsumer.Run(ctx)
 	go searchIndexer.Run(ctx)
 	go outboxGC.Run(ctx)
+	go mailer.Run(ctx)
+
+	// Warn on the dev default for invites.secret — every real deployment
+	// MUST override HUDDLE_INVITES_SECRET. Forging a token with the known
+	// default would give anyone on the internet the ability to accept an
+	// invite they didn't receive.
+	if cfg.Invites.Secret == "" || cfg.Invites.Secret == "dev-only-invites-secret-change-in-prod" {
+		logger.Warn("invites.secret is using the dev-only default; set HUDDLE_INVITES_SECRET before running outside local development")
+	}
 
 	srv := server.New(cfg, logger, db, verifier, bus, searchClient)
 
@@ -147,4 +170,26 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("shutdown: %w", err)
 	}
 	return nil
+}
+
+// buildEmailSender picks the right concrete email.Sender for the
+// configured driver. Unknown / empty driver falls back to "log" so a
+// fresh `make dev-up` starts cleanly without SMTP config; production
+// must set driver=smtp alongside the relay credentials.
+func buildEmailSender(cfg *config.Config, logger *slog.Logger) (email.Sender, error) {
+	switch cfg.Email.Driver {
+	case "smtp":
+		return email.NewSMTPSender(email.SMTPConfig{
+			Host:     cfg.Email.SMTP.Host,
+			Port:     cfg.Email.SMTP.Port,
+			Username: cfg.Email.SMTP.Username,
+			Password: cfg.Email.SMTP.Password,
+			StartTLS: cfg.Email.SMTP.StartTLS,
+		})
+	case "log", "":
+		return email.NewLogSender(logger), nil
+	default:
+		logger.Warn("unknown email.driver; falling back to log", "driver", cfg.Email.Driver)
+		return email.NewLogSender(logger), nil
+	}
 }

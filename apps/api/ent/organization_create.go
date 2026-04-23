@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 )
@@ -108,6 +109,21 @@ func (_c *OrganizationCreate) AddChannels(v ...*Channel) *OrganizationCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddChannelIDs(ids...)
+}
+
+// AddInvitationIDs adds the "invitations" edge to the Invitation entity by IDs.
+func (_c *OrganizationCreate) AddInvitationIDs(ids ...uuid.UUID) *OrganizationCreate {
+	_c.mutation.AddInvitationIDs(ids...)
+	return _c
+}
+
+// AddInvitations adds the "invitations" edges to the Invitation entity.
+func (_c *OrganizationCreate) AddInvitations(v ...*Invitation) *OrganizationCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddInvitationIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -260,6 +276,22 @@ func (_c *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.InvitationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.InvitationsTable,
+			Columns: []string{organization.InvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(invitation.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -123,11 +123,14 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 		}
 	}()
 
+	// Poll ALL un-indexed rows, not just message.created. indexed_at is
+	// outbox.GC's "has the indexer finished with this row?" marker — if we
+	// only stamped message.created events, other event types (invitations,
+	// future notifications) would never satisfy the GC predicate and the
+	// outbox would grow unbounded. For non-message events the stamp is
+	// load-bearing without triggering an OpenSearch write.
 	q := tx.OutboxEvent.Query().
-		Where(
-			outboxevent.IndexedAtIsNil(),
-			outboxevent.EventTypeEQ(eventTypeMessageCreated),
-		).
+		Where(outboxevent.IndexedAtIsNil()).
 		Order(ent.Asc(outboxevent.FieldCreatedAt)).
 		Limit(i.batchSize)
 	if i.dialect == dialect.Postgres {
@@ -139,6 +142,16 @@ func (i *Indexer) IndexBatch(ctx context.Context) error {
 	}
 
 	for _, row := range rows {
+		if row.EventType != eventTypeMessageCreated {
+			// Other consumers handle these events. The indexer's job is
+			// just to mark them "evaluated" so outbox.GC can proceed.
+			if err := stampInTx(ctx, tx, row.ID); err != nil {
+				i.logger.Warn("search-indexer: stamp non-message",
+					"err", err, "outbox_id", row.ID, "event_type", row.EventType)
+			}
+			continue
+		}
+
 		doc, err := docFromOutbox(row)
 		if err != nil {
 			// Malformed payload is a bug, not a transient failure — stamp

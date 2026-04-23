@@ -16,6 +16,10 @@ type Tx struct {
 	AuditEvent *AuditEventClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// EmailDelivery is the client for interacting with the EmailDelivery builders.
+	EmailDelivery *EmailDeliveryClient
+	// Invitation is the client for interacting with the Invitation builders.
+	Invitation *InvitationClient
 	// Membership is the client for interacting with the Membership builders.
 	Membership *MembershipClient
 	// Message is the client for interacting with the Message builders.
@@ -159,6 +163,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.AuditEvent = NewAuditEventClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
+	tx.EmailDelivery = NewEmailDeliveryClient(tx.config)
+	tx.Invitation = NewInvitationClient(tx.config)
 	tx.Membership = NewMembershipClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)

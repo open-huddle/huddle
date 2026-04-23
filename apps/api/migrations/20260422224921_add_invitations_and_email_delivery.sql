@@ -1,0 +1,10 @@
+-- Create "invitations" table
+CREATE TABLE "invitations" ("id" uuid NOT NULL, "created_at" timestamptz NOT NULL, "updated_at" timestamptz NOT NULL, "email" character varying NOT NULL, "role" character varying NOT NULL DEFAULT 'member', "token_hash" bytea NOT NULL, "token_plaintext" bytea NULL, "expires_at" timestamptz NOT NULL, "email_sent_at" timestamptz NULL, "accepted_at" timestamptz NULL, "organization_invitations" uuid NOT NULL, "user_invitations_sent" uuid NOT NULL, "user_invitations_accepted" uuid NULL, PRIMARY KEY ("id"), CONSTRAINT "invitations_organizations_invitations" FOREIGN KEY ("organization_invitations") REFERENCES "organizations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT "invitations_users_invitations_accepted" FOREIGN KEY ("user_invitations_accepted") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL, CONSTRAINT "invitations_users_invitations_sent" FOREIGN KEY ("user_invitations_sent") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION);
+-- Create index "invitation_email_organization_invitations" to table: "invitations"
+CREATE INDEX "invitation_email_organization_invitations" ON "invitations" ("email", "organization_invitations");
+-- Create index "invitations_token_hash_key" to table: "invitations"
+CREATE UNIQUE INDEX "invitations_token_hash_key" ON "invitations" ("token_hash");
+-- Create "email_deliveries" table
+CREATE TABLE "email_deliveries" ("id" uuid NOT NULL, "created_at" timestamptz NOT NULL, "status" character varying NOT NULL, "failure_reason" character varying NULL, "recipient" character varying NOT NULL, "invitation_deliveries" uuid NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "email_deliveries_invitations_deliveries" FOREIGN KEY ("invitation_deliveries") REFERENCES "invitations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION);
+-- Create index "emaildelivery_created_at_invitation_deliveries" to table: "email_deliveries"
+CREATE INDEX "emaildelivery_created_at_invitation_deliveries" ON "email_deliveries" ("created_at", "invitation_deliveries");

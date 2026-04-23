@@ -446,6 +446,298 @@ func (x *AddMemberResponse) GetMembership() *Membership {
 	return nil
 }
 
+// Invitation represents a pending email invite. The raw token is NEVER
+// returned on the wire — it only appears in the email the mailer sends.
+// Response objects on the API surface carry the invitation metadata so
+// admins can confirm who was invited and when, not the secret itself.
+type Invitation struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	OrganizationId  string                 `protobuf:"bytes,2,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
+	Email           string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Role            string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"` // "owner" | "admin" | "member"
+	InvitedByUserId string                 `protobuf:"bytes,5,opt,name=invited_by_user_id,json=invitedByUserId,proto3" json:"invited_by_user_id,omitempty"`
+	ExpiresAt       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *Invitation) Reset() {
+	*x = Invitation{}
+	mi := &file_huddle_v1_organization_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Invitation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Invitation) ProtoMessage() {}
+
+func (x *Invitation) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_organization_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Invitation.ProtoReflect.Descriptor instead.
+func (*Invitation) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Invitation) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Invitation) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *Invitation) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *Invitation) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *Invitation) GetInvitedByUserId() string {
+	if x != nil {
+		return x.InvitedByUserId
+	}
+	return ""
+}
+
+func (x *Invitation) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *Invitation) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type InviteMemberRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	OrganizationId string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
+	Email          string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"` // lowercased server-side; bounded to <= 320 chars (RFC 5321)
+	Role           string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`   // same semantics as AddMember.role
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *InviteMemberRequest) Reset() {
+	*x = InviteMemberRequest{}
+	mi := &file_huddle_v1_organization_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InviteMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteMemberRequest) ProtoMessage() {}
+
+func (x *InviteMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_organization_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteMemberRequest.ProtoReflect.Descriptor instead.
+func (*InviteMemberRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *InviteMemberRequest) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *InviteMemberRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *InviteMemberRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+type InviteMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InviteMemberResponse) Reset() {
+	*x = InviteMemberResponse{}
+	mi := &file_huddle_v1_organization_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InviteMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteMemberResponse) ProtoMessage() {}
+
+func (x *InviteMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_organization_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteMemberResponse.ProtoReflect.Descriptor instead.
+func (*InviteMemberResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *InviteMemberResponse) GetInvitation() *Invitation {
+	if x != nil {
+		return x.Invitation
+	}
+	return nil
+}
+
+type AcceptInvitationRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The token from the invite email. Base64url-encoded 32 random bytes.
+	// Opaque to clients — the server HMACs to look the row up.
+	Token         string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationRequest) Reset() {
+	*x = AcceptInvitationRequest{}
+	mi := &file_huddle_v1_organization_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationRequest) ProtoMessage() {}
+
+func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_organization_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationRequest.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationRequest) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AcceptInvitationRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type AcceptInvitationResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The Membership row the acceptance created. Clients can use this to
+	// short-circuit to the new organization's dashboard.
+	Membership    *Membership `protobuf:"bytes,1,opt,name=membership,proto3" json:"membership,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationResponse) Reset() {
+	*x = AcceptInvitationResponse{}
+	mi := &file_huddle_v1_organization_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationResponse) ProtoMessage() {}
+
+func (x *AcceptInvitationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_huddle_v1_organization_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationResponse.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationResponse) Descriptor() ([]byte, []int) {
+	return file_huddle_v1_organization_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *AcceptInvitationResponse) GetMembership() *Membership {
+	if x != nil {
+		return x.Membership
+	}
+	return nil
+}
+
 var File_huddle_v1_organization_proto protoreflect.FileDescriptor
 
 const file_huddle_v1_organization_proto_rawDesc = "" +
@@ -480,11 +772,38 @@ const file_huddle_v1_organization_proto_rawDesc = "" +
 	"\x11AddMemberResponse\x125\n" +
 	"\n" +
 	"membership\x18\x01 \x01(\v2\x15.huddle.v1.MembershipR\n" +
-	"membership2\xdb\x01\n" +
+	"membership\"\x92\x02\n" +
+	"\n" +
+	"Invitation\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
+	"\x0forganization_id\x18\x02 \x01(\tR\x0eorganizationId\x12\x14\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\x12+\n" +
+	"\x12invited_by_user_id\x18\x05 \x01(\tR\x0finvitedByUserId\x129\n" +
+	"\n" +
+	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x129\n" +
+	"\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"h\n" +
+	"\x13InviteMemberRequest\x12'\n" +
+	"\x0forganization_id\x18\x01 \x01(\tR\x0eorganizationId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\"M\n" +
+	"\x14InviteMemberResponse\x125\n" +
+	"\n" +
+	"invitation\x18\x01 \x01(\v2\x15.huddle.v1.InvitationR\n" +
+	"invitation\"/\n" +
+	"\x17AcceptInvitationRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"Q\n" +
+	"\x18AcceptInvitationResponse\x125\n" +
+	"\n" +
+	"membership\x18\x01 \x01(\v2\x15.huddle.v1.MembershipR\n" +
+	"membership2\x8d\x03\n" +
 	"\x13OrganizationService\x12?\n" +
 	"\x06Create\x12\x18.huddle.v1.CreateRequest\x1a\x19.huddle.v1.CreateResponse\"\x00\x129\n" +
 	"\x04List\x12\x16.huddle.v1.ListRequest\x1a\x17.huddle.v1.ListResponse\"\x00\x12H\n" +
-	"\tAddMember\x12\x1b.huddle.v1.AddMemberRequest\x1a\x1c.huddle.v1.AddMemberResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
+	"\tAddMember\x12\x1b.huddle.v1.AddMemberRequest\x1a\x1c.huddle.v1.AddMemberResponse\"\x00\x12Q\n" +
+	"\fInviteMember\x12\x1e.huddle.v1.InviteMemberRequest\x1a\x1f.huddle.v1.InviteMemberResponse\"\x00\x12]\n" +
+	"\x10AcceptInvitation\x12\".huddle.v1.AcceptInvitationRequest\x1a#.huddle.v1.AcceptInvitationResponse\"\x00B9Z7github.com/open-huddle/huddle/gen/go/huddle/v1;huddlev1b\x06proto3"
 
 var (
 	file_huddle_v1_organization_proto_rawDescOnce sync.Once
@@ -498,35 +817,48 @@ func file_huddle_v1_organization_proto_rawDescGZIP() []byte {
 	return file_huddle_v1_organization_proto_rawDescData
 }
 
-var file_huddle_v1_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_huddle_v1_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_huddle_v1_organization_proto_goTypes = []any{
-	(*Organization)(nil),          // 0: huddle.v1.Organization
-	(*Membership)(nil),            // 1: huddle.v1.Membership
-	(*CreateRequest)(nil),         // 2: huddle.v1.CreateRequest
-	(*CreateResponse)(nil),        // 3: huddle.v1.CreateResponse
-	(*ListRequest)(nil),           // 4: huddle.v1.ListRequest
-	(*ListResponse)(nil),          // 5: huddle.v1.ListResponse
-	(*AddMemberRequest)(nil),      // 6: huddle.v1.AddMemberRequest
-	(*AddMemberResponse)(nil),     // 7: huddle.v1.AddMemberResponse
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*Organization)(nil),             // 0: huddle.v1.Organization
+	(*Membership)(nil),               // 1: huddle.v1.Membership
+	(*CreateRequest)(nil),            // 2: huddle.v1.CreateRequest
+	(*CreateResponse)(nil),           // 3: huddle.v1.CreateResponse
+	(*ListRequest)(nil),              // 4: huddle.v1.ListRequest
+	(*ListResponse)(nil),             // 5: huddle.v1.ListResponse
+	(*AddMemberRequest)(nil),         // 6: huddle.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),        // 7: huddle.v1.AddMemberResponse
+	(*Invitation)(nil),               // 8: huddle.v1.Invitation
+	(*InviteMemberRequest)(nil),      // 9: huddle.v1.InviteMemberRequest
+	(*InviteMemberResponse)(nil),     // 10: huddle.v1.InviteMemberResponse
+	(*AcceptInvitationRequest)(nil),  // 11: huddle.v1.AcceptInvitationRequest
+	(*AcceptInvitationResponse)(nil), // 12: huddle.v1.AcceptInvitationResponse
+	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
 }
 var file_huddle_v1_organization_proto_depIdxs = []int32{
-	8, // 0: huddle.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
-	8, // 1: huddle.v1.Membership.created_at:type_name -> google.protobuf.Timestamp
-	0, // 2: huddle.v1.CreateResponse.organization:type_name -> huddle.v1.Organization
-	0, // 3: huddle.v1.ListResponse.organizations:type_name -> huddle.v1.Organization
-	1, // 4: huddle.v1.AddMemberResponse.membership:type_name -> huddle.v1.Membership
-	2, // 5: huddle.v1.OrganizationService.Create:input_type -> huddle.v1.CreateRequest
-	4, // 6: huddle.v1.OrganizationService.List:input_type -> huddle.v1.ListRequest
-	6, // 7: huddle.v1.OrganizationService.AddMember:input_type -> huddle.v1.AddMemberRequest
-	3, // 8: huddle.v1.OrganizationService.Create:output_type -> huddle.v1.CreateResponse
-	5, // 9: huddle.v1.OrganizationService.List:output_type -> huddle.v1.ListResponse
-	7, // 10: huddle.v1.OrganizationService.AddMember:output_type -> huddle.v1.AddMemberResponse
-	8, // [8:11] is the sub-list for method output_type
-	5, // [5:8] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	13, // 0: huddle.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
+	13, // 1: huddle.v1.Membership.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: huddle.v1.CreateResponse.organization:type_name -> huddle.v1.Organization
+	0,  // 3: huddle.v1.ListResponse.organizations:type_name -> huddle.v1.Organization
+	1,  // 4: huddle.v1.AddMemberResponse.membership:type_name -> huddle.v1.Membership
+	13, // 5: huddle.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	13, // 6: huddle.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 7: huddle.v1.InviteMemberResponse.invitation:type_name -> huddle.v1.Invitation
+	1,  // 8: huddle.v1.AcceptInvitationResponse.membership:type_name -> huddle.v1.Membership
+	2,  // 9: huddle.v1.OrganizationService.Create:input_type -> huddle.v1.CreateRequest
+	4,  // 10: huddle.v1.OrganizationService.List:input_type -> huddle.v1.ListRequest
+	6,  // 11: huddle.v1.OrganizationService.AddMember:input_type -> huddle.v1.AddMemberRequest
+	9,  // 12: huddle.v1.OrganizationService.InviteMember:input_type -> huddle.v1.InviteMemberRequest
+	11, // 13: huddle.v1.OrganizationService.AcceptInvitation:input_type -> huddle.v1.AcceptInvitationRequest
+	3,  // 14: huddle.v1.OrganizationService.Create:output_type -> huddle.v1.CreateResponse
+	5,  // 15: huddle.v1.OrganizationService.List:output_type -> huddle.v1.ListResponse
+	7,  // 16: huddle.v1.OrganizationService.AddMember:output_type -> huddle.v1.AddMemberResponse
+	10, // 17: huddle.v1.OrganizationService.InviteMember:output_type -> huddle.v1.InviteMemberResponse
+	12, // 18: huddle.v1.OrganizationService.AcceptInvitation:output_type -> huddle.v1.AcceptInvitationResponse
+	14, // [14:19] is the sub-list for method output_type
+	9,  // [9:14] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_huddle_v1_organization_proto_init() }
@@ -540,7 +872,7 @@ func file_huddle_v1_organization_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_huddle_v1_organization_proto_rawDesc), len(file_huddle_v1_organization_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

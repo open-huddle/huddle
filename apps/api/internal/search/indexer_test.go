@@ -14,7 +14,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
-	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/internal/search"
 	"github.com/open-huddle/huddle/apps/api/internal/testutil"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
@@ -161,14 +160,18 @@ func TestIndexBatch_Idempotent(t *testing.T) {
 	}
 }
 
-func TestIndexBatch_SkipsNonMessageEvents(t *testing.T) {
+// Non-message outbox rows (channel.created, invitation.created, future
+// event types) must not cause an OpenSearch write — but they must have
+// indexed_at stamped so outbox.GC can eventually trim them. Without the
+// stamp, non-message rows would live in the outbox forever regardless of
+// their publish + audit state.
+func TestIndexBatch_StampsNonMessageEventsWithoutIndexing(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	client, fc, idx := newIndexer(t)
 
-	// A future channel.created row should be ignored by the indexer.
 	aggID := uuid.New()
-	if _, err := client.OutboxEvent.Create().
+	channelRow, err := client.OutboxEvent.Create().
 		SetAggregateType("channel").
 		SetAggregateID(aggID).
 		SetEventType("channel.created").
@@ -176,34 +179,43 @@ func TestIndexBatch_SkipsNonMessageEvents(t *testing.T) {
 		SetPayload([]byte("irrelevant")).
 		SetResourceType("channel").
 		SetResourceID(aggID).
-		Save(ctx); err != nil {
+		Save(ctx)
+	if err != nil {
 		t.Fatalf("seed channel outbox: %v", err)
 	}
 
-	seedMessageOutbox(ctx, t, client, "take me", time.Now())
+	msgRow := seedMessageOutbox(ctx, t, client, "take me", time.Now())
 
 	if err := idx.IndexBatch(ctx); err != nil {
 		t.Fatalf("IndexBatch: %v", err)
 	}
 
+	// Only the message.created row reaches the search backend.
 	calls := fc.snapshot()
 	if len(calls) != 1 {
 		t.Fatalf("want 1 IndexMessage call, got %d", len(calls))
 	}
-	if calls[0].doc.Body != "take me" {
-		t.Errorf("indexed the wrong row: body=%q", calls[0].doc.Body)
+	if calls[0].outboxID != msgRow.ID {
+		t.Errorf("indexed the wrong row: want %s got %s", msgRow.ID, calls[0].outboxID)
 	}
 
-	// The channel.created row stays un-indexed (indexed_at is nil) so a
-	// future indexer that cares about channels can pick it up.
-	unindexed, err := client.OutboxEvent.Query().
-		Where(outboxevent.IndexedAtIsNil()).
-		All(ctx)
+	// Both rows get their indexed_at stamped — the channel.created row
+	// because the indexer explicitly marks non-message events as
+	// "evaluated, nothing to do," the message row because IndexMessage
+	// succeeded.
+	reloadedChannel, err := client.OutboxEvent.Get(ctx, channelRow.ID)
 	if err != nil {
-		t.Fatalf("query un-indexed: %v", err)
+		t.Fatalf("reload channel row: %v", err)
 	}
-	if len(unindexed) != 1 || unindexed[0].EventType != "channel.created" {
-		t.Fatalf("want channel.created still un-indexed, got %+v", unindexed)
+	if reloadedChannel.IndexedAt == nil {
+		t.Errorf("channel.created row should have indexed_at stamped (so GC can trim)")
+	}
+	reloadedMsg, err := client.OutboxEvent.Get(ctx, msgRow.ID)
+	if err != nil {
+		t.Fatalf("reload message row: %v", err)
+	}
+	if reloadedMsg.IndexedAt == nil {
+		t.Errorf("message.created row should have indexed_at stamped")
 	}
 }
 

@@ -12,6 +12,12 @@ type AuditEvent func(*sql.Selector)
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
+// EmailDelivery is the predicate function for emaildelivery builders.
+type EmailDelivery func(*sql.Selector)
+
+// Invitation is the predicate function for invitation builders.
+type Invitation func(*sql.Selector)
+
 // Membership is the predicate function for membership builders.
 type Membership func(*sql.Selector)
 

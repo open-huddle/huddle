@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/open-huddle/huddle/apps/api/ent/auditevent"
 	"github.com/open-huddle/huddle/apps/api/ent/channel"
+	"github.com/open-huddle/huddle/apps/api/ent/emaildelivery"
+	"github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/ent/membership"
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
@@ -79,13 +81,15 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			auditevent.Table:   auditevent.ValidColumn,
-			channel.Table:      channel.ValidColumn,
-			membership.Table:   membership.ValidColumn,
-			message.Table:      message.ValidColumn,
-			organization.Table: organization.ValidColumn,
-			outboxevent.Table:  outboxevent.ValidColumn,
-			user.Table:         user.ValidColumn,
+			auditevent.Table:    auditevent.ValidColumn,
+			channel.Table:       channel.ValidColumn,
+			emaildelivery.Table: emaildelivery.ValidColumn,
+			invitation.Table:    invitation.ValidColumn,
+			membership.Table:    membership.ValidColumn,
+			message.Table:       message.ValidColumn,
+			organization.Table:  organization.ValidColumn,
+			outboxevent.Table:   outboxevent.ValidColumn,
+			user.Table:          user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)
