@@ -281,6 +281,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "kind", Type: field.TypeEnum, Enums: []string{"mention"}},
 		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "emailed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "message_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "organization_id", Type: field.TypeUUID},
@@ -294,25 +295,25 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "notifications_channels_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[5]},
+				Columns:    []*schema.Column{NotificationsColumns[6]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "notifications_messages_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[6]},
+				Columns:    []*schema.Column{NotificationsColumns[7]},
 				RefColumns: []*schema.Column{MessagesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "notifications_organizations_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[7]},
+				Columns:    []*schema.Column{NotificationsColumns[8]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "notifications_users_notifications",
-				Columns:    []*schema.Column{NotificationsColumns[8]},
+				Columns:    []*schema.Column{NotificationsColumns[9]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -321,17 +322,47 @@ var (
 			{
 				Name:    "notification_recipient_user_id_read_at_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[4], NotificationsColumns[1]},
+				Columns: []*schema.Column{NotificationsColumns[9], NotificationsColumns[4], NotificationsColumns[1]},
 			},
 			{
 				Name:    "notification_recipient_user_id_message_id_kind",
 				Unique:  true,
-				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[6], NotificationsColumns[3]},
+				Columns: []*schema.Column{NotificationsColumns[9], NotificationsColumns[7], NotificationsColumns[3]},
 			},
 			{
 				Name:    "notification_organization_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationsColumns[7], NotificationsColumns[1]},
+				Columns: []*schema.Column{NotificationsColumns[8], NotificationsColumns[1]},
+			},
+		},
+	}
+	// NotificationPreferencesColumns holds the columns for the "notification_preferences" table.
+	NotificationPreferencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"mention"}},
+		{Name: "email_enabled", Type: field.TypeBool, Default: true},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// NotificationPreferencesTable holds the schema information for the "notification_preferences" table.
+	NotificationPreferencesTable = &schema.Table{
+		Name:       "notification_preferences",
+		Columns:    NotificationPreferencesColumns,
+		PrimaryKey: []*schema.Column{NotificationPreferencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "notification_preferences_users_notification_preferences",
+				Columns:    []*schema.Column{NotificationPreferencesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notificationpreference_user_id_kind",
+				Unique:  true,
+				Columns: []*schema.Column{NotificationPreferencesColumns[5], NotificationPreferencesColumns[3]},
 			},
 		},
 	}
@@ -426,6 +457,7 @@ var (
 		MessagesTable,
 		MessageMentionsTable,
 		NotificationsTable,
+		NotificationPreferencesTable,
 		OrganizationsTable,
 		OutboxEventsTable,
 		UsersTable,
@@ -450,4 +482,5 @@ func init() {
 	NotificationsTable.ForeignKeys[1].RefTable = MessagesTable
 	NotificationsTable.ForeignKeys[2].RefTable = OrganizationsTable
 	NotificationsTable.ForeignKeys[3].RefTable = UsersTable
+	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
 }

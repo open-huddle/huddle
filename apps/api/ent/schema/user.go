@@ -50,5 +50,8 @@ func (User) Edges() []ent.Edge {
 		// Messages where this user has been @-mentioned. Powers the
 		// future "my mentions" UI.
 		edge.To("mentioned_in", MessageMention.Type),
+		// Per-kind notification preferences. Sparse: only rows that
+		// opt out of the default (email enabled).
+		edge.To("notification_preferences", NotificationPreference.Type),
 	}
 }

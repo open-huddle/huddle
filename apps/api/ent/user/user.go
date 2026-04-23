@@ -39,6 +39,8 @@ const (
 	EdgeNotifications = "notifications"
 	// EdgeMentionedIn holds the string denoting the mentioned_in edge name in mutations.
 	EdgeMentionedIn = "mentioned_in"
+	// EdgeNotificationPreferences holds the string denoting the notification_preferences edge name in mutations.
+	EdgeNotificationPreferences = "notification_preferences"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// MembershipsTable is the table that holds the memberships relation/edge.
@@ -90,6 +92,13 @@ const (
 	MentionedInInverseTable = "message_mentions"
 	// MentionedInColumn is the table column denoting the mentioned_in relation/edge.
 	MentionedInColumn = "user_id"
+	// NotificationPreferencesTable is the table that holds the notification_preferences relation/edge.
+	NotificationPreferencesTable = "notification_preferences"
+	// NotificationPreferencesInverseTable is the table name for the NotificationPreference entity.
+	// It exists in this package in order to avoid circular dependency with the "notificationpreference" package.
+	NotificationPreferencesInverseTable = "notification_preferences"
+	// NotificationPreferencesColumn is the table column denoting the notification_preferences relation/edge.
+	NotificationPreferencesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -257,6 +266,20 @@ func ByMentionedIn(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMentionedInStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByNotificationPreferencesCount orders the results by notification_preferences count.
+func ByNotificationPreferencesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotificationPreferencesStep(), opts...)
+	}
+}
+
+// ByNotificationPreferences orders the results by notification_preferences terms.
+func ByNotificationPreferences(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotificationPreferencesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -304,5 +327,12 @@ func newMentionedInStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MentionedInInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MentionedInTable, MentionedInColumn),
+	)
+}
+func newNotificationPreferencesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotificationPreferencesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NotificationPreferencesTable, NotificationPreferencesColumn),
 	)
 }

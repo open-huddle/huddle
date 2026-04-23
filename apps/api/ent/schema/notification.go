@@ -61,6 +61,11 @@ func (Notification) Fields() []ent.Field {
 		// NotificationService.MarkRead. NULL means unread — the default
 		// filter for List.
 		field.Time("read_at").Optional().Nillable(),
+
+		// Set when notifications.Mailer has dispatched the email. NULL
+		// means "still pending send" — the mailer's polling filter.
+		// Same pattern as Invitation.email_sent_at.
+		field.Time("emailed_at").Optional().Nillable(),
 	}
 }
 

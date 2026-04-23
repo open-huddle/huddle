@@ -38,6 +38,8 @@ type Notification struct {
 	OrganizationID uuid.UUID `json:"organization_id,omitempty"`
 	// ReadAt holds the value of the "read_at" field.
 	ReadAt *time.Time `json:"read_at,omitempty"`
+	// EmailedAt holds the value of the "emailed_at" field.
+	EmailedAt *time.Time `json:"emailed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the NotificationQuery when eager-loading is set.
 	Edges        NotificationEdges `json:"edges"`
@@ -112,7 +114,7 @@ func (*Notification) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case notification.FieldKind:
 			values[i] = new(sql.NullString)
-		case notification.FieldCreatedAt, notification.FieldUpdatedAt, notification.FieldReadAt:
+		case notification.FieldCreatedAt, notification.FieldUpdatedAt, notification.FieldReadAt, notification.FieldEmailedAt:
 			values[i] = new(sql.NullTime)
 		case notification.FieldID, notification.FieldRecipientUserID, notification.FieldOrganizationID:
 			values[i] = new(uuid.UUID)
@@ -187,6 +189,13 @@ func (_m *Notification) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ReadAt = new(time.Time)
 				*_m.ReadAt = value.Time
+			}
+		case notification.FieldEmailedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field emailed_at", values[i])
+			} else if value.Valid {
+				_m.EmailedAt = new(time.Time)
+				*_m.EmailedAt = value.Time
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -271,6 +280,11 @@ func (_m *Notification) String() string {
 	builder.WriteString(", ")
 	if v := _m.ReadAt; v != nil {
 		builder.WriteString("read_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.EmailedAt; v != nil {
+		builder.WriteString("emailed_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

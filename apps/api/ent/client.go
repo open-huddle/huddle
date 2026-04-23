@@ -24,6 +24,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
 	"github.com/open-huddle/huddle/apps/api/ent/notification"
+	"github.com/open-huddle/huddle/apps/api/ent/notificationpreference"
 	"github.com/open-huddle/huddle/apps/api/ent/organization"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
@@ -50,6 +51,8 @@ type Client struct {
 	MessageMention *MessageMentionClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// NotificationPreference is the client for interacting with the NotificationPreference builders.
+	NotificationPreference *NotificationPreferenceClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// OutboxEvent is the client for interacting with the OutboxEvent builders.
@@ -75,6 +78,7 @@ func (c *Client) init() {
 	c.Message = NewMessageClient(c.config)
 	c.MessageMention = NewMessageMentionClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
+	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
 	c.OutboxEvent = NewOutboxEventClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -168,19 +172,20 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		AuditEvent:     NewAuditEventClient(cfg),
-		Channel:        NewChannelClient(cfg),
-		EmailDelivery:  NewEmailDeliveryClient(cfg),
-		Invitation:     NewInvitationClient(cfg),
-		Membership:     NewMembershipClient(cfg),
-		Message:        NewMessageClient(cfg),
-		MessageMention: NewMessageMentionClient(cfg),
-		Notification:   NewNotificationClient(cfg),
-		Organization:   NewOrganizationClient(cfg),
-		OutboxEvent:    NewOutboxEventClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:                    ctx,
+		config:                 cfg,
+		AuditEvent:             NewAuditEventClient(cfg),
+		Channel:                NewChannelClient(cfg),
+		EmailDelivery:          NewEmailDeliveryClient(cfg),
+		Invitation:             NewInvitationClient(cfg),
+		Membership:             NewMembershipClient(cfg),
+		Message:                NewMessageClient(cfg),
+		MessageMention:         NewMessageMentionClient(cfg),
+		Notification:           NewNotificationClient(cfg),
+		NotificationPreference: NewNotificationPreferenceClient(cfg),
+		Organization:           NewOrganizationClient(cfg),
+		OutboxEvent:            NewOutboxEventClient(cfg),
+		User:                   NewUserClient(cfg),
 	}, nil
 }
 
@@ -198,19 +203,20 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		AuditEvent:     NewAuditEventClient(cfg),
-		Channel:        NewChannelClient(cfg),
-		EmailDelivery:  NewEmailDeliveryClient(cfg),
-		Invitation:     NewInvitationClient(cfg),
-		Membership:     NewMembershipClient(cfg),
-		Message:        NewMessageClient(cfg),
-		MessageMention: NewMessageMentionClient(cfg),
-		Notification:   NewNotificationClient(cfg),
-		Organization:   NewOrganizationClient(cfg),
-		OutboxEvent:    NewOutboxEventClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:                    ctx,
+		config:                 cfg,
+		AuditEvent:             NewAuditEventClient(cfg),
+		Channel:                NewChannelClient(cfg),
+		EmailDelivery:          NewEmailDeliveryClient(cfg),
+		Invitation:             NewInvitationClient(cfg),
+		Membership:             NewMembershipClient(cfg),
+		Message:                NewMessageClient(cfg),
+		MessageMention:         NewMessageMentionClient(cfg),
+		Notification:           NewNotificationClient(cfg),
+		NotificationPreference: NewNotificationPreferenceClient(cfg),
+		Organization:           NewOrganizationClient(cfg),
+		OutboxEvent:            NewOutboxEventClient(cfg),
+		User:                   NewUserClient(cfg),
 	}, nil
 }
 
@@ -241,7 +247,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
-		c.MessageMention, c.Notification, c.Organization, c.OutboxEvent, c.User,
+		c.MessageMention, c.Notification, c.NotificationPreference, c.Organization,
+		c.OutboxEvent, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -252,7 +259,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AuditEvent, c.Channel, c.EmailDelivery, c.Invitation, c.Membership, c.Message,
-		c.MessageMention, c.Notification, c.Organization, c.OutboxEvent, c.User,
+		c.MessageMention, c.Notification, c.NotificationPreference, c.Organization,
+		c.OutboxEvent, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -277,6 +285,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.MessageMention.mutate(ctx, m)
 	case *NotificationMutation:
 		return c.Notification.mutate(ctx, m)
+	case *NotificationPreferenceMutation:
+		return c.NotificationPreference.mutate(ctx, m)
 	case *OrganizationMutation:
 		return c.Organization.mutate(ctx, m)
 	case *OutboxEventMutation:
@@ -1704,6 +1714,155 @@ func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation
 	}
 }
 
+// NotificationPreferenceClient is a client for the NotificationPreference schema.
+type NotificationPreferenceClient struct {
+	config
+}
+
+// NewNotificationPreferenceClient returns a client for the NotificationPreference from the given config.
+func NewNotificationPreferenceClient(c config) *NotificationPreferenceClient {
+	return &NotificationPreferenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notificationpreference.Hooks(f(g(h())))`.
+func (c *NotificationPreferenceClient) Use(hooks ...Hook) {
+	c.hooks.NotificationPreference = append(c.hooks.NotificationPreference, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notificationpreference.Intercept(f(g(h())))`.
+func (c *NotificationPreferenceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NotificationPreference = append(c.inters.NotificationPreference, interceptors...)
+}
+
+// Create returns a builder for creating a NotificationPreference entity.
+func (c *NotificationPreferenceClient) Create() *NotificationPreferenceCreate {
+	mutation := newNotificationPreferenceMutation(c.config, OpCreate)
+	return &NotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NotificationPreference entities.
+func (c *NotificationPreferenceClient) CreateBulk(builders ...*NotificationPreferenceCreate) *NotificationPreferenceCreateBulk {
+	return &NotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationPreferenceClient) MapCreateBulk(slice any, setFunc func(*NotificationPreferenceCreate, int)) *NotificationPreferenceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationPreferenceCreateBulk{err: fmt.Errorf("calling to NotificationPreferenceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationPreferenceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Update() *NotificationPreferenceUpdate {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdate)
+	return &NotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationPreferenceClient) UpdateOne(_m *NotificationPreference) *NotificationPreferenceUpdateOne {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdateOne, withNotificationPreference(_m))
+	return &NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationPreferenceClient) UpdateOneID(id uuid.UUID) *NotificationPreferenceUpdateOne {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdateOne, withNotificationPreferenceID(id))
+	return &NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Delete() *NotificationPreferenceDelete {
+	mutation := newNotificationPreferenceMutation(c.config, OpDelete)
+	return &NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationPreferenceClient) DeleteOne(_m *NotificationPreference) *NotificationPreferenceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationPreferenceClient) DeleteOneID(id uuid.UUID) *NotificationPreferenceDeleteOne {
+	builder := c.Delete().Where(notificationpreference.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationPreferenceDeleteOne{builder}
+}
+
+// Query returns a query builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Query() *NotificationPreferenceQuery {
+	return &NotificationPreferenceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotificationPreference},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NotificationPreference entity by its id.
+func (c *NotificationPreferenceClient) Get(ctx context.Context, id uuid.UUID) (*NotificationPreference, error) {
+	return c.Query().Where(notificationpreference.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationPreferenceClient) GetX(ctx context.Context, id uuid.UUID) *NotificationPreference {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a NotificationPreference.
+func (c *NotificationPreferenceClient) QueryUser(_m *NotificationPreference) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notificationpreference.Table, notificationpreference.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notificationpreference.UserTable, notificationpreference.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationPreferenceClient) Hooks() []Hook {
+	return c.hooks.NotificationPreference
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationPreferenceClient) Interceptors() []Interceptor {
+	return c.inters.NotificationPreference
+}
+
+func (c *NotificationPreferenceClient) mutate(ctx context.Context, m *NotificationPreferenceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown NotificationPreference mutation op: %q", m.Op())
+	}
+}
+
 // OrganizationClient is a client for the Organization schema.
 type OrganizationClient struct {
 	config
@@ -2270,6 +2429,22 @@ func (c *UserClient) QueryMentionedIn(_m *User) *MessageMentionQuery {
 	return query
 }
 
+// QueryNotificationPreferences queries the notification_preferences edge of a User.
+func (c *UserClient) QueryNotificationPreferences(_m *User) *NotificationPreferenceQuery {
+	query := (&NotificationPreferenceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(notificationpreference.Table, notificationpreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.NotificationPreferencesTable, user.NotificationPreferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -2299,10 +2474,12 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
-		MessageMention, Notification, Organization, OutboxEvent, User []ent.Hook
+		MessageMention, Notification, NotificationPreference, Organization,
+		OutboxEvent, User []ent.Hook
 	}
 	inters struct {
 		AuditEvent, Channel, EmailDelivery, Invitation, Membership, Message,
-		MessageMention, Notification, Organization, OutboxEvent, User []ent.Interceptor
+		MessageMention, Notification, NotificationPreference, Organization,
+		OutboxEvent, User []ent.Interceptor
 	}
 )

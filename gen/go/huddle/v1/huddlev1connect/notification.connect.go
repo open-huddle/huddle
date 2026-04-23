@@ -39,6 +39,12 @@ const (
 	// NotificationServiceMarkReadProcedure is the fully-qualified name of the NotificationService's
 	// MarkRead RPC.
 	NotificationServiceMarkReadProcedure = "/huddle.v1.NotificationService/MarkRead"
+	// NotificationServiceGetPreferencesProcedure is the fully-qualified name of the
+	// NotificationService's GetPreferences RPC.
+	NotificationServiceGetPreferencesProcedure = "/huddle.v1.NotificationService/GetPreferences"
+	// NotificationServiceSetPreferenceProcedure is the fully-qualified name of the
+	// NotificationService's SetPreference RPC.
+	NotificationServiceSetPreferenceProcedure = "/huddle.v1.NotificationService/SetPreference"
 )
 
 // NotificationServiceClient is a client for the huddle.v1.NotificationService service.
@@ -52,6 +58,14 @@ type NotificationServiceClient interface {
 	// notification the caller doesn't own returns NotFound (not Forbidden,
 	// to avoid confirming the id exists).
 	MarkRead(context.Context, *connect.Request[v1.NotificationServiceMarkReadRequest]) (*connect.Response[v1.NotificationServiceMarkReadResponse], error)
+	// GetPreferences returns the caller's notification preferences with
+	// industry-standard opt-out defaults applied: a kind the caller has
+	// never touched comes back as email_enabled = true. Preferences are
+	// strictly the caller's own — no admin / cross-user surface.
+	GetPreferences(context.Context, *connect.Request[v1.NotificationServiceGetPreferencesRequest]) (*connect.Response[v1.NotificationServiceGetPreferencesResponse], error)
+	// SetPreference upserts the caller's preference for one kind.
+	// Idempotent: calling with the same value twice is a no-op.
+	SetPreference(context.Context, *connect.Request[v1.NotificationServiceSetPreferenceRequest]) (*connect.Response[v1.NotificationServiceSetPreferenceResponse], error)
 }
 
 // NewNotificationServiceClient constructs a client for the huddle.v1.NotificationService service.
@@ -77,13 +91,27 @@ func NewNotificationServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(notificationServiceMethods.ByName("MarkRead")),
 			connect.WithClientOptions(opts...),
 		),
+		getPreferences: connect.NewClient[v1.NotificationServiceGetPreferencesRequest, v1.NotificationServiceGetPreferencesResponse](
+			httpClient,
+			baseURL+NotificationServiceGetPreferencesProcedure,
+			connect.WithSchema(notificationServiceMethods.ByName("GetPreferences")),
+			connect.WithClientOptions(opts...),
+		),
+		setPreference: connect.NewClient[v1.NotificationServiceSetPreferenceRequest, v1.NotificationServiceSetPreferenceResponse](
+			httpClient,
+			baseURL+NotificationServiceSetPreferenceProcedure,
+			connect.WithSchema(notificationServiceMethods.ByName("SetPreference")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // notificationServiceClient implements NotificationServiceClient.
 type notificationServiceClient struct {
-	list     *connect.Client[v1.NotificationServiceListRequest, v1.NotificationServiceListResponse]
-	markRead *connect.Client[v1.NotificationServiceMarkReadRequest, v1.NotificationServiceMarkReadResponse]
+	list           *connect.Client[v1.NotificationServiceListRequest, v1.NotificationServiceListResponse]
+	markRead       *connect.Client[v1.NotificationServiceMarkReadRequest, v1.NotificationServiceMarkReadResponse]
+	getPreferences *connect.Client[v1.NotificationServiceGetPreferencesRequest, v1.NotificationServiceGetPreferencesResponse]
+	setPreference  *connect.Client[v1.NotificationServiceSetPreferenceRequest, v1.NotificationServiceSetPreferenceResponse]
 }
 
 // List calls huddle.v1.NotificationService.List.
@@ -94,6 +122,16 @@ func (c *notificationServiceClient) List(ctx context.Context, req *connect.Reque
 // MarkRead calls huddle.v1.NotificationService.MarkRead.
 func (c *notificationServiceClient) MarkRead(ctx context.Context, req *connect.Request[v1.NotificationServiceMarkReadRequest]) (*connect.Response[v1.NotificationServiceMarkReadResponse], error) {
 	return c.markRead.CallUnary(ctx, req)
+}
+
+// GetPreferences calls huddle.v1.NotificationService.GetPreferences.
+func (c *notificationServiceClient) GetPreferences(ctx context.Context, req *connect.Request[v1.NotificationServiceGetPreferencesRequest]) (*connect.Response[v1.NotificationServiceGetPreferencesResponse], error) {
+	return c.getPreferences.CallUnary(ctx, req)
+}
+
+// SetPreference calls huddle.v1.NotificationService.SetPreference.
+func (c *notificationServiceClient) SetPreference(ctx context.Context, req *connect.Request[v1.NotificationServiceSetPreferenceRequest]) (*connect.Response[v1.NotificationServiceSetPreferenceResponse], error) {
+	return c.setPreference.CallUnary(ctx, req)
 }
 
 // NotificationServiceHandler is an implementation of the huddle.v1.NotificationService service.
@@ -107,6 +145,14 @@ type NotificationServiceHandler interface {
 	// notification the caller doesn't own returns NotFound (not Forbidden,
 	// to avoid confirming the id exists).
 	MarkRead(context.Context, *connect.Request[v1.NotificationServiceMarkReadRequest]) (*connect.Response[v1.NotificationServiceMarkReadResponse], error)
+	// GetPreferences returns the caller's notification preferences with
+	// industry-standard opt-out defaults applied: a kind the caller has
+	// never touched comes back as email_enabled = true. Preferences are
+	// strictly the caller's own — no admin / cross-user surface.
+	GetPreferences(context.Context, *connect.Request[v1.NotificationServiceGetPreferencesRequest]) (*connect.Response[v1.NotificationServiceGetPreferencesResponse], error)
+	// SetPreference upserts the caller's preference for one kind.
+	// Idempotent: calling with the same value twice is a no-op.
+	SetPreference(context.Context, *connect.Request[v1.NotificationServiceSetPreferenceRequest]) (*connect.Response[v1.NotificationServiceSetPreferenceResponse], error)
 }
 
 // NewNotificationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -128,12 +174,28 @@ func NewNotificationServiceHandler(svc NotificationServiceHandler, opts ...conne
 		connect.WithSchema(notificationServiceMethods.ByName("MarkRead")),
 		connect.WithHandlerOptions(opts...),
 	)
+	notificationServiceGetPreferencesHandler := connect.NewUnaryHandler(
+		NotificationServiceGetPreferencesProcedure,
+		svc.GetPreferences,
+		connect.WithSchema(notificationServiceMethods.ByName("GetPreferences")),
+		connect.WithHandlerOptions(opts...),
+	)
+	notificationServiceSetPreferenceHandler := connect.NewUnaryHandler(
+		NotificationServiceSetPreferenceProcedure,
+		svc.SetPreference,
+		connect.WithSchema(notificationServiceMethods.ByName("SetPreference")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/huddle.v1.NotificationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case NotificationServiceListProcedure:
 			notificationServiceListHandler.ServeHTTP(w, r)
 		case NotificationServiceMarkReadProcedure:
 			notificationServiceMarkReadHandler.ServeHTTP(w, r)
+		case NotificationServiceGetPreferencesProcedure:
+			notificationServiceGetPreferencesHandler.ServeHTTP(w, r)
+		case NotificationServiceSetPreferenceProcedure:
+			notificationServiceSetPreferenceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -149,4 +211,12 @@ func (UnimplementedNotificationServiceHandler) List(context.Context, *connect.Re
 
 func (UnimplementedNotificationServiceHandler) MarkRead(context.Context, *connect.Request[v1.NotificationServiceMarkReadRequest]) (*connect.Response[v1.NotificationServiceMarkReadResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.NotificationService.MarkRead is not implemented"))
+}
+
+func (UnimplementedNotificationServiceHandler) GetPreferences(context.Context, *connect.Request[v1.NotificationServiceGetPreferencesRequest]) (*connect.Response[v1.NotificationServiceGetPreferencesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.NotificationService.GetPreferences is not implemented"))
+}
+
+func (UnimplementedNotificationServiceHandler) SetPreference(context.Context, *connect.Request[v1.NotificationServiceSetPreferenceRequest]) (*connect.Response[v1.NotificationServiceSetPreferenceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("huddle.v1.NotificationService.SetPreference is not implemented"))
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/ent/message"
 	"github.com/open-huddle/huddle/apps/api/ent/messagemention"
 	"github.com/open-huddle/huddle/apps/api/ent/notification"
+	"github.com/open-huddle/huddle/apps/api/ent/notificationpreference"
 	"github.com/open-huddle/huddle/apps/api/ent/user"
 )
 
@@ -201,6 +202,21 @@ func (_c *UserCreate) AddMentionedIn(v ...*MessageMention) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMentionedInIDs(ids...)
+}
+
+// AddNotificationPreferenceIDs adds the "notification_preferences" edge to the NotificationPreference entity by IDs.
+func (_c *UserCreate) AddNotificationPreferenceIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddNotificationPreferenceIDs(ids...)
+	return _c
+}
+
+// AddNotificationPreferences adds the "notification_preferences" edges to the NotificationPreference entity.
+func (_c *UserCreate) AddNotificationPreferences(v ...*NotificationPreference) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddNotificationPreferenceIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -437,6 +453,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(messagemention.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.NotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.NotificationPreferencesTable,
+			Columns: []string{user.NotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

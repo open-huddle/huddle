@@ -91,6 +91,11 @@ func ReadAt(v time.Time) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldReadAt, v))
 }
 
+// EmailedAt applies equality check predicate on the "emailed_at" field. It's identical to EmailedAtEQ.
+func EmailedAt(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldEmailedAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldCreatedAt, v))
@@ -339,6 +344,56 @@ func ReadAtIsNil() predicate.Notification {
 // ReadAtNotNil applies the NotNil predicate on the "read_at" field.
 func ReadAtNotNil() predicate.Notification {
 	return predicate.Notification(sql.FieldNotNull(FieldReadAt))
+}
+
+// EmailedAtEQ applies the EQ predicate on the "emailed_at" field.
+func EmailedAtEQ(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldEmailedAt, v))
+}
+
+// EmailedAtNEQ applies the NEQ predicate on the "emailed_at" field.
+func EmailedAtNEQ(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldNEQ(FieldEmailedAt, v))
+}
+
+// EmailedAtIn applies the In predicate on the "emailed_at" field.
+func EmailedAtIn(vs ...time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldIn(FieldEmailedAt, vs...))
+}
+
+// EmailedAtNotIn applies the NotIn predicate on the "emailed_at" field.
+func EmailedAtNotIn(vs ...time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldNotIn(FieldEmailedAt, vs...))
+}
+
+// EmailedAtGT applies the GT predicate on the "emailed_at" field.
+func EmailedAtGT(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldGT(FieldEmailedAt, v))
+}
+
+// EmailedAtGTE applies the GTE predicate on the "emailed_at" field.
+func EmailedAtGTE(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldGTE(FieldEmailedAt, v))
+}
+
+// EmailedAtLT applies the LT predicate on the "emailed_at" field.
+func EmailedAtLT(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldLT(FieldEmailedAt, v))
+}
+
+// EmailedAtLTE applies the LTE predicate on the "emailed_at" field.
+func EmailedAtLTE(v time.Time) predicate.Notification {
+	return predicate.Notification(sql.FieldLTE(FieldEmailedAt, v))
+}
+
+// EmailedAtIsNil applies the IsNil predicate on the "emailed_at" field.
+func EmailedAtIsNil() predicate.Notification {
+	return predicate.Notification(sql.FieldIsNull(FieldEmailedAt))
+}
+
+// EmailedAtNotNil applies the NotNil predicate on the "emailed_at" field.
+func EmailedAtNotNil() predicate.Notification {
+	return predicate.Notification(sql.FieldNotNull(FieldEmailedAt))
 }
 
 // HasRecipient applies the HasEdge predicate on the "recipient" edge.

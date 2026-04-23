@@ -116,6 +116,20 @@ func (_c *NotificationCreate) SetNillableReadAt(v *time.Time) *NotificationCreat
 	return _c
 }
 
+// SetEmailedAt sets the "emailed_at" field.
+func (_c *NotificationCreate) SetEmailedAt(v time.Time) *NotificationCreate {
+	_c.mutation.SetEmailedAt(v)
+	return _c
+}
+
+// SetNillableEmailedAt sets the "emailed_at" field if the given value is not nil.
+func (_c *NotificationCreate) SetNillableEmailedAt(v *time.Time) *NotificationCreate {
+	if v != nil {
+		_c.SetEmailedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *NotificationCreate) SetID(v uuid.UUID) *NotificationCreate {
 	_c.mutation.SetID(v)
@@ -285,6 +299,10 @@ func (_c *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		_spec.SetField(notification.FieldReadAt, field.TypeTime, value)
 		_node.ReadAt = &value
 	}
+	if value, ok := _c.mutation.EmailedAt(); ok {
+		_spec.SetField(notification.FieldEmailedAt, field.TypeTime, value)
+		_node.EmailedAt = &value
+	}
 	if nodes := _c.mutation.RecipientIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -435,6 +453,24 @@ func (u *NotificationUpsert) ClearReadAt() *NotificationUpsert {
 	return u
 }
 
+// SetEmailedAt sets the "emailed_at" field.
+func (u *NotificationUpsert) SetEmailedAt(v time.Time) *NotificationUpsert {
+	u.Set(notification.FieldEmailedAt, v)
+	return u
+}
+
+// UpdateEmailedAt sets the "emailed_at" field to the value that was provided on create.
+func (u *NotificationUpsert) UpdateEmailedAt() *NotificationUpsert {
+	u.SetExcluded(notification.FieldEmailedAt)
+	return u
+}
+
+// ClearEmailedAt clears the value of the "emailed_at" field.
+func (u *NotificationUpsert) ClearEmailedAt() *NotificationUpsert {
+	u.SetNull(notification.FieldEmailedAt)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -533,6 +569,27 @@ func (u *NotificationUpsertOne) UpdateReadAt() *NotificationUpsertOne {
 func (u *NotificationUpsertOne) ClearReadAt() *NotificationUpsertOne {
 	return u.Update(func(s *NotificationUpsert) {
 		s.ClearReadAt()
+	})
+}
+
+// SetEmailedAt sets the "emailed_at" field.
+func (u *NotificationUpsertOne) SetEmailedAt(v time.Time) *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetEmailedAt(v)
+	})
+}
+
+// UpdateEmailedAt sets the "emailed_at" field to the value that was provided on create.
+func (u *NotificationUpsertOne) UpdateEmailedAt() *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateEmailedAt()
+	})
+}
+
+// ClearEmailedAt clears the value of the "emailed_at" field.
+func (u *NotificationUpsertOne) ClearEmailedAt() *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.ClearEmailedAt()
 	})
 }
 
@@ -801,6 +858,27 @@ func (u *NotificationUpsertBulk) UpdateReadAt() *NotificationUpsertBulk {
 func (u *NotificationUpsertBulk) ClearReadAt() *NotificationUpsertBulk {
 	return u.Update(func(s *NotificationUpsert) {
 		s.ClearReadAt()
+	})
+}
+
+// SetEmailedAt sets the "emailed_at" field.
+func (u *NotificationUpsertBulk) SetEmailedAt(v time.Time) *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetEmailedAt(v)
+	})
+}
+
+// UpdateEmailedAt sets the "emailed_at" field to the value that was provided on create.
+func (u *NotificationUpsertBulk) UpdateEmailedAt() *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateEmailedAt()
+	})
+}
+
+// ClearEmailedAt clears the value of the "emailed_at" field.
+func (u *NotificationUpsertBulk) ClearEmailedAt() *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.ClearEmailedAt()
 	})
 }
 

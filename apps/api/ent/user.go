@@ -50,9 +50,11 @@ type UserEdges struct {
 	Notifications []*Notification `json:"notifications,omitempty"`
 	// MentionedIn holds the value of the mentioned_in edge.
 	MentionedIn []*MessageMention `json:"mentioned_in,omitempty"`
+	// NotificationPreferences holds the value of the notification_preferences edge.
+	NotificationPreferences []*NotificationPreference `json:"notification_preferences,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -116,6 +118,15 @@ func (e UserEdges) MentionedInOrErr() ([]*MessageMention, error) {
 		return e.MentionedIn, nil
 	}
 	return nil, &NotLoadedError{edge: "mentioned_in"}
+}
+
+// NotificationPreferencesOrErr returns the NotificationPreferences value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, error) {
+	if e.loadedTypes[7] {
+		return e.NotificationPreferences, nil
+	}
+	return nil, &NotLoadedError{edge: "notification_preferences"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -226,6 +237,11 @@ func (_m *User) QueryNotifications() *NotificationQuery {
 // QueryMentionedIn queries the "mentioned_in" edge of the User entity.
 func (_m *User) QueryMentionedIn() *MessageMentionQuery {
 	return NewUserClient(_m.config).QueryMentionedIn(_m)
+}
+
+// QueryNotificationPreferences queries the "notification_preferences" edge of the User entity.
+func (_m *User) QueryNotificationPreferences() *NotificationPreferenceQuery {
+	return NewUserClient(_m.config).QueryNotificationPreferences(_m)
 }
 
 // Update returns a builder for updating this User.

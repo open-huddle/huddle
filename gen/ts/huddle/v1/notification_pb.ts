@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file huddle/v1/notification.proto.
  */
 export const file_huddle_v1_notification: GenFile = /*@__PURE__*/
-  fileDesc("ChxodWRkbGUvdjEvbm90aWZpY2F0aW9uLnByb3RvEglodWRkbGUudjEi4QEKDE5vdGlmaWNhdGlvbhIKCgJpZBgBIAEoCRIZChFyZWNpcGllbnRfdXNlcl9pZBgCIAEoCRIMCgRraW5kGAMgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgEIAEoCRISCgptZXNzYWdlX2lkGAUgASgJEhIKCmNoYW5uZWxfaWQYBiABKAkSLgoKY3JlYXRlZF9hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASKwoHcmVhZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiVQoeTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXF1ZXN0EhQKDGluY2x1ZGVfcmVhZBgBIAEoCBIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiZgofTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXNwb25zZRIuCg1ub3RpZmljYXRpb25zGAEgAygLMhcuaHVkZGxlLnYxLk5vdGlmaWNhdGlvbhITCgtuZXh0X2N1cnNvchgCIAEoCSIwCiJOb3RpZmljYXRpb25TZXJ2aWNlTWFya1JlYWRSZXF1ZXN0EgoKAmlkGAEgASgJIlQKI05vdGlmaWNhdGlvblNlcnZpY2VNYXJrUmVhZFJlc3BvbnNlEi0KDG5vdGlmaWNhdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Ob3RpZmljYXRpb24y4wEKE05vdGlmaWNhdGlvblNlcnZpY2USXwoETGlzdBIpLmh1ZGRsZS52MS5Ob3RpZmljYXRpb25TZXJ2aWNlTGlzdFJlcXVlc3QaKi5odWRkbGUudjEuTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXNwb25zZSIAEmsKCE1hcmtSZWFkEi0uaHVkZGxlLnYxLk5vdGlmaWNhdGlvblNlcnZpY2VNYXJrUmVhZFJlcXVlc3QaLi5odWRkbGUudjEuTm90aWZpY2F0aW9uU2VydmljZU1hcmtSZWFkUmVzcG9uc2UiAEI5WjdnaXRodWIuY29tL29wZW4taHVkZGxlL2h1ZGRsZS9nZW4vZ28vaHVkZGxlL3YxO2h1ZGRsZXYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("ChxodWRkbGUvdjEvbm90aWZpY2F0aW9uLnByb3RvEglodWRkbGUudjEi4QEKDE5vdGlmaWNhdGlvbhIKCgJpZBgBIAEoCRIZChFyZWNpcGllbnRfdXNlcl9pZBgCIAEoCRIMCgRraW5kGAMgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgEIAEoCRISCgptZXNzYWdlX2lkGAUgASgJEhIKCmNoYW5uZWxfaWQYBiABKAkSLgoKY3JlYXRlZF9hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASKwoHcmVhZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiVQoeTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXF1ZXN0EhQKDGluY2x1ZGVfcmVhZBgBIAEoCBIOCgZiZWZvcmUYAiABKAkSDQoFbGltaXQYAyABKAUiZgofTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXNwb25zZRIuCg1ub3RpZmljYXRpb25zGAEgAygLMhcuaHVkZGxlLnYxLk5vdGlmaWNhdGlvbhITCgtuZXh0X2N1cnNvchgCIAEoCSIwCiJOb3RpZmljYXRpb25TZXJ2aWNlTWFya1JlYWRSZXF1ZXN0EgoKAmlkGAEgASgJIlQKI05vdGlmaWNhdGlvblNlcnZpY2VNYXJrUmVhZFJlc3BvbnNlEi0KDG5vdGlmaWNhdGlvbhgBIAEoCzIXLmh1ZGRsZS52MS5Ob3RpZmljYXRpb24iPQoWTm90aWZpY2F0aW9uUHJlZmVyZW5jZRIMCgRraW5kGAEgASgJEhUKDWVtYWlsX2VuYWJsZWQYAiABKAgiKgooTm90aWZpY2F0aW9uU2VydmljZUdldFByZWZlcmVuY2VzUmVxdWVzdCJjCilOb3RpZmljYXRpb25TZXJ2aWNlR2V0UHJlZmVyZW5jZXNSZXNwb25zZRI2CgtwcmVmZXJlbmNlcxgBIAMoCzIhLmh1ZGRsZS52MS5Ob3RpZmljYXRpb25QcmVmZXJlbmNlIk4KJ05vdGlmaWNhdGlvblNlcnZpY2VTZXRQcmVmZXJlbmNlUmVxdWVzdBIMCgRraW5kGAEgASgJEhUKDWVtYWlsX2VuYWJsZWQYAiABKAgiYQooTm90aWZpY2F0aW9uU2VydmljZVNldFByZWZlcmVuY2VSZXNwb25zZRI1CgpwcmVmZXJlbmNlGAEgASgLMiEuaHVkZGxlLnYxLk5vdGlmaWNhdGlvblByZWZlcmVuY2Uy3gMKE05vdGlmaWNhdGlvblNlcnZpY2USXwoETGlzdBIpLmh1ZGRsZS52MS5Ob3RpZmljYXRpb25TZXJ2aWNlTGlzdFJlcXVlc3QaKi5odWRkbGUudjEuTm90aWZpY2F0aW9uU2VydmljZUxpc3RSZXNwb25zZSIAEmsKCE1hcmtSZWFkEi0uaHVkZGxlLnYxLk5vdGlmaWNhdGlvblNlcnZpY2VNYXJrUmVhZFJlcXVlc3QaLi5odWRkbGUudjEuTm90aWZpY2F0aW9uU2VydmljZU1hcmtSZWFkUmVzcG9uc2UiABJ9Cg5HZXRQcmVmZXJlbmNlcxIzLmh1ZGRsZS52MS5Ob3RpZmljYXRpb25TZXJ2aWNlR2V0UHJlZmVyZW5jZXNSZXF1ZXN0GjQuaHVkZGxlLnYxLk5vdGlmaWNhdGlvblNlcnZpY2VHZXRQcmVmZXJlbmNlc1Jlc3BvbnNlIgASegoNU2V0UHJlZmVyZW5jZRIyLmh1ZGRsZS52MS5Ob3RpZmljYXRpb25TZXJ2aWNlU2V0UHJlZmVyZW5jZVJlcXVlc3QaMy5odWRkbGUudjEuTm90aWZpY2F0aW9uU2VydmljZVNldFByZWZlcmVuY2VSZXNwb25zZSIAQjlaN2dpdGh1Yi5jb20vb3Blbi1odWRkbGUvaHVkZGxlL2dlbi9nby9odWRkbGUvdjE7aHVkZGxldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message huddle.v1.Notification
@@ -170,6 +170,102 @@ export const NotificationServiceMarkReadResponseSchema: GenMessage<NotificationS
   messageDesc(file_huddle_v1_notification, 4);
 
 /**
+ * @generated from message huddle.v1.NotificationPreference
+ */
+export type NotificationPreference = Message<"huddle.v1.NotificationPreference"> & {
+  /**
+   * "mention" for MVP — aligned with Notification.kind.
+   *
+   * @generated from field: string kind = 1;
+   */
+  kind: string;
+
+  /**
+   * @generated from field: bool email_enabled = 2;
+   */
+  emailEnabled: boolean;
+};
+
+/**
+ * Describes the message huddle.v1.NotificationPreference.
+ * Use `create(NotificationPreferenceSchema)` to create a new message.
+ */
+export const NotificationPreferenceSchema: GenMessage<NotificationPreference> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_notification, 5);
+
+/**
+ * @generated from message huddle.v1.NotificationServiceGetPreferencesRequest
+ */
+export type NotificationServiceGetPreferencesRequest = Message<"huddle.v1.NotificationServiceGetPreferencesRequest"> & {
+};
+
+/**
+ * Describes the message huddle.v1.NotificationServiceGetPreferencesRequest.
+ * Use `create(NotificationServiceGetPreferencesRequestSchema)` to create a new message.
+ */
+export const NotificationServiceGetPreferencesRequestSchema: GenMessage<NotificationServiceGetPreferencesRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_notification, 6);
+
+/**
+ * @generated from message huddle.v1.NotificationServiceGetPreferencesResponse
+ */
+export type NotificationServiceGetPreferencesResponse = Message<"huddle.v1.NotificationServiceGetPreferencesResponse"> & {
+  /**
+   * One entry per kind the server knows about. Kinds the caller hasn't
+   * explicitly set come back with the default (email_enabled = true).
+   *
+   * @generated from field: repeated huddle.v1.NotificationPreference preferences = 1;
+   */
+  preferences: NotificationPreference[];
+};
+
+/**
+ * Describes the message huddle.v1.NotificationServiceGetPreferencesResponse.
+ * Use `create(NotificationServiceGetPreferencesResponseSchema)` to create a new message.
+ */
+export const NotificationServiceGetPreferencesResponseSchema: GenMessage<NotificationServiceGetPreferencesResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_notification, 7);
+
+/**
+ * @generated from message huddle.v1.NotificationServiceSetPreferenceRequest
+ */
+export type NotificationServiceSetPreferenceRequest = Message<"huddle.v1.NotificationServiceSetPreferenceRequest"> & {
+  /**
+   * @generated from field: string kind = 1;
+   */
+  kind: string;
+
+  /**
+   * @generated from field: bool email_enabled = 2;
+   */
+  emailEnabled: boolean;
+};
+
+/**
+ * Describes the message huddle.v1.NotificationServiceSetPreferenceRequest.
+ * Use `create(NotificationServiceSetPreferenceRequestSchema)` to create a new message.
+ */
+export const NotificationServiceSetPreferenceRequestSchema: GenMessage<NotificationServiceSetPreferenceRequest> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_notification, 8);
+
+/**
+ * @generated from message huddle.v1.NotificationServiceSetPreferenceResponse
+ */
+export type NotificationServiceSetPreferenceResponse = Message<"huddle.v1.NotificationServiceSetPreferenceResponse"> & {
+  /**
+   * @generated from field: huddle.v1.NotificationPreference preference = 1;
+   */
+  preference?: NotificationPreference | undefined;
+};
+
+/**
+ * Describes the message huddle.v1.NotificationServiceSetPreferenceResponse.
+ * Use `create(NotificationServiceSetPreferenceResponseSchema)` to create a new message.
+ */
+export const NotificationServiceSetPreferenceResponseSchema: GenMessage<NotificationServiceSetPreferenceResponse> = /*@__PURE__*/
+  messageDesc(file_huddle_v1_notification, 9);
+
+/**
  * NotificationService serves the per-user in-app notifications inbox.
  * Every RPC returns / acts on rows owned by the calling principal only —
  * there is no cross-user administrative surface here by design. Ownership
@@ -202,6 +298,30 @@ export const NotificationService: GenService<{
     methodKind: "unary";
     input: typeof NotificationServiceMarkReadRequestSchema;
     output: typeof NotificationServiceMarkReadResponseSchema;
+  },
+  /**
+   * GetPreferences returns the caller's notification preferences with
+   * industry-standard opt-out defaults applied: a kind the caller has
+   * never touched comes back as email_enabled = true. Preferences are
+   * strictly the caller's own — no admin / cross-user surface.
+   *
+   * @generated from rpc huddle.v1.NotificationService.GetPreferences
+   */
+  getPreferences: {
+    methodKind: "unary";
+    input: typeof NotificationServiceGetPreferencesRequestSchema;
+    output: typeof NotificationServiceGetPreferencesResponseSchema;
+  },
+  /**
+   * SetPreference upserts the caller's preference for one kind.
+   * Idempotent: calling with the same value twice is a no-op.
+   *
+   * @generated from rpc huddle.v1.NotificationService.SetPreference
+   */
+  setPreference: {
+    methodKind: "unary";
+    input: typeof NotificationServiceSetPreferenceRequestSchema;
+    output: typeof NotificationServiceSetPreferenceResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_huddle_v1_notification, 0);

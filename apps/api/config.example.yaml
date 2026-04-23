@@ -4,6 +4,11 @@
 addr: ":8080"
 version: "dev"
 
+app:
+  # Public-facing web URL. Used to build "view in app" links in emails
+  # (notification mailer, future password reset + digest mailers).
+  base_url: "http://localhost:5173"
+
 database:
   url: "postgres://huddle:huddle@localhost:5432/huddle?sslmode=disable"
   # Pool sizing. Tune per deployment based on Postgres max_connections and
