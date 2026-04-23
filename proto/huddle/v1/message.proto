@@ -97,10 +97,45 @@ message MessageServiceListResponse {
 message MessageServiceSubscribeRequest {
   string channel_id = 1;
 }
-// Wrapping the streamed Message lets us add future fields (event type,
-// heartbeat, tombstone) without a breaking wire change.
+
+// Subscribe streams every mutation to the channel: creates, edits, and
+// deletes. Clients dispatch on the oneof variant. Heartbeats and other
+// non-message control frames will join this oneof as new variants as
+// they land.
+//
+// v1 carried only `Message message = 1` — this is a deliberate wire
+// break (ADR-0017). The project is pre-alpha and the web client does
+// not consume Subscribe yet, so the blast radius was zero at the
+// time of the redesign.
 message MessageServiceSubscribeResponse {
+  oneof event {
+    // A new message was sent in the channel.
+    MessageCreatedEvent created = 1;
+    // An existing message was edited by its author.
+    MessageEditedEvent edited = 2;
+    // A message was soft-deleted by its author or a moderator.
+    MessageDeletedEvent deleted = 3;
+  }
+}
+
+// Send-side fan-out. Carries the full Message proto including any
+// mention_user_ids populated at Send time.
+message MessageCreatedEvent {
   Message message = 1;
+}
+
+// Edit-side fan-out. Carries the Message as of the edit — same shape
+// as MessageCreatedEvent, separated so clients can branch on kind
+// without introspecting Message.edited_at.
+message MessageEditedEvent {
+  Message message = 1;
+}
+
+// Delete-side fan-out. Carries only the ids — there's no body to ship
+// after a soft-delete. Clients remove the message locally.
+message MessageDeletedEvent {
+  string message_id = 1;
+  string channel_id = 2;
 }
 
 message MessageServiceEditRequest {
