@@ -394,8 +394,15 @@ func TestList_DefaultAndClampedLimit(t *testing.T) {
 	}
 }
 
-// TODO(subscribe): exercise MessageService.Subscribe in a dedicated test PR
-// once embedded nats-server/test + a ServerStream fake are available.
+// Subscribe coverage lives in two other places: the dispatch logic
+// (events.MessageEvent → oneof variant) is unit-tested in
+// subscribe_internal_test.go; the NATS roundtrip (publish → bus →
+// subscriber, all three event kinds) is in
+// internal/events/nats_integration_test.go behind the `integration`
+// build tag. A wire-level end-to-end test that drives a real Connect
+// ServerStream is still pending — connect.ServerStream has no public
+// constructor, so it would require an httptest server + Connect
+// client and is bigger than this PR's scope.
 
 // --- helpers ----------------------------------------------------------------
 
