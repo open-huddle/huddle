@@ -7,19 +7,3 @@ lint:
 breaking:
   use:
     - FILE
-  # One-time exemption for the Subscribe envelope redesign in ADR-0017.
-  # We replaced a singular `Message message = 1` with a oneof of
-  # MessageCreated/Edited/Deleted variants — a wire break, intentional
-  # while pre-alpha and with no production clients on Subscribe yet.
-  # Once main carries the new shape these ignores become dead config;
-  # delete them in a follow-up PR so future Subscribe-adjacent edits
-  # get the breaking-check signal again.
-  ignore_only:
-    FIELD_SAME_JSON_NAME:
-      - proto/huddle/v1/message.proto
-    FIELD_SAME_ONEOF:
-      - proto/huddle/v1/message.proto
-    FIELD_SAME_TYPE:
-      - proto/huddle/v1/message.proto
-    FIELD_SAME_NAME:
-      - proto/huddle/v1/message.proto
