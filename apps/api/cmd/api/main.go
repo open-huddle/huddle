@@ -100,11 +100,12 @@ func run(logger *slog.Logger) error {
 	}
 	ecancel()
 
-	// Background workers: drain the transactional outbox to NATS (when
-	// outbox.publisher.driver=in_process), mirror outbox rows into the
-	// audit log, index message projections into OpenSearch, and GC
-	// fully-processed rows once they age past Outbox.Retention. All share
-	// the signal-cancellable ctx so they stop when SIGINT/SIGTERM fires —
+	// Background workers: mirror outbox rows into the audit log, index
+	// message projections into OpenSearch, deliver invitation + mention
+	// notification emails, and GC fully-processed outbox rows once they
+	// age past Outbox.Retention. NATS publish itself is driven by Debezium
+	// Server reading the WAL — see ADR-0018. All workers share the
+	// signal-cancellable ctx so they stop when SIGINT/SIGTERM fires;
 	// rows they didn't reach stay durable in the DB and get picked up at
 	// next startup.
 	sender, err := buildEmailSender(cfg, logger)
@@ -124,23 +125,6 @@ func run(logger *slog.Logger) error {
 		cfg.Email.FromAddress, cfg.Email.FromName, cfg.App.BaseURL,
 		notifications.WithMailerDialect(dialect.Postgres),
 	)
-
-	// Outbox → NATS publisher. The default in-process worker is the path
-	// every existing deployment uses; "none" disables it for the Debezium
-	// CDC bridge to take over (ADR-0018, Slice B). Validation in
-	// config.Load already rejects unknown driver values, so the default
-	// branch here is a structural assertion, not user-facing.
-	switch cfg.Outbox.Publisher.Driver {
-	case config.OutboxPublisherDriverInProcess:
-		outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger, outbox.WithDialect(dialect.Postgres))
-		go outboxPublisher.Run(ctx)
-	case config.OutboxPublisherDriverNone:
-		// Realtime Subscribe needs *something* publishing to NATS; if no
-		// out-of-band CDC bridge is running, this driver silently breaks
-		// fan-out. Log loudly so the misconfiguration is obvious.
-		logger.Warn("outbox publisher disabled in app — an out-of-band CDC bridge (e.g. Debezium Server) MUST be publishing outbox_events to NATS, or realtime Subscribe will see no events",
-			"driver", cfg.Outbox.Publisher.Driver)
-	}
 
 	go auditConsumer.Run(ctx)
 	go searchIndexer.Run(ctx)
