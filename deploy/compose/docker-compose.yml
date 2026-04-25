@@ -6,6 +6,20 @@ services:
     # bump updates compose + migration diffs together.
     image: ${POSTGRES_IMAGE:-postgres:18.3-alpine}
     restart: unless-stopped
+    # wal_level=logical is required by Debezium's pgoutput plugin (the default
+    # `replica` is not enough). max_wal_senders / max_replication_slots are at
+    # the Postgres 18 defaults of 10 each, but pinning them here makes the
+    # contract visible to operators and survives a default change. The values
+    # are harmless when no replication is happening — non-Debezium dev runs
+    # are unaffected.
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
     environment:
       POSTGRES_USER: huddle
       POSTGRES_PASSWORD: huddle
@@ -128,8 +142,42 @@ services:
       retries: 20
       start_period: 30s
 
+  # Debezium Server reads INSERTs to outbox_events from the Postgres WAL and
+  # republishes each row to NATS, with the topic pulled directly from the
+  # row's `subject` column and the message body taken verbatim from `payload`.
+  # Profile-gated: `make dev-up` does NOT start Debezium; bring it up with
+  # `docker compose --profile debezium up`. The intent is to validate the CDC
+  # path end-to-end before the app-side cutover (Slice B) flips the publisher
+  # driver away from the in-process worker.
+  #
+  # Important: while this profile is active alongside the in-process publisher,
+  # every outbox row gets published TWICE to NATS (once by each path). The
+  # realtime client UI keys on message UUID and is robust to dupes, but this
+  # is not the production end-state — see ADR-0018 for the cutover plan.
+  debezium:
+    image: ${DEBEZIUM_IMAGE:-debezium/server:3.0.0.Final}
+    profiles: [ "debezium" ]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    volumes:
+      - ./debezium:/debezium/config:ro
+      - debezium-data:/debezium/data
+    healthcheck:
+      # Debezium Server's actuator-style endpoint at :8080/q/health returns
+      # 200 once the source connector has attached its replication slot.
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8080/q/health | grep -q '\"status\":\"UP\"' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
 volumes:
   postgres-data:
   valkey-data:
   nats-data:
   opensearch-data:
+  debezium-data:

@@ -1,4 +1,4 @@
-.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-test-integration api-lint web-run web-build web-lint web-typecheck dev-up dev-down lint test test-integration tidy fmt ent-generate migrate-diff migrate-apply migrate-status
+.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-test-integration api-lint web-run web-build web-lint web-typecheck dev-up dev-up-debezium dev-down lint test test-integration tidy fmt ent-generate migrate-diff migrate-apply migrate-status
 
 # Postgres image used by both the local compose stack and the throwaway
 # container that Atlas/Ent uses to compute schema diffs. Bumping here bumps
@@ -52,11 +52,14 @@ web-typecheck: ## Typecheck the web app
 web-lint: ## Lint the web app
 	pnpm --filter @open-huddle/web lint
 
-dev-up: ## Start local dependencies (postgres, valkey)
+dev-up: ## Start local dependencies (postgres, valkey, keycloak, nats, opensearch)
 	docker compose -f deploy/compose/docker-compose.yml up -d
 
+dev-up-debezium: ## Same as dev-up plus the Debezium CDC bridge (profile-gated)
+	docker compose -f deploy/compose/docker-compose.yml --profile debezium up -d
+
 dev-down: ## Stop local dependencies
-	docker compose -f deploy/compose/docker-compose.yml down
+	docker compose -f deploy/compose/docker-compose.yml --profile debezium down
 
 lint: api-lint web-lint proto-lint ## Run all linters
 
