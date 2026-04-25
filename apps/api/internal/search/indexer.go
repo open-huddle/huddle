@@ -41,7 +41,9 @@ type Indexer struct {
 
 	interval  time.Duration
 	batchSize int
-	// dialect gates FOR UPDATE SKIP LOCKED — same story as outbox.Publisher.
+	// dialect gates FOR UPDATE SKIP LOCKED — empty (the default) skips the
+	// lock clause for SQLite-backed unit tests; dialect.Postgres applies it
+	// so concurrent replicas claim disjoint batches.
 	dialect string
 }
 
@@ -110,10 +112,10 @@ func (i *Indexer) Run(ctx context.Context) {
 // deterministically.
 //
 // Wrapped in a transaction so the SELECT can hold FOR UPDATE SKIP LOCKED
-// on Postgres — same multi-replica claim pattern as outbox.Publisher.
-// OpenSearch write runs under the lock; commit releases it. OpenSearch
-// upserts by outbox event UUID anyway, so the worst a retry does is
-// rewrite the same document.
+// on Postgres — concurrent replicas claim disjoint batches and never
+// double-index the same row. OpenSearch write runs under the lock;
+// commit releases it. OpenSearch upserts by outbox event UUID anyway,
+// so the worst a retry does is rewrite the same document.
 func (i *Indexer) IndexBatch(ctx context.Context) error {
 	tx, err := i.client.Tx(ctx)
 	if err != nil {

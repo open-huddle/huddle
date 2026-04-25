@@ -99,9 +99,10 @@ func NewMailer(
 	return m
 }
 
-// Run polls until ctx is cancelled. Mirrors the shape of outbox.Publisher
-// and search.Indexer — drain once at startup so an invite queued while
-// the process was down goes out immediately, then tick.
+// Run polls until ctx is cancelled. Mirrors the shape of search.Indexer
+// and the other table-driven workers — drain once at startup so an
+// invite queued while the process was down goes out immediately,
+// then tick.
 func (m *Mailer) Run(ctx context.Context) {
 	ticker := time.NewTicker(m.interval)
 	defer ticker.Stop()
