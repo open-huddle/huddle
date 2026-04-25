@@ -100,25 +100,18 @@ func run(logger *slog.Logger) error {
 	}
 	ecancel()
 
-	// Background workers: drain the transactional outbox to NATS, mirror
-	// outbox rows into the audit log, index message projections into
-	// OpenSearch, and GC fully-processed outbox rows once they age past
-	// Outbox.Retention. All share the signal-cancellable ctx so they stop
-	// when SIGINT/SIGTERM fires — rows they didn't reach stay durable in
-	// the DB and get picked up at next startup.
-	// Postgres is the production dialect (internal/database pins it); the
-	// option enables FOR UPDATE SKIP LOCKED so multiple API replicas drain
-	// disjoint rows from the outbox. SQLite-backed unit tests omit this
-	// option and exercise the unlocked path.
-	// Email sender: "log" prints to the API log (dev default), "smtp"
-	// dials the relay. SMTP construction fails fast on obvious misconfig
-	// so a bad relay URL surfaces at startup.
+	// Background workers: drain the transactional outbox to NATS (when
+	// outbox.publisher.driver=in_process), mirror outbox rows into the
+	// audit log, index message projections into OpenSearch, and GC
+	// fully-processed rows once they age past Outbox.Retention. All share
+	// the signal-cancellable ctx so they stop when SIGINT/SIGTERM fires —
+	// rows they didn't reach stay durable in the DB and get picked up at
+	// next startup.
 	sender, err := buildEmailSender(cfg, logger)
 	if err != nil {
 		return fmt.Errorf("init email sender: %w", err)
 	}
 
-	outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger, outbox.WithDialect(dialect.Postgres))
 	auditConsumer := audit.NewConsumer(db.Ent, logger)
 	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger, search.WithIndexerDialect(dialect.Postgres))
 	outboxGC := outbox.NewGC(db.Ent, logger, outbox.WithGCRetention(cfg.Outbox.Retention))
@@ -131,7 +124,24 @@ func run(logger *slog.Logger) error {
 		cfg.Email.FromAddress, cfg.Email.FromName, cfg.App.BaseURL,
 		notifications.WithMailerDialect(dialect.Postgres),
 	)
-	go outboxPublisher.Run(ctx)
+
+	// Outbox → NATS publisher. The default in-process worker is the path
+	// every existing deployment uses; "none" disables it for the Debezium
+	// CDC bridge to take over (ADR-0018, Slice B). Validation in
+	// config.Load already rejects unknown driver values, so the default
+	// branch here is a structural assertion, not user-facing.
+	switch cfg.Outbox.Publisher.Driver {
+	case config.OutboxPublisherDriverInProcess:
+		outboxPublisher := outbox.NewPublisher(db.Ent, bus, logger, outbox.WithDialect(dialect.Postgres))
+		go outboxPublisher.Run(ctx)
+	case config.OutboxPublisherDriverNone:
+		// Realtime Subscribe needs *something* publishing to NATS; if no
+		// out-of-band CDC bridge is running, this driver silently breaks
+		// fan-out. Log loudly so the misconfiguration is obvious.
+		logger.Warn("outbox publisher disabled in app — an out-of-band CDC bridge (e.g. Debezium Server) MUST be publishing outbox_events to NATS, or realtime Subscribe will see no events",
+			"driver", cfg.Outbox.Publisher.Driver)
+	}
+
 	go auditConsumer.Run(ctx)
 	go searchIndexer.Run(ctx)
 	go outboxGC.Run(ctx)

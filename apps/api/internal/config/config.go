@@ -79,8 +79,32 @@ type Outbox struct {
 	// Retention is the minimum age before a fully-published, fully-audited,
 	// fully-indexed outbox row is eligible for deletion. Longer is safer
 	// (larger window to diagnose a bad publish) but keeps the table bigger.
-	Retention time.Duration `mapstructure:"retention"`
+	Retention time.Duration   `mapstructure:"retention"`
+	Publisher OutboxPublisher `mapstructure:"publisher"`
 }
+
+// OutboxPublisher selects how outbox rows reach NATS. See ADR-0018 for the
+// cutover plan.
+type OutboxPublisher struct {
+	// Driver picks the publish path:
+	//   "in_process" — the default; cmd/api/main.go starts the in-process
+	//                  outbox.Publisher goroutine that polls outbox_events
+	//                  and publishes to NATS.
+	//   "none"       — the in-process publisher is NOT started. Operators
+	//                  pick this when an out-of-band CDC bridge (Debezium
+	//                  Server, configured via deploy/compose --profile
+	//                  debezium) owns NATS publish. Setting this with no
+	//                  CDC bridge running silently breaks realtime
+	//                  Subscribe — startup logs an explicit warning.
+	Driver string `mapstructure:"driver"`
+}
+
+// Allowed driver values. Exported so cmd/api/main.go's switch and tests
+// reference the same strings.
+const (
+	OutboxPublisherDriverInProcess = "in_process"
+	OutboxPublisherDriverNone      = "none"
+)
 
 // Nats configures the JetStream connection used for realtime fan-out and
 // (future) audit / search / notifications consumers.
@@ -146,6 +170,7 @@ func Load() (*Config, error) {
 	v.SetDefault("opensearch.url", "http://localhost:9200")
 	v.SetDefault("opensearch.messages_index", "huddle-messages")
 	v.SetDefault("outbox.retention", 24*time.Hour)
+	v.SetDefault("outbox.publisher.driver", OutboxPublisherDriverInProcess)
 	// Dev-only default for invites.secret. Operators MUST override
 	// HUDDLE_INVITES_SECRET in any non-dev deployment — running with this
 	// literal value would let anyone with the source tree forge invite
@@ -179,5 +204,17 @@ func Load() (*Config, error) {
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
+
+	// Strict validation: a typo'd driver value silently turning the
+	// publisher off would mean realtime Subscribe stops working with no
+	// obvious signal. Reject at Load so the misconfiguration surfaces at
+	// process start.
+	switch cfg.Outbox.Publisher.Driver {
+	case OutboxPublisherDriverInProcess, OutboxPublisherDriverNone:
+	default:
+		return nil, fmt.Errorf("invalid outbox.publisher.driver %q: must be %q or %q",
+			cfg.Outbox.Publisher.Driver, OutboxPublisherDriverInProcess, OutboxPublisherDriverNone)
+	}
+
 	return &cfg, nil
 }
