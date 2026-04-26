@@ -16,6 +16,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/config"
 	"github.com/open-huddle/huddle/apps/api/internal/database"
 	"github.com/open-huddle/huddle/apps/api/internal/events"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 	"github.com/open-huddle/huddle/apps/api/internal/policy"
 	"github.com/open-huddle/huddle/apps/api/internal/principal"
 	"github.com/open-huddle/huddle/apps/api/internal/search"
@@ -75,7 +76,16 @@ func (s *Server) routes() {
 	}
 
 	// Authenticated Connect services — every RPC requires a valid bearer token.
-	authInt := connect.WithInterceptors(auth.NewInterceptor(s.verifier))
+	// otelconnect goes first so its span covers the auth check and any
+	// downstream work; auth.NewInterceptor follows so the principal-resolved
+	// span attributes (added by interceptors layered on top in Slice B) see
+	// an already-authenticated context.
+	interceptors := append(
+		[]connect.Interceptor{},
+		observability.ConnectInterceptor()...,
+	)
+	interceptors = append(interceptors, auth.NewInterceptor(s.verifier))
+	authInt := connect.WithInterceptors(interceptors...)
 	{
 		svc := identity.New(s.resolver, s.logger)
 		path, handler := huddlev1connect.NewIdentityServiceHandler(svc, authInt)
