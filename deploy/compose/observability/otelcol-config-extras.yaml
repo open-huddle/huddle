@@ -1,0 +1,41 @@
+# grafana/otel-lgtm merges this file with the bundled OTel collector
+# config at startup. Slice C of ADR-0019 uses it to wire two more
+# data sources into the existing metrics pipeline:
+#
+#   - postgres-exporter (replication-slot lag, WAL bytes behind, etc.)
+#   - nats-exporter (JetStream consumer num_pending, msgs in/out, etc.)
+#
+# Both exporters expose Prometheus-format metrics; the OTel collector's
+# `prometheus` receiver scrapes them on a fixed cadence and pushes the
+# samples into a parallel metrics pipeline. The pipeline's exporter is
+# `otlphttp`, which the bundled config uses to forward into Prometheus
+# (the LGTM stack's bundled instance) — same path that OTLP-pushed
+# metrics from the API take.
+#
+# If the bundled image's default exporter name changes (the merge
+# requires it to exist), update the `exporters` list here.
+
+receivers:
+  prometheus/cdc-exporters:
+    config:
+      scrape_configs:
+        - job_name: huddle-postgres
+          scrape_interval: 15s
+          static_configs:
+            - targets:
+                - postgres-exporter:9187
+        - job_name: huddle-nats
+          scrape_interval: 15s
+          static_configs:
+            - targets:
+                - nats-exporter:7777
+
+service:
+  pipelines:
+    metrics/cdc-exporters:
+      receivers:
+        - prometheus/cdc-exporters
+      processors:
+        - batch
+      exporters:
+        - otlphttp/metrics

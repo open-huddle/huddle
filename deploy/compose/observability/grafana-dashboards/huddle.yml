@@ -1,0 +1,14 @@
+# Grafana dashboard provisioning. Loads every JSON file from
+# /otel-lgtm/grafana/conf/provisioning/dashboards-content into a
+# folder named "Huddle" at startup. Pre-alpha runbook lives next to
+# the dashboard JSON in deploy/compose/observability/.
+apiVersion: 1
+providers:
+  - name: huddle-dashboards
+    type: file
+    folder: Huddle
+    folderUid: huddle
+    updateIntervalSeconds: 10
+    options:
+      path: /otel-lgtm/grafana/conf/provisioning/dashboards-content
+      foldersFromFilesStructure: false
