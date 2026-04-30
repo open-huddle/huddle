@@ -153,6 +153,12 @@ services:
   #   - 4317: OTLP/gRPC ingest — what the API sends traces and metrics to
   #           when HUDDLE_OBSERVABILITY_ENABLED=true.
   #   - 4318: OTLP/HTTP ingest — alternative for clients that can't speak gRPC.
+  #
+  # Slice C of ADR-0019 mounts two extras:
+  #   - otelcol-config-extras.yaml adds a Prometheus receiver in the
+  #     collector that scrapes the postgres- and nats-exporter sidecars
+  #     and feeds the metrics into the existing OTLP pipeline.
+  #   - grafana-dashboards/ provisions the canned CDC-pipeline dashboard.
   otel-lgtm:
     image: ${OTEL_LGTM_IMAGE:-grafana/otel-lgtm:0.8.1}
     profiles: [ "observability" ]
@@ -163,6 +169,9 @@ services:
       - "4318:4318"
     volumes:
       - otel-lgtm-data:/data
+      - ./observability/otelcol-config-extras.yaml:/otel-lgtm/otelcol-config-extras.yaml:ro
+      - ./observability/grafana-dashboards:/otel-lgtm/grafana/conf/provisioning/dashboards:ro
+      - ./observability/grafana-dashboards-content:/otel-lgtm/grafana/conf/provisioning/dashboards-content:ro
     healthcheck:
       # Grafana on 3000 is the user-facing surface; if it's up, the bundled
       # backends are wired in.
@@ -171,6 +180,48 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+
+  # postgres_exporter publishes Postgres-internal metrics in Prometheus
+  # format. Slice C of ADR-0019 uses it for the load-bearing CDC signal:
+  # `pg_replication_slots_pg_wal_lsn_diff` (bytes the Debezium slot is
+  # behind master). Without this metric, ADR-0018's cutover ("Debezium is
+  # the only NATS publisher") is operating blind.
+  postgres-exporter:
+    image: ${POSTGRES_EXPORTER_IMAGE:-quay.io/prometheuscommunity/postgres-exporter:v0.15.0}
+    profiles: [ "observability" ]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: "postgresql://huddle:huddle@postgres:5432/huddle?sslmode=disable"
+    ports:
+      - "9187:9187"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:9187/metrics | grep -q '^pg_up ' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # prometheus-nats-exporter scrapes NATS's monitoring port (8222) and
+  # republishes the JSON shape as Prometheus metrics. The load-bearing
+  # one for the CDC dashboard is `gnatsd_consumer_num_pending` —
+  # JetStream messages waiting on the API's durable consumers.
+  nats-exporter:
+    image: ${NATS_EXPORTER_IMAGE:-natsio/prometheus-nats-exporter:0.14.0}
+    profiles: [ "observability" ]
+    restart: unless-stopped
+    depends_on:
+      nats:
+        condition: service_healthy
+    command: [ "-varz", "-jsz=all", "-connz", "http://nats:8222" ]
+    ports:
+      - "7777:7777"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:7777/metrics | grep -q '^gnatsd_varz_' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # Debezium Server reads INSERTs to outbox_events from the Postgres WAL and
   # republishes each row to NATS, with the topic pulled directly from the

@@ -100,11 +100,31 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("init oidc verifier: %w", err)
 	}
 
+	// Pipeline metrics — Slice C of ADR-0019. End-to-end Send→Subscribe
+	// latency is recorded from inside events.Subscribe; outbox-depth is an
+	// observable gauge whose callback runs at metric collection time. Both
+	// are no-ops when observability is disabled.
+	pipelineMetrics, err := observability.NewPipelineMetrics()
+	if err != nil {
+		return fmt.Errorf("init pipeline metrics: %w", err)
+	}
+	depthRegistration, err := pipelineMetrics.RegisterOutboxDepth(observability.NewSQLOutboxDepthQuerier(db.SQL))
+	if err != nil {
+		return fmt.Errorf("register outbox depth gauge: %w", err)
+	}
+	defer func() {
+		if err := depthRegistration.Unregister(); err != nil {
+			logger.Warn("outbox depth gauge unregister", "err", err)
+		}
+	}()
+
 	// Connect to NATS and ensure the JetStream stream exists. Failure here is
 	// fatal at startup — operators should know up front that the realtime
 	// path is broken rather than discover it on the first Subscribe call.
 	natsCtx, ncancel := context.WithTimeout(ctx, 15*time.Second)
-	bus, err := events.Open(natsCtx, cfg.Nats.URL, logger)
+	bus, err := events.Open(natsCtx, cfg.Nats.URL, logger,
+		events.WithPipelineMetrics(pipelineMetrics),
+	)
 	ncancel()
 	if err != nil {
 		return fmt.Errorf("init nats: %w", err)

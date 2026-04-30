@@ -13,6 +13,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
@@ -28,16 +29,27 @@ const (
 
 // NATS implements Publisher and Subscriber on top of JetStream.
 type NATS struct {
-	conn   *nats.Conn
-	js     jetstream.JetStream
-	logger *slog.Logger
+	conn    *nats.Conn
+	js      jetstream.JetStream
+	logger  *slog.Logger
+	metrics *observability.PipelineMetrics
+}
+
+// Option tunes a NATS client at Open time.
+type Option func(*NATS)
+
+// WithPipelineMetrics wires Slice C's end-to-end latency histogram. A
+// nil metrics handle is safe — observability.PipelineMetrics methods
+// no-op on nil receivers.
+func WithPipelineMetrics(m *observability.PipelineMetrics) Option {
+	return func(n *NATS) { n.metrics = m }
 }
 
 // Open dials NATS, ensures the messages stream exists, and returns a NATS
 // client ready for use. The stream is created idempotently — bumping
 // retention here on a new release will update an existing deployment in
 // place rather than fail.
-func Open(ctx context.Context, url string, logger *slog.Logger) (*NATS, error) {
+func Open(ctx context.Context, url string, logger *slog.Logger, opts ...Option) (*NATS, error) {
 	conn, err := nats.Connect(url,
 		nats.Name("huddle-api"),
 		nats.MaxReconnects(-1),
@@ -70,7 +82,11 @@ func Open(ctx context.Context, url string, logger *slog.Logger) (*NATS, error) {
 		return nil, fmt.Errorf("create stream %q: %w", streamName, err)
 	}
 
-	return &NATS{conn: conn, js: js, logger: logger}, nil
+	n := &NATS{conn: conn, js: js, logger: logger}
+	for _, opt := range opts {
+		opt(n)
+	}
+	return n, nil
 }
 
 // Close drains in-flight messages and shuts the connection down.
@@ -131,6 +147,13 @@ func (n *NATS) SubscribeMessages(ctx context.Context, channelID uuid.UUID) (<-ch
 			n.logger.Warn("subscriber: unmarshal", "err", err, "subject", jmsg.Subject())
 			return
 		}
+		// End-to-end Send→Subscribe latency: time from when the
+		// message was authored (outbox row written) to dispatch from
+		// JetStream into our handler channel. Captures the full CDC
+		// chain: Postgres commit → WAL → Debezium → NATS → API.
+		if m.CreatedAt != nil {
+			n.metrics.RecordSendToSubscribe(ctx, kindString(kind), time.Since(m.CreatedAt.AsTime()))
+		}
 		select {
 		case out <- &MessageEvent{Kind: kind, Message: m}:
 		case <-ctx.Done():
@@ -150,6 +173,22 @@ func (n *NATS) SubscribeMessages(ctx context.Context, channelID uuid.UUID) (<-ch
 	}()
 
 	return out, nil
+}
+
+// kindString returns the lower-case label used for metric attributes.
+// Mirrors the verb segment of the NATS subject so trace/metric data
+// joins on the same vocabulary as the wire format.
+func kindString(k MessageEventKind) string {
+	switch k {
+	case MessageEventCreated:
+		return "created"
+	case MessageEventEdited:
+		return "edited"
+	case MessageEventDeleted:
+		return "deleted"
+	default:
+		return "unknown"
+	}
 }
 
 // kindFromSubject maps a NATS subject to the MessageEventKind the
