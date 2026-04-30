@@ -142,6 +142,36 @@ services:
       retries: 20
       start_period: 30s
 
+  # All-in-one observability stack: OpenTelemetry Collector + Tempo + Prometheus
+  # + Loki + Grafana, in one container, with Grafana pre-configured to query
+  # all three backends. Profile-gated: `make dev-up` does NOT start it; bring
+  # it up with `make dev-up-observability`. The image is ~1 GB but the dev
+  # story is one container instead of five — ADR-0019 documents the choice.
+  #
+  # Ports:
+  #   - 3000: Grafana UI (anonymous access on; no login in dev).
+  #   - 4317: OTLP/gRPC ingest — what the API sends traces and metrics to
+  #           when HUDDLE_OBSERVABILITY_ENABLED=true.
+  #   - 4318: OTLP/HTTP ingest — alternative for clients that can't speak gRPC.
+  otel-lgtm:
+    image: ${OTEL_LGTM_IMAGE:-grafana/otel-lgtm:0.8.1}
+    profiles: [ "observability" ]
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - otel-lgtm-data:/data
+    healthcheck:
+      # Grafana on 3000 is the user-facing surface; if it's up, the bundled
+      # backends are wired in.
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health | grep -q '\"database\":\"ok\"' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
   # Debezium Server reads INSERTs to outbox_events from the Postgres WAL and
   # republishes each row to NATS, with the topic pulled directly from the
   # row's `subject` column and the message body taken verbatim from `payload`.
@@ -181,3 +211,4 @@ volumes:
   nats-data:
   opensearch-data:
   debezium-data:
+  otel-lgtm-data:

@@ -9,17 +9,29 @@ import (
 )
 
 type Config struct {
-	Addr       string     `mapstructure:"addr"`
-	Version    string     `mapstructure:"version"`
-	App        App        `mapstructure:"app"`
-	Database   Database   `mapstructure:"database"`
-	Valkey     Valkey     `mapstructure:"valkey"`
-	Auth       Auth       `mapstructure:"auth"`
-	Nats       Nats       `mapstructure:"nats"`
-	OpenSearch OpenSearch `mapstructure:"opensearch"`
-	Outbox     Outbox     `mapstructure:"outbox"`
-	Invites    Invites    `mapstructure:"invites"`
-	Email      Email      `mapstructure:"email"`
+	Addr          string        `mapstructure:"addr"`
+	Version       string        `mapstructure:"version"`
+	App           App           `mapstructure:"app"`
+	Database      Database      `mapstructure:"database"`
+	Valkey        Valkey        `mapstructure:"valkey"`
+	Auth          Auth          `mapstructure:"auth"`
+	Nats          Nats          `mapstructure:"nats"`
+	OpenSearch    OpenSearch    `mapstructure:"opensearch"`
+	Outbox        Outbox        `mapstructure:"outbox"`
+	Invites       Invites       `mapstructure:"invites"`
+	Email         Email         `mapstructure:"email"`
+	Observability Observability `mapstructure:"observability"`
+}
+
+// Observability gates the OpenTelemetry SDK lifecycle. See ADR-0019. The
+// default is Enabled=false so existing deployments stay silent until an
+// operator opts in.
+type Observability struct {
+	Enabled        bool   `mapstructure:"enabled"`
+	OTLPEndpoint   string `mapstructure:"otlp_endpoint"`
+	OTLPInsecure   bool   `mapstructure:"otlp_insecure"`
+	ServiceName    string `mapstructure:"service_name"`
+	ServiceVersion string `mapstructure:"service_version"`
 }
 
 // App is the small set of public-facing values every email template and
@@ -159,6 +171,13 @@ func Load() (*Config, error) {
 	v.SetDefault("email.from_name", "Open Huddle")
 	v.SetDefault("email.smtp.port", 587)
 	v.SetDefault("email.smtp.start_tls", true)
+	v.SetDefault("observability.enabled", false)
+	v.SetDefault("observability.otlp_endpoint", "localhost:4317")
+	v.SetDefault("observability.otlp_insecure", true)
+	v.SetDefault("observability.service_name", "huddle-api")
+	// service_version defaults to the Version field via post-Load fallback
+	// (see below) so the build-time version embedded in cfg.Version is the
+	// single source of truth.
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
@@ -178,6 +197,9 @@ func Load() (*Config, error) {
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
+	}
+	if cfg.Observability.ServiceVersion == "" {
+		cfg.Observability.ServiceVersion = cfg.Version
 	}
 	return &cfg, nil
 }

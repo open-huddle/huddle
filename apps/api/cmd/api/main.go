@@ -21,6 +21,7 @@ import (
 	"github.com/open-huddle/huddle/apps/api/internal/events"
 	"github.com/open-huddle/huddle/apps/api/internal/invitations"
 	"github.com/open-huddle/huddle/apps/api/internal/notifications"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 	"github.com/open-huddle/huddle/apps/api/internal/outbox"
 	"github.com/open-huddle/huddle/apps/api/internal/search"
 	"github.com/open-huddle/huddle/apps/api/internal/server"
@@ -46,6 +47,30 @@ func run(logger *slog.Logger) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	// Initialize OpenTelemetry first so every dependency we open below
+	// (DB, NATS, OpenSearch, OIDC verifier) has a working tracer/meter
+	// from its first call. When observability.enabled=false the SDK
+	// stays at no-op and the framework instrumentation below is free.
+	obsShutdown, err := observability.Init(ctx, observability.Config{
+		Enabled:        cfg.Observability.Enabled,
+		OTLPEndpoint:   cfg.Observability.OTLPEndpoint,
+		OTLPInsecure:   cfg.Observability.OTLPInsecure,
+		ServiceName:    cfg.Observability.ServiceName,
+		ServiceVersion: cfg.Observability.ServiceVersion,
+	}, logger)
+	if err != nil {
+		return fmt.Errorf("init observability: %w", err)
+	}
+	defer func() {
+		// Drain in-flight span/metric batches on the way out. Bound the
+		// wait so a misbehaving collector can't stall shutdown forever.
+		drainCtx, drainCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer drainCancel()
+		if err := obsShutdown(drainCtx); err != nil {
+			logger.Warn("observability shutdown", "err", err)
+		}
+	}()
 
 	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	db, err := database.Open(connectCtx, database.Config{
@@ -144,8 +169,12 @@ func run(logger *slog.Logger) error {
 	srv := server.New(cfg, logger, db, verifier, bus, searchClient)
 
 	httpSrv := &http.Server{
-		Addr:              cfg.Addr,
-		Handler:           srv.Handler(),
+		Addr: cfg.Addr,
+		// otelhttp.NewHandler wraps the chi router so every incoming
+		// request gets a server span with the route, method, status,
+		// and duration. Connect handlers and DB queries hang as child
+		// spans off this root.
+		Handler:           observability.HTTPHandler(srv.Handler()),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

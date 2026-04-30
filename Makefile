@@ -1,4 +1,4 @@
-.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-test-integration api-lint web-run web-build web-lint web-typecheck dev-up dev-up-debezium dev-down lint test test-integration tidy fmt ent-generate migrate-diff migrate-apply migrate-status
+.PHONY: help install proto proto-lint proto-breaking api-run api-build api-test api-test-integration api-lint web-run web-build web-lint web-typecheck dev-up dev-up-debezium dev-up-observability dev-down lint test test-integration tidy fmt ent-generate migrate-diff migrate-apply migrate-status
 
 # Postgres image used by both the local compose stack and the throwaway
 # container that Atlas/Ent uses to compute schema diffs. Bumping here bumps
@@ -58,8 +58,11 @@ dev-up: ## Start local dependencies (postgres, valkey, keycloak, nats, opensearc
 dev-up-debezium: ## Same as dev-up plus the Debezium CDC bridge (profile-gated)
 	docker compose -f deploy/compose/docker-compose.yml --profile debezium up -d
 
+dev-up-observability: ## Same as dev-up plus the Grafana LGTM observability stack (profile-gated)
+	docker compose -f deploy/compose/docker-compose.yml --profile observability up -d
+
 dev-down: ## Stop local dependencies
-	docker compose -f deploy/compose/docker-compose.yml --profile debezium down
+	docker compose -f deploy/compose/docker-compose.yml --profile debezium --profile observability down
 
 lint: api-lint web-lint proto-lint ## Run all linters
 
