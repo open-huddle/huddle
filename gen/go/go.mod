@@ -4,11 +4,7 @@ go 1.26
 
 require (
 	connectrpc.com/connect v1.18.1
-	google.golang.org/protobuf v1.36.3
+	google.golang.org/protobuf v1.36.11
 )
 
-require (
-	github.com/google/go-cmp v0.7.0 // indirect
-	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
-)
+require golang.org/x/net v0.52.0 // indirect
