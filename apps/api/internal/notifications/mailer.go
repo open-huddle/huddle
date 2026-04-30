@@ -11,12 +11,14 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	entnotification "github.com/open-huddle/huddle/apps/api/ent/notification"
 	entnotificationpreference "github.com/open-huddle/huddle/apps/api/ent/notificationpreference"
 	entuser "github.com/open-huddle/huddle/apps/api/ent/user"
 	"github.com/open-huddle/huddle/apps/api/internal/email"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 )
 
 const (
@@ -44,6 +46,7 @@ type Mailer struct {
 	interval  time.Duration
 	batchSize int
 	dialect   string
+	instr     *observability.WorkerInstr
 }
 
 // MailerOption tunes Mailer; zero options yields production defaults.
@@ -65,6 +68,11 @@ func WithMailerBatchSize(n int) MailerOption {
 // for Postgres. Omit in unit tests (SQLite).
 func WithMailerDialect(d string) MailerOption {
 	return func(m *Mailer) { m.dialect = d }
+}
+
+// WithMailerWorkerInstr wires per-tick + per-row spans and RED metrics.
+func WithMailerWorkerInstr(w *observability.WorkerInstr) MailerOption {
+	return func(m *Mailer) { m.instr = w }
 }
 
 // NewMailer wires a Mailer against the given ent client and Sender.
@@ -120,60 +128,67 @@ func (m *Mailer) Run(ctx context.Context) {
 // (email_enabled = false on a NotificationPreference row matching the
 // notification's kind). Missing preference = enabled (the default).
 func (m *Mailer) SendBatch(ctx context.Context) error {
-	tx, err := m.client.Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
+	return m.instr.Tick(ctx, func(ctx context.Context) error {
+		tx, err := m.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("begin tx: %w", err)
 		}
-	}()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
-	// "Un-emailed notifications, source=message_created (edits stay
-	// in-app only per ADR-0016), whose recipient hasn't opted out of
-	// email for this kind." Expressed as: source = message_created,
-	// no matching preference row with email_enabled = false.
-	q := tx.Notification.Query().
-		Where(
-			entnotification.EmailedAtIsNil(),
-			entnotification.SourceEQ(entnotification.SourceMessageCreated),
-			entnotification.Not(
-				entnotification.HasRecipientWith(
-					entuser.HasNotificationPreferencesWith(
-						entnotificationpreference.EmailEnabledEQ(false),
-						// Match preference kind to notification kind.
-						// ent doesn't let us reference the outer row's
-						// kind in the subquery, so we evaluate both
-						// kinds explicitly — there's only one today.
-						entnotificationpreference.KindEQ(entnotificationpreference.KindMention),
+		// "Un-emailed notifications, source=message_created (edits stay
+		// in-app only per ADR-0016), whose recipient hasn't opted out of
+		// email for this kind." Expressed as: source = message_created,
+		// no matching preference row with email_enabled = false.
+		q := tx.Notification.Query().
+			Where(
+				entnotification.EmailedAtIsNil(),
+				entnotification.SourceEQ(entnotification.SourceMessageCreated),
+				entnotification.Not(
+					entnotification.HasRecipientWith(
+						entuser.HasNotificationPreferencesWith(
+							entnotificationpreference.EmailEnabledEQ(false),
+							// Match preference kind to notification kind.
+							// ent doesn't let us reference the outer row's
+							// kind in the subquery, so we evaluate both
+							// kinds explicitly — there's only one today.
+							entnotificationpreference.KindEQ(entnotificationpreference.KindMention),
+						),
 					),
 				),
-			),
-		).
-		Order(ent.Asc(entnotification.FieldCreatedAt)).
-		Limit(m.batchSize)
-	if m.dialect == dialect.Postgres {
-		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
-	}
-	rows, err := q.All(ctx)
-	if err != nil {
-		return fmt.Errorf("query pending: %w", err)
-	}
-
-	for _, n := range rows {
-		if err := m.sendOne(ctx, tx, n); err != nil {
-			m.logger.Warn("notifications-mailer: send",
-				"err", err, "notification_id", n.ID)
+			).
+			Order(ent.Asc(entnotification.FieldCreatedAt)).
+			Limit(m.batchSize)
+		if m.dialect == dialect.Postgres {
+			q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
 		}
-	}
+		rows, err := q.All(ctx)
+		if err != nil {
+			return fmt.Errorf("query pending: %w", err)
+		}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
-	}
-	committed = true
-	return nil
+		for _, n := range rows {
+			rowCtx, end := m.instr.StartRow(ctx,
+				attribute.String("notification.id", n.ID.String()),
+			)
+			err := m.sendOne(rowCtx, tx, n)
+			if err != nil {
+				m.logger.Warn("notifications-mailer: send",
+					"err", err, "notification_id", n.ID)
+			}
+			end(err)
+		}
+
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit: %w", err)
+		}
+		committed = true
+		return nil
+	})
 }
 
 // sendOne renders and dispatches one notification email. On success,

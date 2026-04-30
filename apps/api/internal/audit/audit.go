@@ -17,8 +17,11 @@ import (
 	"log/slog"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/open-huddle/huddle/apps/api/ent"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 )
 
 const (
@@ -33,6 +36,7 @@ type Consumer struct {
 
 	interval  time.Duration
 	batchSize int
+	instr     *observability.WorkerInstr
 }
 
 type Option func(*Consumer)
@@ -43,6 +47,13 @@ func WithInterval(d time.Duration) Option {
 
 func WithBatchSize(n int) Option {
 	return func(c *Consumer) { c.batchSize = n }
+}
+
+// WithWorkerInstr wires per-tick + per-row spans and RED metrics. Optional;
+// a nil instr (the test default) preserves full functional behavior with no
+// observability side-effects.
+func WithWorkerInstr(w *observability.WorkerInstr) Option {
+	return func(c *Consumer) { c.instr = w }
 }
 
 func NewConsumer(client *ent.Client, logger *slog.Logger, opts ...Option) *Consumer {
@@ -82,40 +93,52 @@ func (c *Consumer) Run(ctx context.Context) {
 // ConsumeBatch does one iteration. Exported so tests can drive the loop
 // deterministically.
 func (c *Consumer) ConsumeBatch(ctx context.Context) error {
-	// "Outbox rows not yet audited" — ent translates this to NOT EXISTS over
-	// the audit_event FK, which is index-backed on the unique column.
-	rows, err := c.client.OutboxEvent.Query().
-		Where(outboxevent.Not(outboxevent.HasAuditEvent())).
-		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(c.batchSize).
-		All(ctx)
-	if err != nil {
-		return fmt.Errorf("query un-audited: %w", err)
-	}
-
-	for _, row := range rows {
-		create := c.client.AuditEvent.Create().
-			SetOutboxEventID(row.ID).
-			SetEventType(row.EventType).
-			SetResourceType(row.ResourceType).
-			SetResourceID(row.ResourceID).
-			SetPayload(row.Payload)
-		if row.ActorID != nil {
-			create = create.SetActorID(*row.ActorID)
-		}
-		if row.OrganizationID != nil {
-			create = create.SetOrganizationID(*row.OrganizationID)
+	return c.instr.Tick(ctx, func(ctx context.Context) error {
+		// "Outbox rows not yet audited" — ent translates this to NOT EXISTS
+		// over the audit_event FK, which is index-backed on the unique
+		// column.
+		rows, err := c.client.OutboxEvent.Query().
+			Where(outboxevent.Not(outboxevent.HasAuditEvent())).
+			Order(ent.Asc(outboxevent.FieldCreatedAt)).
+			Limit(c.batchSize).
+			All(ctx)
+		if err != nil {
+			return fmt.Errorf("query un-audited: %w", err)
 		}
 
-		if err := create.Exec(ctx); err != nil {
-			// A concurrent consumer on another replica may have beaten us to
-			// this row — the unique constraint on outbox_event_id rejects the
-			// second write. Both "duplicate key" and genuine errors land here;
-			// we log and move on. The next iteration picks up anything that
-			// genuinely failed (it'll still lack an audit row).
-			c.logger.Warn("audit: insert", "err", err, "outbox_id", row.ID)
-			continue
+		for _, row := range rows {
+			rowCtx, end := c.instr.StartRow(ctx,
+				attribute.String("outbox.id", row.ID.String()),
+				attribute.String("event_type", row.EventType),
+			)
+			err := c.insertAuditEvent(rowCtx, row)
+			if err != nil {
+				// A concurrent consumer on another replica may have beaten us
+				// to this row — the unique constraint on outbox_event_id
+				// rejects the second write. Both "duplicate key" and genuine
+				// errors land here; we log and move on. The next iteration
+				// picks up anything that genuinely failed (it'll still lack
+				// an audit row).
+				c.logger.Warn("audit: insert", "err", err, "outbox_id", row.ID)
+			}
+			end(err)
 		}
+		return nil
+	})
+}
+
+func (c *Consumer) insertAuditEvent(ctx context.Context, row *ent.OutboxEvent) error {
+	create := c.client.AuditEvent.Create().
+		SetOutboxEventID(row.ID).
+		SetEventType(row.EventType).
+		SetResourceType(row.ResourceType).
+		SetResourceID(row.ResourceID).
+		SetPayload(row.Payload)
+	if row.ActorID != nil {
+		create = create.SetActorID(*row.ActorID)
 	}
-	return nil
+	if row.OrganizationID != nil {
+		create = create.SetOrganizationID(*row.OrganizationID)
+	}
+	return create.Exec(ctx)
 }

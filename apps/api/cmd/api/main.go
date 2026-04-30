@@ -138,17 +138,37 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("init email sender: %w", err)
 	}
 
-	auditConsumer := audit.NewConsumer(db.Ent, logger)
-	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger, search.WithIndexerDialect(dialect.Postgres))
-	outboxGC := outbox.NewGC(db.Ent, logger, outbox.WithGCRetention(cfg.Outbox.Retention))
+	// Shared worker metric instruments — one set, attribute-tagged per
+	// worker, so dashboards can `sum by (worker)` over a single counter.
+	workerMetrics, err := observability.NewWorkerMetrics()
+	if err != nil {
+		return fmt.Errorf("init worker metrics: %w", err)
+	}
+
+	auditConsumer := audit.NewConsumer(db.Ent, logger,
+		audit.WithWorkerInstr(observability.NewWorkerInstr("audit", workerMetrics)),
+	)
+	searchIndexer := search.NewIndexer(db.Ent, searchClient, logger,
+		search.WithIndexerDialect(dialect.Postgres),
+		search.WithIndexerWorkerInstr(observability.NewWorkerInstr("search-indexer", workerMetrics)),
+	)
+	outboxGC := outbox.NewGC(db.Ent, logger,
+		outbox.WithGCRetention(cfg.Outbox.Retention),
+		outbox.WithGCWorkerInstr(observability.NewWorkerInstr("outbox-gc", workerMetrics)),
+	)
 	mailer := invitations.NewMailer(db.Ent, sender, logger,
 		cfg.Email.FromAddress, cfg.Email.FromName, cfg.Invites.LinkBaseURL,
 		invitations.WithDialect(dialect.Postgres),
+		invitations.WithWorkerInstr(observability.NewWorkerInstr("invitations-mailer", workerMetrics)),
 	)
-	notificationsConsumer := notifications.NewConsumer(db.Ent, logger, notifications.WithDialect(dialect.Postgres))
+	notificationsConsumer := notifications.NewConsumer(db.Ent, logger,
+		notifications.WithDialect(dialect.Postgres),
+		notifications.WithWorkerInstr(observability.NewWorkerInstr("notifications-consumer", workerMetrics)),
+	)
 	notificationsMailer := notifications.NewMailer(db.Ent, sender, logger,
 		cfg.Email.FromAddress, cfg.Email.FromName, cfg.App.BaseURL,
 		notifications.WithMailerDialect(dialect.Postgres),
+		notifications.WithMailerWorkerInstr(observability.NewWorkerInstr("notifications-mailer", workerMetrics)),
 	)
 
 	go auditConsumer.Run(ctx)

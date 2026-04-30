@@ -9,6 +9,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -76,15 +77,21 @@ func (s *Server) routes() {
 	}
 
 	// Authenticated Connect services — every RPC requires a valid bearer token.
-	// otelconnect goes first so its span covers the auth check and any
-	// downstream work; auth.NewInterceptor follows so the principal-resolved
-	// span attributes (added by interceptors layered on top in Slice B) see
-	// an already-authenticated context.
+	// Order in the chain (outermost first):
+	//   1. otelconnect — opens the per-RPC span; everything below hangs
+	//      off it.
+	//   2. auth.NewInterceptor — verifies the bearer token and stashes
+	//      claims on the context.
+	//   3. observability.AttributeInterceptor — reads claims and decorates
+	//      the (already-open) span with principal attributes.
 	interceptors := append(
 		[]connect.Interceptor{},
 		observability.ConnectInterceptor()...,
 	)
-	interceptors = append(interceptors, auth.NewInterceptor(s.verifier))
+	interceptors = append(interceptors,
+		auth.NewInterceptor(s.verifier),
+		observability.AttributeInterceptor(principalAttributes),
+	)
 	authInt := connect.WithInterceptors(interceptors...)
 	{
 		svc := identity.New(s.resolver, s.logger)
@@ -139,4 +146,19 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 // gRPC clients that don't negotiate TLS (e.g. local dev, in-cluster mesh).
 func (s *Server) Handler() http.Handler {
 	return h2c.NewHandler(s.router, &http2.Server{})
+}
+
+// principalAttributes is the AttributeReader closed over auth.ClaimsFrom
+// for the authenticated RPC interceptor chain. Email is deliberately
+// omitted — it's PII, and per ADR-0019 PII does not belong in span
+// attributes. Subject (the OIDC `sub` claim) is the stable identifier
+// operators correlate with their IDP.
+func principalAttributes(ctx context.Context) []attribute.KeyValue {
+	claims, ok := auth.ClaimsFrom(ctx)
+	if !ok {
+		return nil
+	}
+	return []attribute.KeyValue{
+		attribute.String("huddle.user.subject", claims.Subject),
+	}
 }
