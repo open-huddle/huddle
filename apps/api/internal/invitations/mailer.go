@@ -25,11 +25,13 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	"github.com/open-huddle/huddle/apps/api/ent/emaildelivery"
 	entinvitation "github.com/open-huddle/huddle/apps/api/ent/invitation"
 	"github.com/open-huddle/huddle/apps/api/internal/email"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 )
 
 const (
@@ -51,6 +53,7 @@ type Mailer struct {
 	interval  time.Duration
 	batchSize int
 	dialect   string
+	instr     *observability.WorkerInstr
 }
 
 // Option configures a Mailer; zero options yields production defaults.
@@ -70,6 +73,11 @@ func WithBatchSize(n int) Option {
 // Postgres. Omitted in unit tests (SQLite path).
 func WithDialect(d string) Option {
 	return func(m *Mailer) { m.dialect = d }
+}
+
+// WithWorkerInstr wires per-tick + per-row spans and RED metrics.
+func WithWorkerInstr(w *observability.WorkerInstr) Option {
+	return func(m *Mailer) { m.instr = w }
 }
 
 // NewMailer returns a Mailer that sends invite emails via the given
@@ -131,47 +139,54 @@ func (m *Mailer) Run(ctx context.Context) {
 // EmailDelivery rows with status=failed; they'll be picked up again
 // next tick until the invite expires.
 func (m *Mailer) SendBatch(ctx context.Context) error {
-	tx, err := m.client.Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
+	return m.instr.Tick(ctx, func(ctx context.Context) error {
+		tx, err := m.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("begin tx: %w", err)
 		}
-	}()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
-	q := tx.Invitation.Query().
-		Where(
-			entinvitation.EmailSentAtIsNil(),
-			entinvitation.AcceptedAtIsNil(),
-			entinvitation.ExpiresAtGT(time.Now()),
-		).
-		Order(ent.Asc(entinvitation.FieldCreatedAt)).
-		Limit(m.batchSize)
-	if m.dialect == dialect.Postgres {
-		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
-	}
-	rows, err := q.All(ctx)
-	if err != nil {
-		return fmt.Errorf("query pending invites: %w", err)
-	}
-
-	for _, inv := range rows {
-		if err := m.sendOne(ctx, tx, inv); err != nil {
-			// Individual failures don't abort the batch. sendOne already
-			// recorded a failed EmailDelivery row for audit.
-			m.logger.Warn("invitations-mailer: send",
-				"err", err, "invite_id", inv.ID)
+		q := tx.Invitation.Query().
+			Where(
+				entinvitation.EmailSentAtIsNil(),
+				entinvitation.AcceptedAtIsNil(),
+				entinvitation.ExpiresAtGT(time.Now()),
+			).
+			Order(ent.Asc(entinvitation.FieldCreatedAt)).
+			Limit(m.batchSize)
+		if m.dialect == dialect.Postgres {
+			q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
 		}
-	}
+		rows, err := q.All(ctx)
+		if err != nil {
+			return fmt.Errorf("query pending invites: %w", err)
+		}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
-	}
-	committed = true
-	return nil
+		for _, inv := range rows {
+			rowCtx, end := m.instr.StartRow(ctx,
+				attribute.String("invitation.id", inv.ID.String()),
+			)
+			err := m.sendOne(rowCtx, tx, inv)
+			if err != nil {
+				// Individual failures don't abort the batch. sendOne
+				// already recorded a failed EmailDelivery row for audit.
+				m.logger.Warn("invitations-mailer: send",
+					"err", err, "invite_id", inv.ID)
+			}
+			end(err)
+		}
+
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit: %w", err)
+		}
+		committed = true
+		return nil
+	})
 }
 
 // sendOne renders and dispatches a single invitation. Returns a non-nil

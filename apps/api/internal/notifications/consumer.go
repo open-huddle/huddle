@@ -20,11 +20,13 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	entnotification "github.com/open-huddle/huddle/apps/api/ent/notification"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
@@ -48,6 +50,7 @@ type Consumer struct {
 	interval  time.Duration
 	batchSize int
 	dialect   string
+	instr     *observability.WorkerInstr
 }
 
 // Option tunes a Consumer; zero options yields production defaults.
@@ -67,6 +70,11 @@ func WithBatchSize(n int) Option {
 // tests against SQLite.
 func WithDialect(d string) Option {
 	return func(c *Consumer) { c.dialect = d }
+}
+
+// WithWorkerInstr wires per-tick + per-row spans and RED metrics.
+func WithWorkerInstr(w *observability.WorkerInstr) Option {
+	return func(c *Consumer) { c.instr = w }
 }
 
 // NewConsumer wires a Consumer against the given ent client.
@@ -114,77 +122,98 @@ func (c *Consumer) Run(ctx context.Context) {
 // non-message rows is what keeps outbox.GC moving — same rationale as the
 // indexer's post-ADR-0013 behavior.
 func (c *Consumer) ConsumeBatch(ctx context.Context) error {
-	tx, err := c.client.Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
+	return c.instr.Tick(ctx, func(ctx context.Context) error {
+		tx, err := c.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("begin tx: %w", err)
 		}
-	}()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
-	q := tx.OutboxEvent.Query().
-		Where(outboxevent.NotifiedAtIsNil()).
-		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(c.batchSize)
-	if c.dialect == dialect.Postgres {
-		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
-	}
-	rows, err := q.All(ctx)
-	if err != nil {
-		return fmt.Errorf("query un-notified: %w", err)
-	}
+		q := tx.OutboxEvent.Query().
+			Where(outboxevent.NotifiedAtIsNil()).
+			Order(ent.Asc(outboxevent.FieldCreatedAt)).
+			Limit(c.batchSize)
+		if c.dialect == dialect.Postgres {
+			q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
+		}
+		rows, err := q.All(ctx)
+		if err != nil {
+			return fmt.Errorf("query un-notified: %w", err)
+		}
 
-	for _, row := range rows {
-		switch row.EventType {
-		case eventTypeMessageCreated:
-			c.fanOut(ctx, tx, row, entnotification.SourceMessageCreated)
-		case eventTypeMessageEdited:
-			// Edits fire notifications for newly-added mentions only.
-			// The UNIQUE(recipient, message, kind) constraint on
-			// Notification means re-fanning for already-mentioned users
-			// is a benign no-op at insert time — so we fan out the
-			// Message's full mention set and let the DB do the diff.
-			// Source=message_edited signals the mailer to skip email.
-			c.fanOut(ctx, tx, row, entnotification.SourceMessageEdited)
-		default:
-			// Other event types (message.deleted, future types) get
-			// stamped without work so outbox.GC can proceed. Deletes
-			// don't currently produce a notification; a "your message
-			// was deleted by a moderator" notification kind is a
-			// future PR.
-			if err := stampInTx(ctx, tx, row.ID); err != nil {
-				c.logger.Warn("notifications: stamp non-mention",
+		for _, row := range rows {
+			rowCtx, end := c.instr.StartRow(ctx,
+				attribute.String("outbox.id", row.ID.String()),
+				attribute.String("event_type", row.EventType),
+			)
+			err := c.processRow(rowCtx, tx, row)
+			if err != nil {
+				c.logger.Warn("notifications: process row",
 					"err", err, "outbox_id", row.ID, "event_type", row.EventType)
 			}
+			end(err)
 		}
-	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit: %w", err)
+		}
+		committed = true
+		return nil
+	})
+}
+
+// processRow evaluates one outbox row. message.created and message.edited
+// fan out notifications; other event types are stamp-only. Returns the
+// error that surfaces on the row's span; per-mention failures inside
+// fanOut are logged + swallowed (UNIQUE retries are benign).
+func (c *Consumer) processRow(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent) error {
+	switch row.EventType {
+	case eventTypeMessageCreated:
+		return c.fanOut(ctx, tx, row, entnotification.SourceMessageCreated)
+	case eventTypeMessageEdited:
+		// Edits fire notifications for newly-added mentions only.
+		// The UNIQUE(recipient, message, kind) constraint on
+		// Notification means re-fanning for already-mentioned users
+		// is a benign no-op at insert time — so we fan out the
+		// Message's full mention set and let the DB do the diff.
+		// Source=message_edited signals the mailer to skip email.
+		return c.fanOut(ctx, tx, row, entnotification.SourceMessageEdited)
+	default:
+		// Other event types (message.deleted, future types) get
+		// stamped without work so outbox.GC can proceed. Deletes
+		// don't currently produce a notification; a "your message
+		// was deleted by a moderator" notification kind is a future
+		// PR.
+		if err := stampInTx(ctx, tx, row.ID); err != nil {
+			return fmt.Errorf("stamp non-mention: %w", err)
+		}
+		return nil
 	}
-	committed = true
-	return nil
 }
 
 // fanOut decodes a message.created / message.edited row and inserts one
 // Notification per mentioned user, stamping notified_at when done. The
 // source argument determines whether the mailer will eventually send an
 // email (message_created) or leave it in-app-only (message_edited).
-func (c *Consumer) fanOut(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent, source entnotification.Source) {
+//
+// Returns the FIRST structural error encountered (decode or final
+// stamp); per-mention insert errors are logged + swallowed because they
+// are typically benign UNIQUE-constraint hits on retry.
+func (c *Consumer) fanOut(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent, source entnotification.Source) error {
 	mentions, msgID, channelID, orgID, err := decodeMessageCreated(row)
 	if err != nil {
 		// Structural: bad payload. Stamp anyway so we don't hot-loop;
 		// the bad row is a bug to investigate out-of-band.
-		c.logger.Warn("notifications: decode payload",
-			"err", err, "outbox_id", row.ID)
 		if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
 			c.logger.Warn("notifications: stamp after decode error",
 				"err", stampErr, "outbox_id", row.ID)
 		}
-		return
+		return fmt.Errorf("decode: %w", err)
 	}
 
 	for _, recipient := range mentions {
@@ -198,9 +227,9 @@ func (c *Consumer) fanOut(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent,
 	}
 
 	if err := stampInTx(ctx, tx, row.ID); err != nil {
-		c.logger.Warn("notifications: stamp after fan-out",
-			"err", err, "outbox_id", row.ID)
+		return fmt.Errorf("stamp after fan-out: %w", err)
 	}
+	return nil
 }
 
 // decodeMessageCreated extracts the fan-out inputs from a message.created

@@ -10,10 +10,12 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 	huddlev1 "github.com/open-huddle/huddle/gen/go/huddle/v1"
 )
 
@@ -45,6 +47,7 @@ type Indexer struct {
 	// lock clause for SQLite-backed unit tests; dialect.Postgres applies it
 	// so concurrent replicas claim disjoint batches.
 	dialect string
+	instr   *observability.WorkerInstr
 }
 
 // IndexerOption configures an Indexer; zero options yields production defaults.
@@ -65,6 +68,12 @@ func WithIndexerBatchSize(n int) IndexerOption {
 // when the caller is running against Postgres. Omitted in tests.
 func WithIndexerDialect(d string) IndexerOption {
 	return func(i *Indexer) { i.dialect = d }
+}
+
+// WithIndexerWorkerInstr wires per-tick + per-row spans and RED metrics.
+// Optional; nil leaves instrumentation disabled.
+func WithIndexerWorkerInstr(w *observability.WorkerInstr) IndexerOption {
+	return func(i *Indexer) { i.instr = w }
 }
 
 // NewIndexer wires an Indexer against the given ent client and search
@@ -117,90 +126,109 @@ func (i *Indexer) Run(ctx context.Context) {
 // commit releases it. OpenSearch upserts by outbox event UUID anyway,
 // so the worst a retry does is rewrite the same document.
 func (i *Indexer) IndexBatch(ctx context.Context) error {
-	tx, err := i.client.Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
+	return i.instr.Tick(ctx, func(ctx context.Context) error {
+		tx, err := i.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("begin tx: %w", err)
 		}
-	}()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
-	// Poll ALL un-indexed rows, not just message.created. indexed_at is
-	// outbox.GC's "has the indexer finished with this row?" marker — if we
-	// only stamped message.created events, other event types (invitations,
-	// future notifications) would never satisfy the GC predicate and the
-	// outbox would grow unbounded. For non-message events the stamp is
-	// load-bearing without triggering an OpenSearch write.
-	q := tx.OutboxEvent.Query().
-		Where(outboxevent.IndexedAtIsNil()).
-		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(i.batchSize)
-	if i.dialect == dialect.Postgres {
-		q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
-	}
-	rows, err := q.All(ctx)
-	if err != nil {
-		return fmt.Errorf("query un-indexed: %w", err)
-	}
+		// Poll ALL un-indexed rows, not just message.created. indexed_at is
+		// outbox.GC's "has the indexer finished with this row?" marker — if
+		// we only stamped message.created events, other event types
+		// (invitations, future notifications) would never satisfy the GC
+		// predicate and the outbox would grow unbounded. For non-message
+		// events the stamp is load-bearing without triggering an OpenSearch
+		// write.
+		q := tx.OutboxEvent.Query().
+			Where(outboxevent.IndexedAtIsNil()).
+			Order(ent.Asc(outboxevent.FieldCreatedAt)).
+			Limit(i.batchSize)
+		if i.dialect == dialect.Postgres {
+			q = q.ForUpdate(sql.WithLockAction(sql.SkipLocked))
+		}
+		rows, err := q.All(ctx)
+		if err != nil {
+			return fmt.Errorf("query un-indexed: %w", err)
+		}
 
-	for _, row := range rows {
-		switch row.EventType {
-		case eventTypeMessageCreated, eventTypeMessageEdited:
-			// Both create and edit upsert by message_id (ADR-0016).
-			// Create writes a fresh doc; edit overwrites the body and
-			// mentions. Same code path — differences are in the outbox
-			// payload, and the indexer doesn't care which.
-			doc, err := docFromOutbox(row)
+		for _, row := range rows {
+			rowCtx, end := i.instr.StartRow(ctx,
+				attribute.String("outbox.id", row.ID.String()),
+				attribute.String("event_type", row.EventType),
+			)
+			err := i.processRow(rowCtx, tx, row)
 			if err != nil {
-				i.logger.Warn("search-indexer: decode", "err", err, "outbox_id", row.ID)
-				if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
-					i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
-				}
-				continue
-			}
-			if err := i.search.IndexMessage(ctx, doc); err != nil {
-				i.logger.Warn("search-indexer: index", "err", err, "outbox_id", row.ID)
-				continue
-			}
-		case eventTypeMessageDeleted:
-			// Pull the message id out of the payload (delete events ship
-			// just the id + channel id) and remove the doc.
-			msgID, err := messageIDFromOutbox(row)
-			if err != nil {
-				i.logger.Warn("search-indexer: decode delete", "err", err, "outbox_id", row.ID)
-				if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
-					i.logger.Warn("search-indexer: stamp after decode error", "err", stampErr, "outbox_id", row.ID)
-				}
-				continue
-			}
-			if err := i.search.DeleteMessage(ctx, msgID); err != nil {
-				i.logger.Warn("search-indexer: delete", "err", err, "outbox_id", row.ID)
-				continue
-			}
-		default:
-			// Other consumers handle these events. The indexer's job is
-			// just to mark them "evaluated" so outbox.GC can proceed.
-			if err := stampInTx(ctx, tx, row.ID); err != nil {
-				i.logger.Warn("search-indexer: stamp non-message",
+				i.logger.Warn("search-indexer: process row",
 					"err", err, "outbox_id", row.ID, "event_type", row.EventType)
 			}
-			continue
+			end(err)
 		}
-		if err := stampInTx(ctx, tx, row.ID); err != nil {
-			// Failure to stamp means we'll re-process next tick — safe
-			// because _id is the message UUID (upsert) and delete is
-			// idempotent.
-			i.logger.Warn("search-indexer: stamp", "err", err, "outbox_id", row.ID)
-		}
-	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit: %w", err)
+		}
+		committed = true
+		return nil
+	})
+}
+
+// processRow handles one outbox row. Returns nil on full success or on
+// "stamped non-message event type" success; returns the underlying error
+// if the index/delete or stamp failed. Decode failures are stamped to
+// avoid a hot-loop on bad data and the error is still returned so the
+// row span carries the diagnostic.
+func (i *Indexer) processRow(ctx context.Context, tx *ent.Tx, row *ent.OutboxEvent) error {
+	switch row.EventType {
+	case eventTypeMessageCreated, eventTypeMessageEdited:
+		// Both create and edit upsert by message_id (ADR-0016). Create
+		// writes a fresh doc; edit overwrites the body and mentions.
+		// Same code path — differences are in the outbox payload, and
+		// the indexer doesn't care which.
+		doc, err := docFromOutbox(row)
+		if err != nil {
+			if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
+				i.logger.Warn("search-indexer: stamp after decode error",
+					"err", stampErr, "outbox_id", row.ID)
+			}
+			return fmt.Errorf("decode: %w", err)
+		}
+		if err := i.search.IndexMessage(ctx, doc); err != nil {
+			return fmt.Errorf("index: %w", err)
+		}
+	case eventTypeMessageDeleted:
+		// Pull the message id out of the payload (delete events ship just
+		// the id + channel id) and remove the doc.
+		msgID, err := messageIDFromOutbox(row)
+		if err != nil {
+			if stampErr := stampInTx(ctx, tx, row.ID); stampErr != nil {
+				i.logger.Warn("search-indexer: stamp after decode error",
+					"err", stampErr, "outbox_id", row.ID)
+			}
+			return fmt.Errorf("decode delete: %w", err)
+		}
+		if err := i.search.DeleteMessage(ctx, msgID); err != nil {
+			return fmt.Errorf("delete: %w", err)
+		}
+	default:
+		// Other consumers handle these events. The indexer's job is just
+		// to mark them "evaluated" so outbox.GC can proceed.
+		if err := stampInTx(ctx, tx, row.ID); err != nil {
+			return fmt.Errorf("stamp non-message: %w", err)
+		}
+		return nil
 	}
-	committed = true
+	if err := stampInTx(ctx, tx, row.ID); err != nil {
+		// Failure to stamp means we'll re-process next tick — safe
+		// because _id is the message UUID (upsert) and delete is
+		// idempotent.
+		return fmt.Errorf("stamp: %w", err)
+	}
 	return nil
 }
 

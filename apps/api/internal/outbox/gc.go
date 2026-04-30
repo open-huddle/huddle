@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-huddle/huddle/apps/api/ent"
 	"github.com/open-huddle/huddle/apps/api/ent/outboxevent"
+	"github.com/open-huddle/huddle/apps/api/internal/observability"
 )
 
 // GC trims the outbox table. A row is eligible for deletion only when all
@@ -36,6 +37,7 @@ type GC struct {
 	retention time.Duration
 	interval  time.Duration
 	batchSize int
+	instr     *observability.WorkerInstr
 }
 
 // GCOption configures a GC; zero options yields production defaults.
@@ -58,6 +60,13 @@ func WithGCInterval(d time.Duration) GCOption {
 // footprint on a single DELETE; large backlogs drain across several ticks.
 func WithGCBatchSize(n int) GCOption {
 	return func(g *GC) { g.batchSize = n }
+}
+
+// WithGCWorkerInstr wires per-tick spans + RED metrics. AddRows fires
+// once per tick with the count of rows the bulk DELETE removed; there
+// are no per-row spans (GC is a single bulk operation, not a loop).
+func WithGCWorkerInstr(w *observability.WorkerInstr) GCOption {
+	return func(g *GC) { g.instr = w }
 }
 
 const (
@@ -110,7 +119,7 @@ func (g *GC) Run(ctx context.Context) {
 }
 
 // DeleteBatch does one sweep. Returns the number of rows deleted so tests
-// (and, later, observability) can reason about progress.
+// (and observability) can reason about progress.
 //
 // Postgres has no DELETE ... LIMIT, so the worker runs a two-step:
 // collect up to batchSize eligible IDs in one query, then DELETE WHERE id
@@ -118,40 +127,46 @@ func (g *GC) Run(ctx context.Context) {
 // Postgres and SQLite, and the FK's ON DELETE SET NULL handles the audit
 // row fixup server-side.
 func (g *GC) DeleteBatch(ctx context.Context) (int, error) {
-	cutoff := time.Now().Add(-g.retention)
+	var deleted int
+	err := g.instr.Tick(ctx, func(ctx context.Context) error {
+		cutoff := time.Now().Add(-g.retention)
 
-	ids, err := g.client.OutboxEvent.Query().
-		Where(
-			outboxevent.PublishedAtNotNil(),
-			outboxevent.IndexedAtNotNil(),
-			outboxevent.NotifiedAtNotNil(),
-			outboxevent.HasAuditEvent(),
-			outboxevent.CreatedAtLT(cutoff),
-		).
-		Order(ent.Asc(outboxevent.FieldCreatedAt)).
-		Limit(g.batchSize).
-		IDs(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("collect eligible ids: %w", err)
-	}
-	if len(ids) == 0 {
-		return 0, nil
-	}
+		ids, err := g.client.OutboxEvent.Query().
+			Where(
+				outboxevent.PublishedAtNotNil(),
+				outboxevent.IndexedAtNotNil(),
+				outboxevent.NotifiedAtNotNil(),
+				outboxevent.HasAuditEvent(),
+				outboxevent.CreatedAtLT(cutoff),
+			).
+			Order(ent.Asc(outboxevent.FieldCreatedAt)).
+			Limit(g.batchSize).
+			IDs(ctx)
+		if err != nil {
+			return fmt.Errorf("collect eligible ids: %w", err)
+		}
+		if len(ids) == 0 {
+			return nil
+		}
 
-	deleted, err := g.client.OutboxEvent.Delete().
-		Where(outboxevent.IDIn(ids...)).
-		Exec(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("delete %d rows: %w", len(ids), err)
-	}
-	if deleted != len(ids) {
-		// Only log; a row may have been deleted by a concurrent GC on
-		// another replica between the select and the delete. That is the
-		// design — the eventual consistency between replicas is safe
-		// because the predicate only matches fully-stamped, retention-aged
-		// rows.
-		g.logger.Info("outbox-gc: partial delete",
-			"eligible", len(ids), "deleted", deleted)
-	}
-	return deleted, nil
+		n, err := g.client.OutboxEvent.Delete().
+			Where(outboxevent.IDIn(ids...)).
+			Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("delete %d rows: %w", len(ids), err)
+		}
+		if n != len(ids) {
+			// Only log; a row may have been deleted by a concurrent GC on
+			// another replica between the select and the delete. That is
+			// the design — the eventual consistency between replicas is
+			// safe because the predicate only matches fully-stamped,
+			// retention-aged rows.
+			g.logger.Info("outbox-gc: partial delete",
+				"eligible", len(ids), "deleted", n)
+		}
+		deleted = n
+		g.instr.AddRows(ctx, n)
+		return nil
+	})
+	return deleted, err
 }
