@@ -1,0 +1,190 @@
+{
+  "title": "Huddle — CDC Pipeline Health",
+  "uid": "huddle-cdc-pipeline",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "tags": ["huddle", "cdc", "observability"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Debezium replication slot lag (bytes behind WAL)",
+      "description": "How many bytes the Debezium replication slot is behind the latest WAL. Sustained nonzero means CDC is falling behind — the load-bearing CDC health signal.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1048576},
+              {"color": "red", "value": 16777216}
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(pg_replication_slots_pg_wal_lsn_diff)",
+          "legendFormat": "slot lag (bytes)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Outbox depth by consumer",
+      "description": "Outbox rows not yet processed by each downstream consumer. Sustained growth on any line is a stuck worker.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
+        }
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "huddle_outbox_depth",
+          "legendFormat": "{{consumer}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "NATS JetStream consumer pending",
+      "description": "Messages waiting on each NATS JetStream consumer. Combined with outbox depth and slot lag, isolates whether a backup is in Postgres → NATS or NATS → API.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 6},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gnatsd_consumer_num_pending",
+          "legendFormat": "{{stream_name}}/{{consumer_name}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Send → Subscribe latency (p50 / p95 / p99)",
+      "description": "Wall time from outbox row creation to dispatch from JetStream into the API's Subscribe handler. Captures the full chain: Postgres commit → WAL → Debezium → NATS → API.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 6},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"drawStyle": "line", "lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(huddle_pipeline_send_to_subscribe_seconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(huddle_pipeline_send_to_subscribe_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(huddle_pipeline_send_to_subscribe_seconds_bucket[5m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Worker error rate (per second)",
+      "description": "Errors recorded by background workers, split by tick vs. row scope. Per Slice B (ADR-0019). A row-scope spike with no tick-scope component is per-row noise (UNIQUE retries, decode failures); tick-scope errors mean the worker is fully down.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (worker, scope) (rate(huddle_worker_errors_total[5m]))",
+          "legendFormat": "{{worker}} ({{scope}})"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Worker tick duration p95",
+      "description": "Per-tick duration p95 across the six background workers. Per Slice B (ADR-0019). Sustained increase on a single line is a slowing worker; spike across all is shared-resource contention (DB pool, etc.).",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"drawStyle": "line", "lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, worker) (rate(huddle_worker_tick_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{worker}}"
+        }
+      ]
+    }
+  ]
+}
